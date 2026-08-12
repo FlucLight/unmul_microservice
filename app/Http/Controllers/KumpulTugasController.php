@@ -45,6 +45,35 @@ class KumpulTugasController extends Controller
     }
 
     /**
+     * Memberikan nilai tugas mahasiswa via FastAPI2
+     */
+    public function updateNilai(Request $request, $id)
+    {
+        $request->validate([
+            'nilai' => 'required|integer|min:0|max:100',
+        ], [
+            'nilai.required' => 'Nilai wajib diisi.',
+            'nilai.min' => 'Nilai minimal 0.',
+            'nilai.max' => 'Nilai maksimal 100.',
+        ]);
+
+        try {
+            $response = Http::timeout(3)->patch("{$this->api2BaseUrl}/beri-nilai/{$id}", [
+                'nilai' => (int) $request->nilai,
+            ]);
+
+            if ($response->successful()) {
+                return redirect()->back()->with('success', 'Nilai tugas berhasil disimpan!');
+            }
+
+            return redirect()->back()->with('error', 'Gagal memberikan nilai: ' . $response->body());
+        } catch (\Exception $e) {
+            Log::error("FastAPI2 Error: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Koneksi ke FastAPI2 (Port 8001) terputus.');
+        }
+    }
+
+    /**
      * Menghapus data pengumpulan tugas via FastAPI2
      */
     public function destroy($id)
@@ -63,3 +92,4 @@ class KumpulTugasController extends Controller
         }
     }
 }
+

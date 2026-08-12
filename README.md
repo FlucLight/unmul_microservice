@@ -108,7 +108,7 @@ Buka browser dan akses alamat berikut:
 
 - **Asal Sekolah**: SMK Negeri 1 Tenggarong
 - **Lokasi Magang**: Fakultas Teknik Universitas Mulawarman (UNMUL)
-- **Periode**: Juli – Agustus 2026
+- **Periode PKL**: Juni – November 2026
 - **Anggota Tim**: 3 Orang Siswa PKL
 
 ---

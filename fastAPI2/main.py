@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from sqlmodel import Session, select
 from config.db import engine, create_db
-from models.kumpul import kumpul, kumpul_update
+from models.kumpul import kumpul, kumpul_update, beri_nilai
 from contextlib import asynccontextmanager
 
 # ambil id
@@ -53,6 +53,20 @@ async def editdata(kumpul_id: int, kumpul_data: kumpul_update):
             return db_tugas 
 
 
+@app.patch("/beri-nilai/{kumpul_id}")
+async def berinilai(kumpul_id: int, data_nilai: beri_nilai):
+    with Session(engine) as session:
+        db_kumpul = session.get(kumpul, kumpul_id)
+        if not db_kumpul:
+            raise HTTPException(status_code=404, detail="Data pengumpulan tidak ditemukan")
+        else:
+            db_kumpul.nilai = data_nilai.nilai
+            session.add(db_kumpul)
+            session.commit()
+            session.refresh(db_kumpul)
+            return db_kumpul
+
+
 @app.delete("/hapus-kumpul/{kumpul_id}")
 async def hapuskumpul(kumpul_id: int):
     with Session(engine) as session:
@@ -63,4 +77,5 @@ async def hapuskumpul(kumpul_id: int):
             session.delete(db_nilai)
             session.commit()
             return "Udah dihapus dari tabase polizao mas"
+
             

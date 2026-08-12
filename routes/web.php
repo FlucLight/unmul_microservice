@@ -16,9 +16,11 @@ Route::post('/tugas', [TugasController::class, 'store'])->name('tugas.store');
 Route::put('/tugas/{id}', [TugasController::class, 'update'])->name('tugas.update');
 Route::delete('/tugas/{id}', [TugasController::class, 'destroy'])->name('tugas.destroy');
 
-// Pengumpulan Tugas (FastAPI 2)
+// Pengumpulan Tugas & Penilaian (FastAPI 2)
 Route::post('/kumpul-tugas', [KumpulTugasController::class, 'store'])->name('kumpul.store');
+Route::patch('/kumpul-tugas/{id}/nilai', [KumpulTugasController::class, 'updateNilai'])->name('kumpul.nilai');
 Route::delete('/kumpul-tugas/{id}', [KumpulTugasController::class, 'destroy'])->name('kumpul.destroy');
+
 
 
 Route::middleware([
