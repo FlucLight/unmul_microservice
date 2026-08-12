@@ -7,10 +7,12 @@ class kumpul(SQLModel, table=True):
     id_tugas: int = Field(index=True)
     nama_mahasiswa: str = Field(index=True)
     nilai_mahasiswa: float = Field(default=0.0, index=True)
+    file_mahasiswa: str = Field(..., index=True)
     tanggal_kumpul: datetime = Field(...)
 
 class kumpul_update(SQLModel):
     id_tugas: int 
     nama_mahasiswa: str 
     nilai_mahasiswa: float
+    file_mahasiswa: str
     tanggal_kumpul: datetime 
