@@ -31,7 +31,33 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'nomer_induk',
+        'role',
     ];
+
+    /**
+     * Check if user is Dosen.
+     */
+    public function isDosen(): bool
+    {
+        return $this->role === 'dosen';
+    }
+
+    /**
+     * Check if user is Mahasiswa.
+     */
+    public function isMahasiswa(): bool
+    {
+        return $this->role === 'mahasiswa';
+    }
+
+    /**
+     * Check if user is Admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 
     /**
      * The attributes that should be hidden for serialization.

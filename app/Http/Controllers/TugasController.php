@@ -62,21 +62,19 @@ class TugasController extends Controller
     {
         $request->validate([
             'nama_tugas' => 'required|string|max:255',
-            'nama_dosen' => 'required|string|max:255',
             'deadline_tugas' => 'required',
         ], [
             'nama_tugas.required' => 'Nama tugas wajib diisi.',
-            'nama_dosen.required' => 'Nama dosen wajib diisi.',
             'deadline_tugas.required' => 'Deadline tugas wajib diisi.',
         ]);
 
-        // Format datetime agar sesuai format ISO/FastAPI (YYYY-MM-DDTHH:MM)
+        $namaDosen = $request->nama_dosen ?? auth()->user()->name ?? 'Dosen';
         $deadlineFormatted = date('Y-m-d\TH:i:s', strtotime($request->deadline_tugas));
 
         try {
             $response = Http::post("{$this->apiBaseUrl}/tambah", [
                 'nama_tugas' => $request->nama_tugas,
-                'nama_dosen' => $request->nama_dosen,
+                'nama_dosen' => $namaDosen,
                 'deadline_tugas' => $deadlineFormatted,
             ]);
 

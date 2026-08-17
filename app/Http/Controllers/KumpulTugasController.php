@@ -17,19 +17,21 @@ class KumpulTugasController extends Controller
     {
         $request->validate([
             'id_tugas' => 'required|integer',
-            'nama_mahasiswa' => 'required|string|max:255',
+            'file_mahasiswa' => 'nullable|string|max:1000',
         ], [
             'id_tugas.required' => 'ID tugas tidak valid.',
-            'nama_mahasiswa.required' => 'Nama mahasiswa wajib diisi.',
         ]);
 
-        // Waktu pengumpulan saat ini
+        $namaMahasiswa = $request->nama_mahasiswa ?? auth()->user()->name ?? 'Mahasiswa';
         $tanggalKumpul = now()->format('Y-m-d\TH:i:s');
+        $fileMahasiswa = $request->file_mahasiswa ?? '';
 
         try {
             $response = Http::timeout(3)->post("{$this->api2BaseUrl}/kumpul-tugas", [
                 'id_tugas' => (int) $request->id_tugas,
-                'nama_mahasiswa' => $request->nama_mahasiswa,
+                'nama_mahasiswa' => $namaMahasiswa,
+                'file_mahasiswa' => $fileMahasiswa,
+                'nilai_mahasiswa' => 0.0,
                 'tanggal_kumpul' => $tanggalKumpul,
             ]);
 

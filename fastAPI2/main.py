@@ -53,6 +53,9 @@ async def editdata(kumpul_id: int, kumpul_data: kumpul_update):
             return db_tugas 
 
 
+from models.kumpul import kumpul, kumpul_update, beri_nilai
+
+
 @app.patch("/beri-nilai/{kumpul_id}")
 async def berinilai(kumpul_id: int, data_nilai: beri_nilai):
     with Session(engine) as session:
@@ -61,6 +64,7 @@ async def berinilai(kumpul_id: int, data_nilai: beri_nilai):
             raise HTTPException(status_code=404, detail="Data pengumpulan tidak ditemukan")
         else:
             db_kumpul.nilai = data_nilai.nilai
+            db_kumpul.nilai_mahasiswa = float(data_nilai.nilai)
             session.add(db_kumpul)
             session.commit()
             session.refresh(db_kumpul)
