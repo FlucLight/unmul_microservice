@@ -8,6 +8,11 @@
   <meta name="description"
     content="Portal Learning Management System (LMS) Fakultas Teknik Universitas Mulawarman">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   @vite(['resources/css/loginpage.css', 'resources/js/loginpage.js'])
@@ -36,9 +41,15 @@
 
     <div class="header-actions">
       <!-- Tombol ke Halaman Tugas -->
-      <a href="{{ route('tugas.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-        <span>📋 Tugas Kuliah</span>
-      </a>
+      @auth
+        <a href="{{ route('tugas.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
+          <span> Tugas Kuliah</span>
+        </a>
+      @else
+        <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
+          <span> Tugas Kuliah</span>
+        </button>
+      @endauth
 
       <!-- Tombol Hidebar -->
       <button type="button" class="btn-hidebar" id="btnHidebarToggle" aria-label="Buka Menu Hidebar">
@@ -58,9 +69,9 @@
         </a>
       @else
         <!-- Tombol Login -->
-        <a href="{{ route('login') }}" class="btn-login-header" id="btnLoginHeader">
+        <button type="button" class="btn-login-header btn-open-login-modal" id="btnLoginHeader">
           <span>Log In</span>
-        </a>
+        </button>
       @endauth
     </div>
   </header>
@@ -89,90 +100,130 @@
     </div>
   </aside>
 
-  <!-- POP-UP LOGIN MODAL CUSTOM -->
+  <!-- POP-UP LOGIN / REGISTER MODAL (TAMPILAN PERSIS LOGIN.BLADE.PHP) -->
   <div class="modal-overlay" id="loginModalOverlay">
     <div class="modal-card">
       <button type="button" class="btn-close-modal" id="btnCloseModal" aria-label="Tutup Popup Modal">✕</button>
 
-      <!-- FORM LOGIN -->
+      <!-- FORM LOGIN VIEW -->
       <div class="modal-view" id="loginView">
-        <div class="modal-header">
-          <h2 class="modal-title">Log In LMS</h2>
-          <p class="modal-subtitle">Masukkan email dan password Anda</p>
+        <div class="auth-logo">
+          <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
+          <div class="auth-logo-text">
+            <span class="l1">FAKULTAS TEKNIK</span>
+            <span class="l2">UNIVERSITAS MULAWARMAN</span>
+          </div>
         </div>
+        <h2 class="auth-title">Log In LMS</h2>
+        <p class="auth-subtitle">Masukkan email dan password akun Anda</p>
 
-        <form method="POST" action="{{ route('login') }}">
+        @if (session('status'))
+          <div class="mb-4 text-xs font-semibold text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+              <span>{{ session('status') }}</span>
+          </div>
+        @endif
+
+        @if ($errors->any())
+          <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
+              <ul class="space-y-1">
+                  @foreach ($errors->all() as $error)
+                      <li class="flex items-center gap-1.5">
+                        <span class="text-red-500 font-bold">•</span>
+                        <span>{{ $error }}</span>
+                      </li>
+                  @endforeach
+              </ul>
+          </div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}" class="space-y-4">
           @csrf
-          <div class="form-group">
-            <label for="inputEmailLogin" class="form-label">Email</label>
-            <input type="email" name="email" id="inputEmailLogin" class="input-textbox" placeholder="email@unmul.ac.id" required autocomplete="email">
+
+          <div>
+            <label for="inputEmailLogin" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Email</label>
+            <input type="email" id="inputEmailLogin" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="Masukkan email terdaftar" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
           </div>
 
-          <div class="form-group">
-            <label for="inputPasswordLogin" class="form-label">Password</label>
-            <input type="password" name="password" id="inputPasswordLogin" class="input-textbox" placeholder="Masukkan password" required autocomplete="current-password">
+          <div>
+            <label for="inputPasswordLogin" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Password</label>
+            <input type="password" id="inputPasswordLogin" name="password" required autocomplete="current-password" placeholder="Masukkan password" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
           </div>
 
-          <button type="submit" class="btn-submit-login">Log-In</button>
-
-          <div class="login-bottom-right-container">
-            <button type="button" class="link-register-toggle" id="linkToRegister">
-              Belum punya akun? Register di sini
-            </button>
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" name="remember" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+              <span class="text-slate-600 font-medium">Ingat Saya</span>
+            </label>
+            @if (Route::has('password.request'))
+              <a href="{{ route('password.request') }}" class="text-amber-700 font-semibold hover:underline">Lupa password?</a>
+            @endif
           </div>
+
+          <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2">
+            Log In Sekarang
+          </button>
         </form>
+
+        <p class="auth-footer-text">Belum punya akun? <a href="#" id="linkToRegister">Daftar Akun di sini</a></p>
       </div>
 
-      <!-- FORM REGISTER CUSTOM -->
+      <!-- FORM REGISTER VIEW -->
       <div class="modal-view hidden" id="registerView">
-        <div class="modal-header">
-          <h2 class="modal-title">Register Akun LMS</h2>
-          <p class="modal-subtitle">Daftar sebagai Dosen atau Mahasiswa</p>
+        <div class="auth-logo">
+          <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
+          <div class="auth-logo-text">
+            <span class="l1">FAKULTAS TEKNIK</span>
+            <span class="l2">UNIVERSITAS MULAWARMAN</span>
+          </div>
         </div>
+        <h2 class="auth-title">Daftar Akun LMS</h2>
+        <p class="auth-subtitle">Pilih role Anda sebagai Dosen atau Mahasiswa</p>
 
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('register') }}" class="space-y-3.5">
           @csrf
-          <div class="form-group">
-            <label class="form-label">Nama Lengkap</label>
-            <input type="text" name="name" class="input-textbox" placeholder="Nama lengkap Anda" required>
+
+          <div>
+            <label for="regName" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nama Lengkap</label>
+            <input type="text" id="regName" name="name" value="{{ old('name') }}" required placeholder="Contoh: Dr. Budi, S.T. / Ahmad Fulan" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Role (Dosen / Mahasiswa)</label>
-            <select name="role" class="input-textbox" style="background:#fff;" required>
+          <div>
+            <label for="regRole" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Daftar Sebagai (Role)</label>
+            <select id="regRole" name="role" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 bg-white transition">
               <option value="mahasiswa">👨‍🎓 Mahasiswa</option>
               <option value="dosen">👨‍🏫 Dosen</option>
             </select>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Nomor Induk (NIM / NIP)</label>
-            <input type="text" name="nomer_induk" class="input-textbox" placeholder="NIM / NIP" required>
+          <div>
+            <label for="regNomerInduk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM / NIP)</label>
+            <input type="text" id="regNomerInduk" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="NIM untuk Mahasiswa, NIP/NIDN untuk Dosen" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="input-textbox" placeholder="email@unmul.ac.id" required>
+          <div>
+            <label for="regEmail" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Aktif</label>
+            <input type="email" id="regEmail" name="email" value="{{ old('email') }}" required placeholder="email@unmul.ac.id" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" class="input-textbox" placeholder="Minimal 8 karakter" required>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label for="regPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password</label>
+              <input type="password" id="regPassword" name="password" required placeholder="Min. 8 karakter" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+            </div>
+
+            <div>
+              <label for="regPasswordConfirm" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
+              <input type="password" id="regPasswordConfirm" name="password_confirmation" required placeholder="Ulangi password" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Konfirmasi Password</label>
-            <input type="password" name="password_confirmation" class="input-textbox" placeholder="Ulangi password" required>
-          </div>
-
-          <button type="submit" class="btn-submit-login">Daftar Sekarang</button>
-
-          <div class="login-bottom-right-container">
-            <button type="button" class="link-register-toggle" id="linkToLogin">
-              Sudah punya akun? Log in
-            </button>
-          </div>
+          <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2">
+            Daftar Akun Sekarang
+          </button>
         </form>
+
+        <p class="auth-footer-text">Sudah punya akun? <a href="#" id="linkToLogin">Log in di sini</a></p>
       </div>
     </div>
   </div>
@@ -211,6 +262,5 @@
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
-  <script src="{{ asset('js/loginpage.js') }}"></script>
 </body>
 </html>
