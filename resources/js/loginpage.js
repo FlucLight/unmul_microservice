@@ -39,7 +39,7 @@ function decodeJWT(token) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function setupApp() {
   // DOM Elements
   const btnHidebarToggle = document.getElementById('btnHidebarToggle');
   const btnLoginHeader = document.getElementById('btnLoginHeader');
@@ -82,7 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // GOOGLE IDENTITY SERVICES SETUP
   // ==========================================
-  // Fungsi ini dipanggil oleh handleGoogleCredential di index.html
+  function handleGoogleCredential(response) {
+    if (response && response.credential) {
+      if (typeof window.onGoogleSignIn === 'function') {
+        window.onGoogleSignIn(response.credential);
+      }
+    }
+  }
+
+  // Fungsi ini dipanggil oleh handleGoogleCredential
   window.onGoogleSignIn = function (credentialToken) {
     const payload = decodeJWT(credentialToken);
     if (!payload) {
@@ -108,25 +116,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inisialisasi Google Identity Services setelah library siap
   function initGoogleSignIn() {
-    if (typeof google === 'undefined' || !google.accounts) {
-      // Library belum siap, coba lagi setelah 200ms
-      setTimeout(initGoogleSignIn, 200);
-      return;
+    try {
+      if (typeof google === 'undefined' || !google.accounts) {
+        // Library belum siap, coba lagi setelah 500ms
+        setTimeout(initGoogleSignIn, 500);
+        return;
+      }
+
+      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) {
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      console.log('✅ Google Identity Services berhasil diinisialisasi.');
+    } catch (e) {
+      console.warn('Google Sign-In initialization notice:', e);
     }
-
-    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) {
-      console.warn('⚠️ Google Client ID belum dikonfigurasi. Tombol Google login tidak akan berfungsi.');
-      return;
-    }
-
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
-
-    console.log('✅ Google Identity Services berhasil diinisialisasi.');
   }
 
   initGoogleSignIn();
@@ -264,7 +275,20 @@ document.addEventListener('DOMContentLoaded', () => {
     registerView.classList.remove('hidden');
   }
 
-  if (btnLoginHeader) btnLoginHeader.addEventListener('click', () => openModal('login'));
+  if (btnLoginHeader) {
+    btnLoginHeader.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal('login');
+    });
+  }
+
+  document.querySelectorAll('.btn-open-login-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal('login');
+    });
+  });
+
   if (btnCloseModal) btnCloseModal.addEventListener('click', closeModal);
 
   if (loginModalOverlay) {
@@ -397,4 +421,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => toast.remove(), 300);
     }, 3000);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupApp);
+} else {
+  setupApp();
+}

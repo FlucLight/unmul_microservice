@@ -31,7 +31,16 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #E4E6DC; }
+        *, *::before, *::after {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        *::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #E4E6DC; scrollbar-width: none; -ms-overflow-style: none; }
         .font-display { font-family: 'Fraunces', serif; font-feature-settings: "ss02" 1; }
         .tabular { font-family: 'Space Mono', monospace; font-variant-numeric: tabular-nums; }
         .folder-tab { clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px); }
@@ -50,9 +59,9 @@
 
             <!-- Identitas Fakultas -->
             <div class="flex items-center gap-3 pb-4">
-                <a href="{{ route('home') }}" class="w-11 h-11 rounded-full bg-forest text-paper font-display font-semibold flex items-center justify-center text-[11px] shadow-sm ring-2 ring-forest/20 shrink-0 hover:opacity-90 transition">
+                <div class="w-11 h-11 rounded-full bg-forest text-paper font-display font-semibold flex items-center justify-center text-[11px] shadow-sm ring-2 ring-forest/20 shrink-0">
                     UNMUL
-                </a>
+                </div>
                 <div class="leading-tight">
                     <span class="font-display font-semibold text-[15px] text-forestd block tracking-tight">Fakultas Teknik</span>
                     <span class="font-medium text-[11px] text-ink/50 uppercase tracking-[0.14em] block">Universitas Mulawarman</span>
@@ -135,23 +144,10 @@
                     </span>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                        <button onclick="openAddModal()" class="px-4 py-2.5 bg-gold text-forestd font-bold text-sm rounded-lg shadow-md hover:bg-[#c4923a] active:scale-[0.98] transition flex items-center gap-2">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                            Tambah Tugas Baru
-                        </button>
-                    @endif
-
-                    <!-- Logout Button -->
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="px-3.5 py-2 bg-black/20 hover:bg-rose-500/20 text-paper/80 hover:text-rose-300 border border-paper/20 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Keluar
-                        </button>
-                    </form>
-                </div>
+                <button onclick="openAddModal()" class="px-4 py-2.5 bg-gold text-forestd font-bold text-sm rounded-lg shadow-md hover:bg-[#c4923a] active:scale-[0.98] transition flex items-center gap-2">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                    Tambah Tugas
+                </button>
             </div>
 
             <div class="relative max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -159,28 +155,14 @@
                 <!-- LEFT COLUMN: Identitas + Ledger Tugas -->
                 <div class="lg:col-span-7 space-y-4">
 
-                    <!-- Profile Pill Auth User -->
-                    <div class="bg-forestd/60 border border-paper/15 rounded-full pl-2 pr-5 py-2 flex items-center justify-between gap-3 w-full sm:w-auto sm:inline-flex">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full bg-gold text-forestd border-2 border-paper/40 flex items-center justify-center font-display font-semibold text-sm shrink-0 uppercase">
-                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                            </div>
-                            <div class="leading-tight">
-                                <span class="block text-[10px] text-paper/50 uppercase tracking-wide font-medium">
-                                    Login sebagai: {{ auth()->user()->name }}
-                                </span>
-                                <div class="flex items-center gap-2">
-                                    <span class="block text-paper font-semibold text-sm">
-                                        {{ auth()->user()->nomer_induk ?? '-' }}
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
-                                        @if(auth()->user()->isDosen()) bg-purple-500/20 text-purple-200 border border-purple-400/30
-                                        @elseif(auth()->user()->isAdmin()) bg-rose-500/20 text-rose-200 border border-rose-400/30
-                                        @else bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 @endif">
-                                        {{ auth()->user()->role }}
-                                    </span>
-                                </div>
-                            </div>
+                    <!-- Profile Pill -->
+                    <div class="bg-forestd/60 border border-paper/15 rounded-full pl-2 pr-5 py-2 flex items-center gap-3 w-full sm:w-auto sm:inline-flex">
+                        <div class="w-9 h-9 rounded-full bg-gold text-forestd border-2 border-paper/40 flex items-center justify-center font-display font-semibold text-sm shrink-0">
+                            M
+                        </div>
+                        <div class="leading-tight">
+                            <span class="block text-[10px] text-paper/50 uppercase tracking-wide font-medium">Masuk sebagai</span>
+                            <span class="block text-paper font-semibold text-sm">Mahasiswa Mulawarman</span>
                         </div>
                     </div>
 
@@ -189,7 +171,7 @@
 
                         <div class="grid grid-cols-[1fr_auto] gap-4 border-b border-paper/15 bg-black/10 text-paper/60 font-semibold text-[11px] uppercase tracking-wider px-4 py-3 items-center">
                             <div id="task-table-title" class="font-bold text-gold flex items-center gap-2">
-                                <span>Tugas Kuliah</span>
+                                <span>Tugas</span>
                                 <span id="filter-badge" class="hidden bg-gold/20 text-gold px-2 py-0.5 rounded text-[10px] lowercase font-mono">filter aktif</span>
                             </div>
                             <div>Tenggat</div>
@@ -200,13 +182,24 @@
                                 @php
                                     $id = $tugas['id_tugas'] ?? $tugas['id'] ?? null;
                                     $deadline = isset($tugas['deadline_tugas']) ? \Carbon\Carbon::parse($tugas['deadline_tugas']) : null;
+                                    $isPast = $deadline ? $deadline->isPast() : false;
 
                                     // Filter data pengumpulan tugas dari FastAPI2 untuk id_tugas ini
                                     $submissions = collect($kumpulList)->where('id_tugas', $id);
 
-                                    // Cek apakah mahasiswa yang sedang login sudah mengumpulkan tugas ini
-                                    $userSubmission = $submissions->firstWhere('nama_mahasiswa', auth()->user()->name);
-                                    $isSubmitted = !is_null($userSubmission);
+                                    if ($isPast) {
+                                        $statusLabel = 'Lewat tenggat';
+                                        $statusDot = 'bg-rose-400';
+                                        $statusText = 'text-rose-300';
+                                    } elseif ($index % 3 == 0) {
+                                        $statusLabel = 'Selesai';
+                                        $statusDot = 'bg-emerald-400';
+                                        $statusText = 'text-emerald-300';
+                                    } else {
+                                        $statusLabel = 'Berjalan';
+                                        $statusDot = 'bg-gold';
+                                        $statusText = 'text-gold';
+                                    }
                                 @endphp
                                 <div class="task-row p-4 hover:bg-black/10 transition group space-y-2" data-dosen="{{ strtolower($tugas['nama_dosen'] ?? '') }}">
                                     <div class="grid grid-cols-[1fr_auto] gap-4 items-center">
@@ -216,51 +209,30 @@
                                                 {{ $tugas['nama_tugas'] }}
                                             </p>
                                             <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
-
-                                                <!-- STATUS TAMPILAN KHUSUS MAHASISWA vs DOSEN -->
-                                                @if(auth()->user()->isMahasiswa())
-                                                    @if($isSubmitted)
-                                                        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">
-                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Selesai
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 bg-amber-500/20 border border-amber-400/30 px-2.5 py-0.5 rounded-full">
-                                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Belum Selesai
-                                                        </span>
-                                                    @endif
-                                                @else
-                                                    <!-- DOSEN VIEW: Tampilan Ringkas & Profesional -->
-                                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-gold bg-gold/15 border border-gold/30 px-2.5 py-0.5 rounded-full">
-                                                        📋 Tugas #{{ $id }}
-                                                    </span>
-                                                @endif
-
-                                                <span class="text-[11px] text-paper/50 font-medium">
-                                                    • Dosen: {{ $tugas['nama_dosen'] }}
+                                                <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold {{ $statusText }}">
+                                                    <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>{{ $statusLabel }}
+                                                </span>
+                                                <span class="text-[11px] text-paper/40 font-medium">
+                                                    • {{ $tugas['nama_dosen'] }}
                                                 </span>
 
                                                 <!-- Action Buttons for Task -->
-                                                <div class="flex items-center gap-1 transition ml-auto">
-                                                    <!-- Button Kumpulkan Tugas (Khusus Mahasiswa & Admin) -->
-                                                    @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
-                                                        <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="text-xs bg-gold/20 hover:bg-gold/30 text-gold px-2.5 py-1 rounded font-semibold transition flex items-center gap-1" title="Kumpulkan Tugas">
-                                                            <span>📤</span> {{ $isSubmitted ? 'Kumpul Ulang' : 'Kumpulkan' }}
-                                                        </button>
-                                                    @endif
+                                                <div class="flex items-center gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition ml-auto">
+                                                    <!-- Button Kumpulkan Tugas (FastAPI 2) -->
+                                                    <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="text-xs bg-gold/20 hover:bg-gold/30 text-gold px-2 py-1 rounded font-semibold transition flex items-center gap-1" title="Kumpulkan Tugas Mahasiswa">
+                                                        <span>📤</span> Kumpulkan
+                                                    </button>
 
-                                                    <!-- Button Edit & Hapus Tugas (Khusus Dosen & Admin) -->
-                                                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                                        <button onclick='openEditModal({{ json_encode($tugas) }})' class="text-paper/60 hover:text-gold p-1 rounded transition" title="Ubah tugas">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                    <button onclick='openEditModal({{ json_encode($tugas) }})' class="text-paper/60 hover:text-gold p-1 rounded transition" title="Ubah tugas" aria-label="Ubah tugas">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                    </button>
+                                                    <form action="{{ route('tugas.destroy', $id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tugas ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-paper/60 hover:text-rose-300 p-1 rounded transition" title="Hapus tugas" aria-label="Hapus tugas">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                                         </button>
-                                                        <form action="{{ route('tugas.destroy', $id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tugas ini?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="text-paper/60 hover:text-rose-300 p-1 rounded transition" title="Hapus tugas">
-                                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                            </button>
-                                                        </form>
-                                                    @endif
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -275,7 +247,7 @@
 
                                     </div>
 
-                                    <!-- SECTION PENGUMPULAN MAHASISWA -->
+                                    <!-- SECTION PENGUMPULAN MAHASISWA (FASTAPI 2 DATA + NILAI) -->
                                     <div class="bg-black/20 rounded-lg p-2.5 text-xs text-paper/80 mt-2 space-y-1.5">
                                         <div class="flex items-center justify-between font-semibold">
                                             <span class="text-gold flex items-center gap-1">
@@ -294,54 +266,36 @@
                                                     @php
                                                         $subId = $sub['id_kumpul'] ?? $sub['id'] ?? null;
                                                         $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('j M Y, H:i') : '-';
-                                                        
-                                                        // Evaluasi Nilai dari nilai / nilai_mahasiswa
-                                                        $nilaiVal = null;
-                                                        if (array_key_exists('nilai', $sub) && $sub['nilai'] !== null && $sub['nilai'] !== '') {
-                                                            $nilaiVal = (int) $sub['nilai'];
-                                                        } elseif (array_key_exists('nilai_mahasiswa', $sub) && $sub['nilai_mahasiswa'] !== null && $sub['nilai_mahasiswa'] !== '' && (float)$sub['nilai_mahasiswa'] > 0) {
-                                                            $nilaiVal = (int) $sub['nilai_mahasiswa'];
-                                                        }
-                                                        
-                                                        $fileUrl = $sub['file_mahasiswa'] ?? null;
+                                                        $nilaiVal = $sub['nilai'] ?? null;
                                                     @endphp
                                                     <div class="flex flex-wrap items-center justify-between bg-forestd/40 px-2.5 py-1.5 rounded gap-2">
-                                                        <div class="flex items-center gap-2 flex-wrap">
+                                                        <div class="flex items-center gap-2">
                                                             <span class="font-bold text-paper">{{ $sub['nama_mahasiswa'] }}</span>
                                                             <span class="text-[10px] text-paper/50">({{ $tglKumpul }})</span>
 
-                                                            <!-- Badge Link File / Drive -->
-                                                            @if(!empty($fileUrl))
-                                                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Google Drive">
-                                                                    🔗 Link Drive
-                                                                </a>
-                                                            @endif
-
                                                             <!-- Badge Nilai -->
                                                             @if($nilaiVal !== null)
-                                                                <span class="px-2.5 py-0.5 bg-gold/20 text-gold border border-gold/40 rounded-full font-bold text-[11px] flex items-center gap-1 shadow-sm">
-                                                                    ⭐ Nilai: {{ $nilaiVal }} / 100
+                                                                <span class="px-2 py-0.5 bg-gold/20 text-gold border border-gold/30 rounded font-bold text-[11px] flex items-center gap-1">
+                                                                    ⭐ {{ $nilaiVal }}
                                                                 </span>
                                                             @else
-                                                                <span class="px-2 py-0.5 bg-paper/10 text-paper/50 rounded text-[10px] italic">
+                                                                <span class="px-1.5 py-0.5 bg-paper/10 text-paper/50 rounded text-[10px] italic">
                                                                     Belum dinilai
                                                                 </span>
                                                             @endif
                                                         </div>
 
                                                         <div class="flex items-center gap-1.5">
-                                                            <!-- Button Beri / Edit Nilai (Khusus Dosen & Admin) -->
-                                                            @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                                                <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }})' class="text-xs bg-gold/20 hover:bg-gold/30 text-gold border border-gold/30 px-2.5 py-1 rounded font-semibold transition flex items-center gap-1">
-                                                                    📝 {{ $nilaiVal !== null ? 'Edit Nilai' : 'Beri Nilai' }}
-                                                                </button>
+                                                            <!-- Button Beri / Edit Nilai -->
+                                                            <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }})' class="text-xs bg-gold/20 hover:bg-gold/30 text-gold border border-gold/30 px-2 py-0.5 rounded font-semibold transition flex items-center gap-1">
+                                                                📝 {{ $nilaiVal !== null ? 'Edit Nilai' : 'Beri Nilai' }}
+                                                            </button>
 
-                                                                <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data pengumpulan ini?');">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="text-rose-400 hover:text-rose-200 text-[10px] px-1" title="Hapus pengumpulan">&times; Hapus</button>
-                                                                </form>
-                                                            @endif
+                                                            <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data pengumpulan ini?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="text-rose-400 hover:text-rose-200 text-[10px] px-1" title="Hapus pengumpulan">&times; Hapus</button>
+                                                            </form>
                                                         </div>
                                                     </div>
                                                 @endforeach
@@ -352,20 +306,16 @@
                             @empty
                                 <div class="py-10 px-4 text-center">
                                     <p class="text-paper/70 text-sm font-medium">Belum ada tugas tercatat.</p>
-                                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                        <p class="text-paper/40 text-xs mt-1">Klik &ldquo;Tambah Tugas Baru&rdquo; untuk mulai membuat tugas.</p>
-                                    @endif
+                                    <p class="text-paper/40 text-xs mt-1">Klik &ldquo;Tambah Tugas&rdquo; untuk mulai mencatat.</p>
                                 </div>
                             @endforelse
                             
                             <!-- State ketika filter dosen tidak menemukan tugas -->
                             <div id="no-task-filtered" class="hidden py-10 px-4 text-center">
                                 <p class="text-paper/70 text-sm font-medium">Tidak ada tugas untuk dosen ini.</p>
-                                @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                    <button onclick="openAddModalWithDosen()" class="mt-2 text-xs text-gold underline hover:text-paper font-semibold">
-                                        + Tambah tugas untuk dosen ini
-                                    </button>
-                                @endif
+                                <button onclick="openAddModalWithDosen()" class="mt-2 text-xs text-gold underline hover:text-paper font-semibold">
+                                    + Tambah tugas untuk dosen ini
+                                </button>
                             </div>
                         </div>
 
@@ -378,7 +328,7 @@
 
                     <div class="pl-1 flex items-center justify-between">
                         <div>
-                            <span class="block text-[10px] text-gold uppercase tracking-[0.14em] font-semibold mb-0.5">Filter Dosen</span>
+                            <span class="block text-[10px] text-gold uppercase tracking-[0.14em] font-semibold mb-0.5">Kontak & Filter</span>
                             <h2 class="font-display font-semibold text-2xl text-paper tracking-tight">Dosen Pengampu</h2>
                         </div>
                         
@@ -448,13 +398,12 @@
     </div>
 
 
-    <!-- MODAL BERI / EDIT NILAI TUGAS (FASTAPI 2) - KHUSUS DOSEN & ADMIN -->
-    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+    <!-- MODAL BERI / EDIT NILAI TUGAS (FASTAPI 2) -->
     <div id="nilaiModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-paper rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-line">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-display font-semibold text-lg text-forestd flex items-center gap-2">
-                    <span>⭐</span> Beri Nilai Tugas (0 - 100)
+                    <span>⭐</span> Beri Nilai Tugas
                 </h3>
                 <button onclick="closeNilaiModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
@@ -468,7 +417,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Nilai (Minimal 0 - Maksimal 100)</label>
+                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Nilai (0 - 100)</label>
                     <input type="number" id="nilai_input" name="nilai" min="0" max="100" required placeholder="Contoh: 85" class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
                 </div>
 
@@ -479,16 +428,14 @@
             </form>
         </div>
     </div>
-    @endif
 
 
-    <!-- MODAL KUMPULKAN TUGAS (FASTAPI 2) - KHUSUS MAHASISWA & ADMIN -->
-    @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
+    <!-- MODAL KUMPULKAN TUGAS (FASTAPI 2) -->
     <div id="kumpulModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-paper rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="font-display font-semibold text-lg text-forestd flex items-center gap-2">
-                    <span>📤</span> Kumpulkan Tugas (Google Drive)
+                    <span>📤</span> Kumpulkan Tugas
                 </h3>
                 <button onclick="closeKumpulModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
@@ -504,13 +451,7 @@
 
                 <div>
                     <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Nama Mahasiswa</label>
-                    <input type="text" name="nama_mahasiswa" value="{{ auth()->user()->name }}" readonly class="w-full bg-line/30 border border-line rounded-lg px-3 py-2.5 text-sm text-ink/80 font-semibold focus:outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Link Google Drive Tugas <span class="text-rose-500">*</span></label>
-                    <input type="url" name="file_mahasiswa" required placeholder="https://drive.google.com/file/d/..." class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
-                    <p class="text-[10px] text-ink/50 mt-1">Pastikan link Google Drive sudah di-setting <strong>"Anyone with the link can view"</strong> (Publik).</p>
+                    <input type="text" name="nama_mahasiswa" required placeholder="Masukkan nama lengkap kamu" class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
@@ -520,15 +461,13 @@
             </form>
         </div>
     </div>
-    @endif
 
 
-    <!-- MODAL TAMBAH TUGAS (KHUSUS DOSEN & ADMIN) -->
-    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+    <!-- MODAL TAMBAH TUGAS -->
     <div id="addModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-paper rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="font-display font-semibold text-lg text-forestd">Tambah Tugas Kuliah Baru</h3>
+                <h3 class="font-display font-semibold text-lg text-forestd">Tambah Tugas Baru</h3>
                 <button onclick="closeAddModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
@@ -539,11 +478,11 @@
                     <input type="text" name="nama_tugas" required placeholder="Contoh: Laporan Praktikum Bab 3" class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Nama Dosen Pengampu</label>
-                    <input type="text" id="add_nama_dosen" name="nama_dosen" value="{{ auth()->user()->name }}" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
+                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Nama Dosen</label>
+                    <input type="text" id="add_nama_dosen" name="nama_dosen" required placeholder="Contoh: Dr. Supardi, S.T., M.T." class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Tenggat Waktu (Deadline)</label>
+                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Tenggat</label>
                     <input type="datetime-local" name="deadline_tugas" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
                 </div>
 
@@ -556,11 +495,11 @@
     </div>
 
 
-    <!-- MODAL EDIT TUGAS (KHUSUS DOSEN & ADMIN) -->
+    <!-- MODAL EDIT TUGAS -->
     <div id="editModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-paper rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="font-display font-semibold text-lg text-forestd">Ubah Tugas Kuliah</h3>
+                <h3 class="font-display font-semibold text-lg text-forestd">Ubah Tugas</h3>
                 <button onclick="closeEditModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
@@ -572,11 +511,11 @@
                     <input type="text" id="edit_nama_tugas" name="nama_tugas" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Nama Dosen Pengampu</label>
+                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Nama Dosen</label>
                     <input type="text" id="edit_nama_dosen" name="nama_dosen" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Tenggat Waktu (Deadline)</label>
+                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Tenggat</label>
                     <input type="datetime-local" id="edit_deadline_tugas" name="deadline_tugas" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
                 </div>
 
@@ -587,7 +526,6 @@
             </form>
         </div>
     </div>
-    @endif
 
 
     <script>
@@ -599,32 +537,24 @@
         }
 
         function openNilaiModal(subId, namaMhs, currentNilai) {
-            const form = document.getElementById('nilaiForm');
-            if (form) {
-                form.action = `/kumpul-tugas/${subId}/nilai`;
-                document.getElementById('nilai_nama_mahasiswa').value = namaMhs;
-                document.getElementById('nilai_input').value = (currentNilai !== null && currentNilai !== undefined && currentNilai !== 'null' && currentNilai !== '') ? currentNilai : '';
-                document.getElementById('nilaiModal').classList.remove('hidden');
-            }
+            document.getElementById('nilaiForm').action = `/kumpul-tugas/${subId}/nilai`;
+            document.getElementById('nilai_nama_mahasiswa').value = namaMhs;
+            document.getElementById('nilai_input').value = currentNilai !== null ? currentNilai : '';
+            document.getElementById('nilaiModal').classList.remove('hidden');
         }
 
         function closeNilaiModal() {
-            const modal = document.getElementById('nilaiModal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('nilaiModal').classList.add('hidden');
         }
 
         function openKumpulModal(idTugas, namaTugas) {
-            const modal = document.getElementById('kumpulModal');
-            if (modal) {
-                document.getElementById('kumpul_id_tugas').value = idTugas;
-                document.getElementById('kumpul_nama_tugas').value = namaTugas;
-                modal.classList.remove('hidden');
-            }
+            document.getElementById('kumpul_id_tugas').value = idTugas;
+            document.getElementById('kumpul_nama_tugas').value = namaTugas;
+            document.getElementById('kumpulModal').classList.remove('hidden');
         }
 
         function closeKumpulModal() {
-            const modal = document.getElementById('kumpulModal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('kumpulModal').classList.add('hidden');
         }
 
         function filterByDosen(dosenName) {
@@ -638,10 +568,14 @@
             const noTaskEl = document.getElementById('no-task-filtered');
 
             if (!dosenName) {
+                // Tampilkan semua tugas
                 taskRows.forEach(row => row.classList.remove('hidden'));
+                
+                // Style Card "Semua Dosen" aktif
                 allCard.className = "dosen-card cursor-pointer bg-gold text-forestd border-2 border-gold rounded-xl p-3.5 flex items-center justify-between transition shadow-md";
                 document.getElementById('badge-all-dosen').className = "text-xs font-bold bg-forestd text-paper px-2.5 py-1 rounded-full";
 
+                // Nonaktifkan style card dosen lainnya
                 dosenCards.forEach(c => {
                     if (c.id !== 'dosen-card-all') {
                         c.className = "dosen-card cursor-pointer bg-forestd/40 border border-paper/15 rounded-xl p-3.5 flex items-center justify-between hover:border-gold/60 hover:bg-forestd/70 transition";
@@ -650,9 +584,10 @@
 
                 resetBtn.classList.add('hidden');
                 badgeEl.classList.add('hidden');
-                titleEl.innerHTML = `<span>Tugas Kuliah</span>`;
+                titleEl.innerHTML = `<span>Tugas</span>`;
                 if (noTaskEl) noTaskEl.classList.add('hidden');
             } else {
+                // Filter baris tugas berdasarkan nama dosen
                 let visibleCount = 0;
                 const searchDosen = dosenName.toLowerCase();
 
@@ -666,9 +601,11 @@
                     }
                 });
 
+                // Style Card "Semua Dosen" tidak aktif
                 allCard.className = "dosen-card cursor-pointer bg-forestd/40 border border-paper/15 rounded-xl p-3.5 flex items-center justify-between hover:border-gold/60 hover:bg-forestd/70 transition text-paper";
                 document.getElementById('badge-all-dosen').className = "hidden";
 
+                // Highlight card dosen yang dipilih
                 dosenCards.forEach(c => {
                     if (c.id !== 'dosen-card-all') {
                         const targetDosen = c.getAttribute('data-dosen-name');
@@ -713,45 +650,39 @@
         }
 
         function openAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal) {
-                if (currentSelectedDosen) {
-                    document.getElementById('add_nama_dosen').value = currentSelectedDosen;
-                }
-                modal.classList.remove('hidden');
+            if (currentSelectedDosen) {
+                document.getElementById('add_nama_dosen').value = currentSelectedDosen;
+            } else {
+                document.getElementById('add_nama_dosen').value = '';
             }
+            document.getElementById('addModal').classList.remove('hidden');
         }
         
         function closeAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('addModal').classList.add('hidden');
         }
 
         function openEditModal(tugas) {
-            const modal = document.getElementById('editModal');
-            if (modal) {
-                const id = tugas.id_tugas || tugas.id;
-                document.getElementById('editForm').action = `/tugas/${id}`;
-                document.getElementById('edit_nama_tugas').value = tugas.nama_tugas || '';
-                document.getElementById('edit_nama_dosen').value = tugas.nama_dosen || '';
+            const id = tugas.id_tugas || tugas.id;
+            document.getElementById('editForm').action = `/tugas/${id}`;
+            document.getElementById('edit_nama_tugas').value = tugas.nama_tugas || '';
+            document.getElementById('edit_nama_dosen').value = tugas.nama_dosen || '';
 
-                if (tugas.deadline_tugas) {
-                    const dt = new Date(tugas.deadline_tugas);
-                    const year = dt.getFullYear();
-                    const month = String(dt.getMonth() + 1).padStart(2, '0');
-                    const day = String(dt.getDate()).padStart(2, '0');
-                    const hours = String(dt.getHours()).padStart(2, '0');
-                    const minutes = String(dt.getMinutes()).padStart(2, '0');
-                    document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-                }
-
-                modal.classList.remove('hidden');
+            if (tugas.deadline_tugas) {
+                const dt = new Date(tugas.deadline_tugas);
+                const year = dt.getFullYear();
+                const month = String(dt.getMonth() + 1).padStart(2, '0');
+                const day = String(dt.getDate()).padStart(2, '0');
+                const hours = String(dt.getHours()).padStart(2, '0');
+                const minutes = String(dt.getMinutes()).padStart(2, '0');
+                document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
             }
+
+            document.getElementById('editModal').classList.remove('hidden');
         }
 
         function closeEditModal() {
-            const modal = document.getElementById('editModal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('editModal').classList.add('hidden');
         }
 
         // Tutup modal dengan tombol Escape

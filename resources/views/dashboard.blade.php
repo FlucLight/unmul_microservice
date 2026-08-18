@@ -10,12 +10,23 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
+    *, *::before, *::after {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    *::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
     body {
       background: #f1f5f9;
       font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
 
     /* ── NAVBAR DASHBOARD ── */
@@ -258,7 +269,7 @@
   <main class="dash-main">
     <!-- Welcome Banner -->
     <div class="dash-welcome">
-      <div class="dash-welcome-greeting">Selamat datang kembali 👋</div>
+      <div class="dash-welcome-greeting">Selamat datang kembali </div>
       <div class="dash-welcome-name" id="dashWelcomeName">Pengguna</div>
       <div class="dash-welcome-sub">Ini adalah dashboard Fakultas Teknik UNMUL. Pilih jurusan untuk mulai mengeksplorasi.</div>
     </div>
@@ -266,22 +277,22 @@
     <!-- Stats -->
     <div class="dash-stats">
       <div class="stat-card">
-        <div class="stat-icon">🏛️</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Total Jurusan</div>
         <div class="stat-value">10</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">🎓</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Program Studi</div>
         <div class="stat-value">S1</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📍</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Lokasi</div>
         <div class="stat-value" style="font-size:1rem;">Samarinda</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">🌐</div>
+        <div class="stat-icon"></div>
         <div class="stat-label">Status</div>
         <div class="stat-value" style="font-size:1rem;color:#22c55e;">Aktif</div>
       </div>
