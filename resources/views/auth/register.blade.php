@@ -7,6 +7,7 @@
   <title>Register — Fakultas Teknik UNMUL</title>
   <meta name="description" content="Halaman registrasi akun Fakultas Teknik Universitas Mulawarman">
   <link rel="stylesheet" href="{{ asset('css/loginpage.css') }}">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       display: flex;
@@ -16,19 +17,7 @@
       background: #0f172a;
       padding: 20px;
     }
-    .auth-wrapper { width: 100%; max-width: 420px; }
-    .auth-back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: rgba(255,255,255,0.7);
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 24px;
-      transition: color 0.15s ease;
-    }
-    .auth-back-link:hover { color: #FF7A00; }
+    .auth-wrapper { width: 100%; max-width: 440px; }
     .auth-card {
       background: #ffffff;
       border-radius: 20px;
@@ -39,18 +28,17 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
     .auth-logo img { height: 38px; width: auto; object-fit: contain; }
     .auth-logo-text { display: flex; flex-direction: column; line-height: 1.15; }
     .auth-logo-text .l1 { font-size: 0.8rem; font-weight: 800; color: #0f172a; letter-spacing: 0.03em; text-transform: uppercase; }
     .auth-logo-text .l2 { font-size: 0.7rem; font-weight: 800; color: #334155; letter-spacing: 0.02em; text-transform: uppercase; }
-    .auth-title { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-    .auth-subtitle { font-size: 0.88rem; color: #475569; margin-bottom: 28px; }
+    .auth-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .auth-subtitle { font-size: 0.85rem; color: #475569; margin-bottom: 24px; }
     .auth-footer-text { text-align: center; margin-top: 20px; font-size: 0.84rem; color: #64748b; }
-    .auth-footer-text a { color: #FF7A00; font-weight: 700; text-decoration: none; }
+    .auth-footer-text a { color: #B4832A; font-weight: 700; text-decoration: none; }
     .auth-footer-text a:hover { text-decoration: underline; }
-    .password-hint { font-size: 0.78rem; color: #94a3b8; margin-top: 4px; }
   </style>
 </head>
 
@@ -58,76 +46,86 @@
   <div class="video-bg-container">
     <video class="bg-video" autoplay loop muted playsinline
       poster="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80">
-      <source src="fakultas-teknik-universitas-mulawarmanmp4_Al7wZnbtmn.mp4" type="video/mp4">
+      <source src="{{ asset('fakultas-teknik-universitas-mulawarmanmp4_Al7wZnbtmn.mp4') }}" type="video/mp4">
     </video>
     <div class="video-overlay"></div>
   </div>
 
-  <div class="auth-wrapper">
-    <a href="index.html" class="auth-back-link">← Kembali ke Beranda</a>
+  <div class="auth-wrapper relative z-10">
+    <a href="{{ route('home') }}" class="text-white/80 hover:text-gold text-xs font-bold mb-4 inline-flex items-center gap-1">
+      &larr; Kembali ke Beranda
+    </a>
+
     <div class="auth-card">
       <div class="auth-logo">
-        <img src="logo.png" alt="Logo FT UNMUL">
+        <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
         <div class="auth-logo-text">
           <span class="l1">FAKULTAS TEKNIK</span>
           <span class="l2">UNIVERSITAS MULAWARMAN</span>
         </div>
       </div>
-      <h1 class="auth-title">Daftar Akun</h1>
-      <p class="auth-subtitle">Buat akun baru untuk bergabung</p>
+      <h1 class="auth-title">Daftar Akun LMS</h1>
+      <p class="auth-subtitle">Pilih role Anda sebagai Dosen atau Mahasiswa</p>
 
-      <form id="registerForm">
-        <div class="form-group">
-          <label for="inputUsername" class="form-label">Username</label>
-          <input type="text" id="inputUsername" class="input-textbox" placeholder="Buat username baru" required autocomplete="username">
+      @if ($errors->any())
+        <div class="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-xs rounded">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>• {{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-        <div class="form-group">
-          <label for="inputEmail" class="form-label">Email</label>
-          <input type="email" id="inputEmail" class="input-textbox" placeholder="email@example.com" required autocomplete="email">
+      @endif
+
+      <form method="POST" action="{{ route('register') }}" class="space-y-4">
+        @csrf
+
+        <!-- Nama Lengkap -->
+        <div>
+          <label for="name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nama Lengkap</label>
+          <input type="text" id="name" name="name" value="{{ old('name') }}" required placeholder="Contoh: Dr. Budi, S.T. / Ahmad Fulan" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-600">
         </div>
-        <div class="form-group">
-          <label for="inputPassword" class="form-label">Password</label>
-          <input type="password" id="inputPassword" class="input-textbox" placeholder="Minimal 8 karakter" required autocomplete="new-password">
-          <p class="password-hint">Minimal 8 karakter</p>
+
+        <!-- Role: Dosen / Mahasiswa -->
+        <div>
+          <label for="role" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Daftar Sebagai (Role)</label>
+          <select id="role" name="role" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-600 bg-white">
+            <option value="mahasiswa" {{ old('role') == 'mahasiswa' ? 'selected' : '' }}>👨‍🎓 Mahasiswa</option>
+            <option value="dosen" {{ old('role') == 'dosen' ? 'selected' : '' }}>👨‍🏫 Dosen</option>
+          </select>
         </div>
-        <div class="form-group">
-          <label for="inputPasswordConfirm" class="form-label">Konfirmasi Password</label>
-          <input type="password" id="inputPasswordConfirm" class="input-textbox" placeholder="Ulangi password" required autocomplete="new-password">
+
+        <!-- Nomor Induk (NIP / NIM) -->
+        <div>
+          <label for="nomer_induk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM / NIP)</label>
+          <input type="text" id="nomer_induk" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="NIM untuk Mahasiswa, NIP/NIDN untuk Dosen" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-600">
         </div>
-        <button type="submit" class="btn-submit-login">Daftar Akun</button>
+
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Active</label>
+          <input type="email" id="email" name="email" value="{{ old('email') }}" required placeholder="email@unmul.ac.id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-600">
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password</label>
+          <input type="password" id="password" name="password" required placeholder="Minimal 8 karakter" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-600">
+        </div>
+
+        <!-- Konfirmasi Password -->
+        <div>
+          <label for="password_confirmation" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
+          <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="Ulangi password" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-600">
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow text-sm transition mt-2">
+          Daftar Akun Sekarang
+        </button>
       </form>
 
-      <p class="auth-footer-text">Sudah punya akun? <a href="login.html">Log in di sini</a></p>
+      <p class="auth-footer-text">Sudah punya akun? <a href="{{ route('login') }}">Log in di sini</a></p>
     </div>
   </div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script>
-    document.getElementById('registerForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const user = document.getElementById('inputUsername').value.trim();
-      const email = document.getElementById('inputEmail').value.trim();
-      const pass = document.getElementById('inputPassword').value;
-      const passConfirm = document.getElementById('inputPasswordConfirm').value;
-
-      if (!user || !email || !pass) { showToast('Semua kolom harus diisi', '⚠️'); return; }
-      if (pass.length < 8) { showToast('Password minimal 8 karakter', '⚠️'); return; }
-      if (pass !== passConfirm) { showToast('Password tidak cocok', '❌'); return; }
-
-      showToast('Registrasi berhasil! Silakan login', '✅');
-      setTimeout(() => window.location.href = 'login.html', 1500);
-    });
-
-    function showToast(msg, icon = '💡') {
-      const c = document.getElementById('toastContainer');
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.innerText = (icon + ' ' + msg).trim();
-      c.appendChild(t);
-      setTimeout(() => t.classList.add('show'), 10);
-      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
-    }
-  </script>
 </body>
 </html>
