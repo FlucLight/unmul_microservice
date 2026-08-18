@@ -3,496 +3,464 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PKL_2026 - Manajemen Tugas Kuliah</title>
+    <title>Sistem Manajemen Tugas - Universitas Mulawarman</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        paper:    '#F6F5F0',   // page background — warm, soft, not stark white
-                        surface:  '#FFFFFF',   // card background
-                        line:     '#E4E1D4',   // hairline borders
-                        ink:      '#20281F',   // primary text
-                        inkmute:  '#767E6E',   // secondary text
-                        forest:   '#1E5A40',   // brand primary (Unmul green)
-                        forestd:  '#123A29',   // brand primary, darker
-                        forestl:  '#E9F1EC',   // brand tint, for soft backgrounds
-                        gold:     '#A9762C',   // brand accent
-                        goldl:    '#F5ECD8',   // accent tint
-                        clay:     '#AE4B32',   // danger / destructive
-                        clayl:    '#FAEAE5',   // danger tint
+                        unmul: {
+                            green: '#006837',
+                            dark: '#004d28',
+                            lightgreen: '#e6f2ed',
+                            yellow: '#FFC20E',
+                            gold: '#D4A017',
+                        },
+                        neutral: {
+                            bg: '#F8F9FA',
+                            card: '#FFFFFF',
+                            border: '#E5E7EB',
+                            text: '#1F2937',
+                            muted: '#6B7280',
+                        }
                     },
                     fontFamily: {
-                        sans: ['"Inter"', 'sans-serif'],
-                        mono: ['"Space Mono"', 'monospace'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
                     },
+                    borderRadius: {
+                        DEFAULT: '6px',
+                        'lg': '8px',
+                        'xl': '12px',
+                    }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #E4E6DC; }
-        .font-display { font-family: 'Fraunces', serif; font-feature-settings: "ss02" 1; }
-        .tabular { font-family: 'Space Mono', monospace; font-variant-numeric: tabular-nums; }
-        .folder-tab { clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px); }
-        ::selection { background: #A9762C; color: #fff; }
-        :focus-visible { outline: 2px solid #A9762C; outline-offset: 2px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8F9FA; color: #1F2937; }
+        *, *::before, *::after { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="min-h-screen text-ink">
+<body class="min-h-screen bg-neutral-bg text-neutral-text antialiased">
 
-    <!-- Container Utama -->
-    <div class="w-full bg-paper">
-
-        <!-- Letterhead + Navigasi Jurusan -->
-        <div class="bg-surface border-b border-line px-6 sm:px-10 pt-5 sticky top-0 z-30">
-          <div class="max-w-[1400px] mx-auto flex flex-wrap items-end justify-between gap-3">
-
-            <!-- Identitas Fakultas -->
-            <div class="flex items-center gap-3 pb-4">
-                <a href="{{ route('home') }}" class="w-11 h-11 rounded-full bg-forest text-paper font-display font-semibold flex items-center justify-center text-[11px] shadow-sm ring-2 ring-forest/20 shrink-0 hover:opacity-90 transition">
-                    UNMUL
-                </div>
-                <div class="leading-tight">
-                    <span class="font-bold text-[15px] text-forestd block tracking-tight">Fakultas Teknik</span>
-                    <span class="font-medium text-[11px] text-inkmute uppercase tracking-[0.14em] block">Universitas Mulawarman</span>
-                </div>
-            </div>
-
-            <!-- Tabs Jurusan: segmented control ringan -->
-            <div class="flex items-end gap-1.5 overflow-x-auto text-xs font-semibold pb-px" role="tablist" aria-label="Pilih jurusan">
-                <button onclick="setTab('Jurusan 1')" id="tab-Jurusan-1" role="tab" aria-selected="true"
-                    class="folder-tab px-5 py-2.5 bg-forest text-white font-semibold transition shadow-sm">
-                    Jurusan 1
-                </button>
-                <button onclick="setTab('Jurusan 2')" id="tab-Jurusan-2" role="tab" aria-selected="false"
-                    class="folder-tab px-5 py-2.5 bg-paper text-inkmute hover:bg-line/70 hover:text-ink transition">
-                    Jurusan 2
-                </button>
-                <button onclick="setTab('Jurusan 3')" id="tab-Jurusan-3" role="tab" aria-selected="false"
-                    class="folder-tab px-5 py-2.5 bg-paper text-inkmute hover:bg-line/70 hover:text-ink transition">
-                    Jurusan 3
-                </button>
-                <button onclick="setTab('Jurusan 4')" id="tab-Jurusan-4" role="tab" aria-selected="false"
-                    class="folder-tab px-5 py-2.5 bg-paper text-inkmute hover:bg-line/70 hover:text-ink transition">
-                    Jurusan 4
-                </button>
-                <button onclick="setTab('Jurusan 5')" id="tab-Jurusan-5" role="tab" aria-selected="false"
-                    class="folder-tab px-5 py-2.5 bg-paper text-inkmute hover:bg-line/70 hover:text-ink transition">
-                    Jurusan 5
-                </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Alert Notification Messages -->
-        @if(session('success') || session('error') || $errorMessage)
-        <div class="px-6 sm:px-10 pt-4 bg-paper">
-          <div class="max-w-[1400px] mx-auto space-y-2">
-            @if(session('success'))
-                <div class="flex items-center gap-2.5 pl-4 pr-4 py-3 bg-forestl border-l-4 border-forest text-forestd rounded-r-lg text-sm font-medium">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="shrink-0"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error') || $errorMessage)
-                <div class="flex items-center gap-2.5 pl-4 pr-4 py-3 bg-clayl border-l-4 border-clay text-clay rounded-r-lg text-sm font-medium">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="shrink-0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    {{ session('error') ?? $errorMessage }}
-                </div>
-            @endif
-          </div>
-        </div>
-        @endif
-
-        <!-- Area Konten Utama -->
-        <div class="bg-paper px-6 sm:px-10 py-8 min-h-[calc(100vh-88px)] relative">
-
-            <!-- Top Controls -->
-            <div class="relative max-w-[1400px] mx-auto flex flex-wrap items-center justify-between mb-7 gap-3">
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <span id="active-tab-label" class="text-[11px] font-semibold text-forest bg-forestl px-3 py-1.5 rounded-full uppercase tracking-wide">
-                        Jurusan 1
-                    </span>
-
-                    <!-- Status sistem: hanya untuk admin, disembunyikan dari mahasiswa/dosen -->
-                    @if(auth()->user()->isAdmin())
-                        <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-inkmute bg-surface border border-line px-3 py-1.5 rounded-full" title="FastAPI 1: {{ $apiConnected ? 'Online (8000)' : 'Offline' }} • FastAPI 2: {{ $api2Connected ? 'Online (8001)' : 'Offline' }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ ($apiConnected && $api2Connected) ? 'bg-forest' : 'bg-clay' }}"></span>
-                            Status layanan
-                        </span>
-                    @endif
-                </div>
-
+    <!-- Header Navigation Bar -->
+    <header class="bg-white border-b border-neutral-border sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Identitas Kampus & Fakultas -->
                 <div class="flex items-center gap-3">
-                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                        <button onclick="openAddModal()" class="px-4 py-2.5 bg-gold text-forestd font-bold text-sm rounded-lg shadow-md hover:bg-[#c4923a] active:scale-[0.98] transition flex items-center gap-2">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                            Tambah Tugas Baru
-                        </button>
-                    @endif
+    <img src="{{ asset('logo.png') }}" alt="Logo Fakultas Teknik UNMUL" class="w-10 h-10 object-contain shrink-0">
+    
+    <div>
+        <h1 class="font-bold text-base text-unmul-dark leading-tight">Fakultas Teknik</h1>
+        <p class="text-[11px] font-medium text-neutral-muted uppercase tracking-wider">Universitas Mulawarman</p>
+    </div>
+</div>
+
+                <!-- Status API Services & Logged-in User Profile -->
+                <div class="flex items-center gap-3">
+                    @auth
+                    <div class="flex items-center gap-2.5 pl-3 border-l border-neutral-border">
+                        <div class="w-8 h-8 rounded-full bg-unmul-lightgreen text-unmul-dark font-extrabold text-xs flex items-center justify-center border border-unmul-green/30 shrink-0">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                        </div>
+                        <div class="hidden sm:block text-left leading-tight">
+                            <span class="block text-xs font-bold text-neutral-text">{{ auth()->user()->name }}</span>
+                            <span class="inline-block px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded bg-unmul-green/10 text-unmul-green">
+                                {{ auth()->user()->role ?? 'User' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Kembali ke Welcome -->
+                    <a href="{{ route('home') }}" class="inline-flex items-center justify-center px-3 py-1.5 border border-neutral-border rounded-lg text-xs font-semibold text-neutral-text bg-neutral-bg hover:bg-neutral-border transition duration-150 shadow-sm" title="Kembali ke Halaman Welcome">
+                        <svg class="w-3.5 h-3.5 mr-1 text-neutral-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        Kembali
+                    </a>
 
                     <!-- Logout Button -->
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="px-3.5 py-2 bg-black/20 hover:bg-rose-500/20 text-paper/80 hover:text-rose-300 border border-paper/20 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 border border-red-200 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition duration-150 cursor-pointer" title="Keluar dari Akun">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                             Keluar
                         </button>
                     </form>
+                    @endauth
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Sub-header Navigation Tabs Jurusan -->
+        <div class="bg-unmul-dark text-white border-t border-unmul-green/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex space-x-1 overflow-x-auto py-2 text-xs font-medium" aria-label="Jurusan">
+                    <button onclick="setTab('Jurusan 1')" id="tab-Jurusan-1" class="px-4 py-2 rounded-md bg-unmul-green text-white font-semibold transition shadow-sm">
+                        Jurusan 1
+                    </button>
+                    <button onclick="setTab('Jurusan 2')" id="tab-Jurusan-2" class="px-4 py-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white transition">
+                        Jurusan 2
+                    </button>
+                    <button onclick="setTab('Jurusan 3')" id="tab-Jurusan-3" class="px-4 py-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white transition">
+                        Jurusan 3
+                    </button>
+                    <button onclick="setTab('Jurusan 4')" id="tab-Jurusan-4" class="px-4 py-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white transition">
+                        Jurusan 4
+                    </button>
+                    <button onclick="setTab('Jurusan 5')" id="tab-Jurusan-5" class="px-4 py-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white transition">
+                        Jurusan 5
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Messages -->
+    @if(session('success') || session('error') || $errorMessage)
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        @if(session('success'))
+            <div class="p-3.5 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 rounded-r-lg text-xs font-semibold flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+        @if(session('error') || $errorMessage)
+            <div class="p-3.5 bg-red-50 border-l-4 border-red-500 text-red-800 rounded-r-lg text-xs font-semibold flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span>{{ session('error') ?? $errorMessage }}</span>
+                </div>
+            </div>
+        @endif
+    </div>
+    @endif
+
+    <!-- Area Konten Utama -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Top Title & Action Button -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <span id="active-tab-label" class="inline-block text-[11px] font-bold text-unmul-green uppercase tracking-wider bg-unmul-lightgreen px-2.5 py-1 rounded mb-1 border border-unmul-green/20">
+                    Jurusan 1
+                </span>
+                <h2 class="text-xl font-extrabold text-neutral-text">Daftar Tugas Kuliah</h2>
+                <p class="text-xs text-neutral-muted">Kelola dan kumpulkan seluruh penugasan semester ini secara tepat waktu.</p>
+            </div>
+
+            <!-- Tombol Tambah Tugas Baru - KHUSUS DOSEN & ADMIN -->
+            @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+                <button onclick="openAddModal()" class="inline-flex items-center justify-center px-4 py-2.5 bg-unmul-green hover:bg-unmul-dark text-white text-xs font-bold rounded-lg shadow-sm transition duration-150 gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Tugas Baru
+                </button>
+            @endif
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: Ledger / Daftar Tugas -->
+            <div class="lg:col-span-8 space-y-4">
+                <div class="bg-white border border-neutral-border rounded-xl shadow-sm overflow-hidden">
+                    
+                    <div class="bg-neutral-bg border-b border-neutral-border px-5 py-3.5 flex items-center justify-between">
+                        <div id="task-table-title" class="text-xs font-bold text-neutral-text flex items-center gap-2">
+                            <span>Semua Tugas</span>
+                            <span id="filter-badge" class="hidden bg-unmul-lightgreen text-unmul-green px-2 py-0.5 rounded text-[10px] font-mono">Filter Aktif</span>
+                        </div>
+                        <span class="text-[11px] font-semibold text-neutral-muted uppercase tracking-wider">Tenggat Waktu</span>
+                    </div>
+
+                    <div id="task-list-container" class="divide-y divide-neutral-border">
+                        @forelse($tugasList as $index => $tugas)
+                            @php
+                                $id = $tugas['id_tugas'] ?? $tugas['id'] ?? null;
+                                $deadline = isset($tugas['deadline_tugas']) ? \Carbon\Carbon::parse($tugas['deadline_tugas']) : null;
+                                $isPast = $deadline ? $deadline->isPast() : false;
+                                
+                                // Data pengumpulan dari FastAPI 2
+                                $submissions = collect($kumpulList)->where('id_tugas', $id);
+                                
+                                // Cek apakah mahasiswa ini sudah mengumpulkan tugas ini
+                                $mySubmission = $submissions->firstWhere('nama_mahasiswa', auth()->user()->name);
+
+                                if ($isPast) {
+                                    $statusBadge = 'bg-red-50 text-red-700 border-red-200';
+                                    $statusText = 'Lewat Tenggat';
+                                } elseif ($index % 3 == 0) {
+                                    $statusBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                    $statusText = 'Selesai';
+                                } else {
+                                    $statusBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                                    $statusText = 'Sedang Berjalan';
+                                }
+                            @endphp
+
+                            <div class="task-row p-5 hover:bg-neutral-bg/60 transition duration-150 space-y-3" data-dosen="{{ strtolower($tugas['nama_dosen'] ?? '') }}">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="inline-block px-2 py-0.5 text-[10px] font-semibold border rounded {{ $statusBadge }}">
+                                                {{ $statusText }}
+                                            </span>
+                                            <span class="text-xs text-neutral-muted font-medium">• Dosen: {{ $tugas['nama_dosen'] }}</span>
+                                        </div>
+                                        <h3 class="font-bold text-base text-neutral-text truncate" title="{{ $tugas['nama_tugas'] }}">
+                                            {{ $tugas['nama_tugas'] }}
+                                        </h3>
+                                    </div>
+
+                                    <div class="flex items-center sm:flex-col sm:items-end justify-between gap-2 shrink-0">
+                                        <span class="text-xs font-semibold text-neutral-text bg-neutral-bg px-2.5 py-1 rounded border border-neutral-border">
+                                            {{ $deadline ? $deadline->translatedFormat('j M Y, H:i') : 'Tanpa Tenggat' }}
+                                        </span>
+
+                                        <div class="flex items-center gap-1.5">
+                                            <!-- FITUR MAHASISWA / ADMIN: Kumpulkan Tugas & Status Pengumpulan -->
+                                            @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
+                                                @if($mySubmission)
+                                                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded inline-flex items-center gap-1">
+                                                        ✅ Sudah Dikumpulkan
+                                                    </span>
+                                                    <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="px-2 py-1 bg-neutral-bg hover:bg-neutral-border text-neutral-text text-[11px] font-semibold rounded border transition" title="Kirim Ulang / Perbarui Link">
+                                                        🔄 Kirim Ulang
+                                                    </button>
+                                                @else
+                                                    <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="px-3 py-1 bg-unmul-lightgreen hover:bg-unmul-green hover:text-white text-unmul-dark text-xs font-bold rounded transition duration-150 flex items-center gap-1 border border-unmul-green/30">
+                                                        <span>📤</span> Kumpulkan
+                                                    </button>
+                                                @endif
+                                            @endif
+
+                                            <!-- FITUR DOSEN / ADMIN: Edit & Hapus Tugas -->
+                                            @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+                                                <button onclick='openEditModal({{ json_encode($tugas) }})' class="p-1 text-neutral-muted hover:text-unmul-green transition" title="Ubah Tugas">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                </button>
+                                                <form action="{{ route('tugas.destroy', $id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tugas ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="p-1 text-neutral-muted hover:text-red-600 transition" title="Hapus Tugas">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SECTION PENGUMPULAN MAHASISWA (FASTAPI 2 DATA + NILAI) -->
+                                <div class="bg-neutral-bg border border-neutral-border rounded-lg p-3 text-xs space-y-2">
+                                    <div class="flex items-center justify-between font-medium">
+                                        <span class="text-neutral-text font-bold flex items-center gap-1.5">
+                                            <span>👨‍🎓</span> Total Pengumpulan: {{ count($submissions) }} Mahasiswa
+                                        </span>
+                                        @if(count($submissions) > 0)
+                                            <button onclick="toggleSubmissionList({{ $id }})" class="text-unmul-green hover:underline text-[11px] font-semibold">
+                                                Tampilkan Detail &raquo;
+                                            </button>
+                                        @endif
+                                    </div>
+
+                                    @if(count($submissions) > 0)
+                                        <div id="sub-list-{{ $id }}" class="hidden pt-2 border-t border-neutral-border space-y-2">
+                                            @foreach($submissions as $sub)
+                                                @php
+                                                    $subId = $sub['id_kumpul'] ?? $sub['id'] ?? null;
+                                                    $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('j M Y, H:i') : '-';
+                                                    
+                                                    // Evaluasi Nilai dari nilai / nilai_mahasiswa
+                                                    $nilaiVal = null;
+                                                    if (array_key_exists('nilai', $sub) && $sub['nilai'] !== null && $sub['nilai'] !== '') {
+                                                        $nilaiVal = (int) $sub['nilai'];
+                                                    } elseif (array_key_exists('nilai_mahasiswa', $sub) && $sub['nilai_mahasiswa'] !== null && $sub['nilai_mahasiswa'] !== '' && (float)$sub['nilai_mahasiswa'] > 0) {
+                                                        $nilaiVal = (int) $sub['nilai_mahasiswa'];
+                                                    }
+                                                    
+                                                    $fileUrl = $sub['file_mahasiswa'] ?? null;
+                                                @endphp
+                                                <div class="flex items-center justify-between bg-white p-2.5 rounded border border-neutral-border flex-wrap gap-2">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <span class="font-bold text-neutral-text">{{ $sub['nama_mahasiswa'] }}</span>
+                                                        <span class="text-[10px] text-neutral-muted">({{ $tglKumpul }})</span>
+
+                                                        <!-- Link Google Drive jika tersedia -->
+                                                        @if(!empty($fileUrl))
+                                                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Link Google Drive">
+                                                                🔗 Link Drive
+                                                            </a>
+                                                        @endif
+
+                                                        <!-- Badge Status Nilai -->
+                                                        @if($nilaiVal !== null)
+                                                            <span class="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded font-extrabold text-[11px]">
+                                                                ⭐ Nilai: {{ $nilaiVal }} / 100
+                                                            </span>
+                                                        @else
+                                                            <span class="px-1.5 py-0.5 bg-neutral-bg text-neutral-muted rounded text-[10px] italic border">
+                                                                Belum Dinilai
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <!-- KHUSUS DOSEN & ADMIN: Beri Nilai & Hapus Pengumpulan -->
+                                                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+                                                        <div class="flex items-center gap-1.5">
+                                                            <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }})' class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded font-bold text-[11px] transition">
+                                                                {{ $nilaiVal !== null ? 'Ubah Nilai' : 'Beri Nilai' }}
+                                                            </button>
+                                                            <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengumpulan ini?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="text-red-500 hover:text-red-700 px-1 text-xs font-semibold" title="Hapus Pengumpulan">&times;</button>
+                                                            </form>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
+                            </div>
+                        @empty
+                            <div class="py-12 text-center">
+                                <p class="text-neutral-muted text-sm font-medium">Belum ada tugas tercatat untuk jurusan ini.</p>
+                                @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+                                    <button onclick="openAddModal()" class="mt-2 text-xs font-bold text-unmul-green hover:underline">+ Buat Tugas Pertama</button>
+                                @endif
+                            </div>
+                        @endforelse
+
+                        <div id="no-task-filtered" class="hidden py-10 text-center">
+                            <p class="text-neutral-muted text-sm font-medium">Tidak ada tugas terdaftar untuk dosen ini.</p>
+                            @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+                                <button onclick="openAddModalWithDosen()" class="mt-2 text-xs font-bold text-unmul-green hover:underline">
+                                    + Buat Tugas Untuk Dosen Ini
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <div class="relative max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-                <!-- LEFT COLUMN: Identitas + Ledger Tugas -->
-                <div class="lg:col-span-7 space-y-4">
-
-                    <!-- Profile Pill Auth User -->
-                    <div class="bg-forestd/60 border border-paper/15 rounded-full pl-2 pr-5 py-2 flex items-center justify-between gap-3 w-full sm:w-auto sm:inline-flex">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full bg-gold text-forestd border-2 border-paper/40 flex items-center justify-center font-display font-semibold text-sm shrink-0 uppercase">
-                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                            </div>
-                            <div class="leading-tight">
-                                <span class="block text-[10px] text-paper/50 uppercase tracking-wide font-medium">
-                                    Login sebagai: {{ auth()->user()->name }}
-                                </span>
-                                <div class="flex items-center gap-2">
-                                    <span class="block text-paper font-semibold text-sm">
-                                        {{ auth()->user()->nomer_induk ?? '-' }}
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
-                                        @if(auth()->user()->isDosen()) bg-purple-500/20 text-purple-200 border border-purple-400/30
-                                        @elseif(auth()->user()->isAdmin()) bg-rose-500/20 text-rose-200 border border-rose-400/30
-                                        @else bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 @endif">
-                                        {{ auth()->user()->role }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ledger Tugas -->
-                    <div class="rounded-xl overflow-hidden bg-transparent">
-
-                        <div class="grid grid-cols-[1fr_auto] gap-4 border-b border-paper/15 bg-black/10 text-paper/60 font-semibold text-[11px] uppercase tracking-wider px-4 py-3 items-center">
-                            <div id="task-table-title" class="font-bold text-gold flex items-center gap-2">
-                                <span>Tugas Kuliah</span>
-                                <span id="filter-badge" class="hidden bg-gold/20 text-gold px-2 py-0.5 rounded text-[10px] lowercase font-mono">filter aktif</span>
-                            </div>
-                            <div>Tenggat</div>
-                        </div>
-
-                        <div id="task-list-container" class="space-y-3">
-                            @forelse($tugasList as $index => $tugas)
-                                @php
-                                    $id = $tugas['id_tugas'] ?? $tugas['id'] ?? null;
-                                    $deadline = isset($tugas['deadline_tugas']) ? \Carbon\Carbon::parse($tugas['deadline_tugas']) : null;
-                                    $isPast = $deadline ? $deadline->isPast() : false;
-
-                                    // Filter data pengumpulan tugas dari FastAPI2 untuk id_tugas ini
-                                    $submissions = collect($kumpulList)->where('id_tugas', $id);
-
-                                    if ($isPast) {
-                                        $statusLabel = 'Lewat tenggat';
-                                        $statusDot = 'bg-rose-400';
-                                        $statusText = 'text-rose-300';
-                                    } elseif ($index % 3 == 0) {
-                                        $statusLabel = 'Selesai';
-                                        $statusDot = 'bg-emerald-400';
-                                        $statusText = 'text-emerald-300';
-                                    } else {
-                                        $statusLabel = 'Berjalan';
-                                        $statusDot = 'bg-gold';
-                                        $statusText = 'text-gold';
-                                    }
-                                @endphp
-                                <div class="task-row bg-surface border border-line rounded-xl p-4 hover:shadow-md hover:border-forest/25 transition group space-y-2" data-dosen="{{ strtolower($tugas['nama_dosen'] ?? '') }}">
-                                    <div class="grid grid-cols-[1fr_auto] gap-4 items-center">
-
-                                        <div class="min-w-0">
-                                            <p class="font-semibold text-ink text-[15px] truncate" title="{{ $tugas['nama_tugas'] }}">
-                                                {{ $tugas['nama_tugas'] }}
-                                            </p>
-                                            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
-
-                                                <!-- STATUS TAMPILAN KHUSUS MAHASISWA vs DOSEN -->
-                                                @if(auth()->user()->isMahasiswa())
-                                                    @if($isSubmitted)
-                                                        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 rounded-full">
-                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Selesai
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300 bg-amber-500/20 border border-amber-400/30 px-2.5 py-0.5 rounded-full">
-                                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Belum Selesai
-                                                        </span>
-                                                    @endif
-                                                @else
-                                                    <!-- DOSEN VIEW: Tampilan Ringkas & Profesional -->
-                                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-gold bg-gold/15 border border-gold/30 px-2.5 py-0.5 rounded-full">
-                                                        📋 Tugas #{{ $id }}
-                                                    </span>
-                                                @endif
-
-                                                <span class="text-[11px] text-paper/50 font-medium">
-                                                    • Dosen: {{ $tugas['nama_dosen'] }}
-                                                </span>
-
-                                                <!-- Action Buttons for Task -->
-                                                <div class="flex items-center gap-1 transition ml-auto">
-                                                    <!-- Button Kumpulkan Tugas (Khusus Mahasiswa & Admin) -->
-                                                    @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
-                                                        <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="text-xs bg-gold/20 hover:bg-gold/30 text-gold px-2.5 py-1 rounded font-semibold transition flex items-center gap-1" title="Kumpulkan Tugas">
-                                                            <span>📤</span> {{ $isSubmitted ? 'Kumpul Ulang' : 'Kumpulkan' }}
-                                                        </button>
-                                                    @endif
-
-                                                    <!-- Button Edit & Hapus Tugas (Khusus Dosen & Admin) -->
-                                                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                                        <button onclick='openEditModal({{ json_encode($tugas) }})' class="text-paper/60 hover:text-gold p-1 rounded transition" title="Ubah tugas">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                        </button>
-                                                        <form action="{{ route('tugas.destroy', $id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tugas ini?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="text-paper/60 hover:text-rose-300 p-1 rounded transition" title="Hapus tugas">
-                                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="tabular text-[13px] text-inkmute text-right shrink-0">
-                                            @if($deadline)
-                                                {{ $deadline->translatedFormat('j M Y') }}
-                                            @else
-                                                &mdash;
-                                            @endif
-                                        </div>
-
-                                    </div>
-
-                                    <!-- SECTION PENGUMPULAN MAHASISWA -->
-                                    <div class="bg-black/20 rounded-lg p-2.5 text-xs text-paper/80 mt-2 space-y-1.5">
-                                        <div class="flex items-center justify-between font-semibold">
-                                            <span class="text-forestd flex items-center gap-1">
-                                                Dikumpulkan: {{ count($submissions) }} Mahasiswa
-                                            </span>
-                                            @if(count($submissions) > 0)
-                                                <button onclick="toggleSubmissionList({{ $id }})" class="text-[10px] text-inkmute underline hover:text-forest">
-                                                    Lihat Detail Pengumpulan &raquo;
-                                                </button>
-                                            @endif
-                                        </div>
-
-                                        @if(count($submissions) > 0)
-                                            <div id="sub-list-{{ $id }}" class="hidden pt-1.5 space-y-1.5 border-t border-line">
-                                                @foreach($submissions as $sub)
-                                                    @php
-                                                        $subId = $sub['id_kumpul'] ?? $sub['id'] ?? null;
-                                                        $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('j M Y, H:i') : '-';
-                                                        
-                                                        // Evaluasi Nilai dari nilai / nilai_mahasiswa
-                                                        $nilaiVal = null;
-                                                        if (array_key_exists('nilai', $sub) && $sub['nilai'] !== null && $sub['nilai'] !== '') {
-                                                            $nilaiVal = (int) $sub['nilai'];
-                                                        } elseif (array_key_exists('nilai_mahasiswa', $sub) && $sub['nilai_mahasiswa'] !== null && $sub['nilai_mahasiswa'] !== '' && (float)$sub['nilai_mahasiswa'] > 0) {
-                                                            $nilaiVal = (int) $sub['nilai_mahasiswa'];
-                                                        }
-                                                        
-                                                        $fileUrl = $sub['file_mahasiswa'] ?? null;
-                                                    @endphp
-                                                    <div class="flex flex-wrap items-center justify-between bg-forestd/40 px-2.5 py-1.5 rounded gap-2">
-                                                        <div class="flex items-center gap-2 flex-wrap">
-                                                            <span class="font-bold text-paper">{{ $sub['nama_mahasiswa'] }}</span>
-                                                            <span class="text-[10px] text-paper/50">({{ $tglKumpul }})</span>
-
-                                                            <!-- Badge Link File / Drive -->
-                                                            @if(!empty($fileUrl))
-                                                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Google Drive">
-                                                                    🔗 Link Drive
-                                                                </a>
-                                                            @endif
-
-                                                            <!-- Badge Nilai -->
-                                                            @if($nilaiVal !== null)
-                                                                <span class="px-2.5 py-0.5 bg-gold/20 text-gold border border-gold/40 rounded-full font-bold text-[11px] flex items-center gap-1 shadow-sm">
-                                                                    ⭐ Nilai: {{ $nilaiVal }} / 100
-                                                                </span>
-                                                            @else
-                                                                <span class="px-2 py-0.5 bg-paper/10 text-paper/50 rounded text-[10px] italic">
-                                                                    Belum dinilai
-                                                                </span>
-                                                            @endif
-                                                        </div>
-
-                                                        <div class="flex items-center gap-1.5">
-                                                            <!-- Button Beri / Edit Nilai (Khusus Dosen & Admin) -->
-                                                            @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                                                <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }})' class="text-xs bg-gold/20 hover:bg-gold/30 text-gold border border-gold/30 px-2.5 py-1 rounded font-semibold transition flex items-center gap-1">
-                                                                    📝 {{ $nilaiVal !== null ? 'Edit Nilai' : 'Beri Nilai' }}
-                                                                </button>
-
-                                                                <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data pengumpulan ini?');">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="text-rose-400 hover:text-rose-200 text-[10px] px-1" title="Hapus pengumpulan">&times; Hapus</button>
-                                                                </form>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="py-10 px-4 text-center">
-                                    <p class="text-paper/70 text-sm font-medium">Belum ada tugas tercatat.</p>
-                                    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                        <p class="text-paper/40 text-xs mt-1">Klik &ldquo;Tambah Tugas Baru&rdquo; untuk mulai membuat tugas.</p>
-                                    @endif
-                                </div>
-                            @endforelse
-
-                            <!-- State ketika filter dosen tidak menemukan tugas -->
-                            <div id="no-task-filtered" class="hidden py-10 px-4 text-center">
-                                <p class="text-paper/70 text-sm font-medium">Tidak ada tugas untuk dosen ini.</p>
-                                @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                    <button onclick="openAddModalWithDosen()" class="mt-2 text-xs text-gold underline hover:text-paper font-semibold">
-                                        + Tambah tugas untuk dosen ini
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- RIGHT COLUMN: Dosen Pengampu (Interactive Filter) -->
-                <div class="lg:col-span-5 space-y-4">
-
-                    <div class="pl-1 flex items-center justify-between">
+            <!-- RIGHT COLUMN: Dosen Pengampu Filter -->
+            <div class="lg:col-span-4 space-y-4">
+                <div class="bg-white border border-neutral-border rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-neutral-border">
                         <div>
-                            <span class="block text-[10px] text-gold uppercase tracking-[0.14em] font-semibold mb-0.5">Filter Dosen</span>
-                            <h2 class="font-display font-semibold text-2xl text-paper tracking-tight">Dosen Pengampu</h2>
+                            <h3 class="font-bold text-sm text-neutral-text">Dosen Pengampu</h3>
+                            <p class="text-[11px] text-neutral-muted">Filter tugas berdasarkan dosen</p>
                         </div>
-
-                        <!-- Reset Filter Button -->
-                        <button onclick="filterByDosen(null)" id="reset-filter-btn" class="hidden text-xs bg-goldl hover:bg-gold/20 text-gold font-semibold px-2.5 py-1 rounded-lg transition">
-                            Tampilkan Semua
+                        <button onclick="filterByDosen(null)" id="reset-filter-btn" class="hidden text-[11px] bg-neutral-bg hover:bg-neutral-border text-neutral-text font-semibold px-2 py-1 rounded transition">
+                            Reset Filter
                         </button>
                     </div>
 
                     @php
-                        // Kelompokkan tugas berdasarkan nama dosen
                         $groupedDosen = collect($tugasList)->groupBy('nama_dosen');
                     @endphp
 
-                    <div class="space-y-2.5">
-                        <!-- Card "Semua Dosen" -->
-                        <div onclick="filterByDosen(null)" id="dosen-card-all" class="dosen-card cursor-pointer bg-forest text-white border border-forest rounded-xl p-3.5 flex items-center justify-between transition shadow-sm">
+                    <div class="space-y-2">
+                        <div onclick="filterByDosen(null)" id="dosen-card-all" class="dosen-card cursor-pointer bg-unmul-lightgreen border border-unmul-green/40 rounded-lg p-3 flex items-center justify-between transition hover:border-unmul-green">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center font-bold text-sm">
+                                <div class="w-8 h-8 rounded-md bg-unmul-green text-white font-bold flex items-center justify-center text-xs">
                                     ALL
                                 </div>
                                 <div>
-                                    <p class="font-bold text-sm">Semua Dosen</p>
-                                    <p class="text-[11px] opacity-80 font-medium">Tampilkan seluruh tugas ({{ count($tugasList) }})</p>
+                                    <p class="font-bold text-xs text-unmul-dark">Semua Dosen</p>
+                                    <p class="text-[10px] text-neutral-muted">Tampilkan seluruh tugas ({{ count($tugasList) }})</p>
                                 </div>
                             </div>
-                            <span id="badge-all-dosen" class="text-xs font-bold bg-white/20 text-white px-2.5 py-1 rounded-full">Aktif</span>
+                            <span id="badge-all-dosen" class="text-[10px] font-bold bg-unmul-green text-white px-2 py-0.5 rounded">Aktif</span>
                         </div>
 
-                        <!-- Card Per Dosen -->
                         @forelse($groupedDosen as $dosenName => $items)
-                            <div onclick="filterByDosen('{{ addslashes($dosenName) }}')"
+                            <div onclick="filterByDosen('{{ addslashes($dosenName) }}')" 
                                  data-dosen-name="{{ strtolower($dosenName) }}"
-                                 class="dosen-card cursor-pointer bg-surface border border-line rounded-xl p-3.5 flex items-center justify-between hover:border-gold/50 hover:shadow-sm transition">
-                                <div class="flex items-center gap-3.5 min-w-0">
-                                    <div class="w-11 h-11 rounded-full bg-forestl flex-shrink-0 flex items-center justify-center text-forestd font-bold text-base">
+                                 class="dosen-card cursor-pointer bg-neutral-bg border border-neutral-border rounded-lg p-3 flex items-center justify-between hover:border-unmul-green hover:bg-white transition">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-8 h-8 rounded-md bg-neutral-border text-neutral-text font-bold flex items-center justify-center text-xs shrink-0">
                                         {{ strtoupper(substr($dosenName ?? '?', 0, 1)) }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="font-semibold text-[13.5px] text-ink truncate">
-                                            {{ $dosenName }}
-                                        </p>
-                                        <p class="text-[12px] text-inkmute truncate mt-0.5">
-                                            {{ count($items) }} Tugas Ditugaskan
-                                        </p>
+                                        <p class="font-semibold text-xs text-neutral-text truncate">{{ $dosenName }}</p>
+                                        <p class="text-[10px] text-neutral-muted truncate">{{ count($items) }} Tugas Ditugaskan</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <span class="text-xs text-gold font-mono font-bold bg-goldl px-2 py-1 rounded-md">
+                                    <span class="text-xs text-unmul-dark font-mono font-bold bg-unmul-lightgreen px-2 py-0.5 rounded border border-unmul-green/20">
                                         {{ count($items) }}
                                     </span>
                                 </div>
                             </div>
                         @empty
-                            <div class="bg-surface border border-dashed border-line rounded-xl p-4 text-center">
-                                <p class="text-inkmute text-xs">Belum ada dosen tercatat.</p>
+                            <div class="bg-neutral-bg border border-dashed border-neutral-border rounded-lg p-4 text-center">
+                                <p class="text-neutral-muted text-xs">Belum ada dosen tercatat.</p>
                             </div>
                         @endforelse
                     </div>
 
                 </div>
-
             </div>
 
         </div>
 
-    </div>
+    </main>
 
 
     <!-- MODAL BERI / EDIT NILAI TUGAS (FASTAPI 2) - KHUSUS DOSEN & ADMIN -->
     @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-    <div id="nilaiModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-paper rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-line">
+    <div id="nilaiModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl border border-neutral-border">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-display font-semibold text-lg text-forestd flex items-center gap-2">
+                <h3 class="font-bold text-base text-neutral-text flex items-center gap-2">
                     <span>⭐</span> Beri Nilai Tugas (0 - 100)
                 </h3>
-                <button onclick="closeNilaiModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
+                <button onclick="closeNilaiModal()" class="text-neutral-muted hover:text-neutral-text text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
             <form id="nilaiForm" method="POST" class="space-y-4">
                 @csrf
                 @method('PATCH')
                 <div>
-                    <label class="block text-[11px] font-semibold text-inkmute uppercase tracking-wide mb-1">Nama Mahasiswa</label>
-                    <input type="text" id="nilai_nama_mahasiswa" readonly class="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink/70 font-semibold focus:outline-none">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Nama Mahasiswa</label>
+                    <input type="text" id="nilai_nama_mahasiswa" readonly class="w-full bg-neutral-bg border border-neutral-border rounded-lg px-3 py-2 text-xs font-semibold text-neutral-text focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Nilai (Minimal 0 - Maksimal 100)</label>
-                    <input type="number" id="nilai_input" name="nilai" min="0" max="100" required placeholder="Contoh: 85" class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Nilai (0 - 100)</label>
+                    <input type="number" id="nilai_input" name="nilai" min="0" max="100" required placeholder="Contoh: 85" class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeNilaiModal()" class="px-4 py-2.5 bg-line/60 text-ink/70 rounded-lg text-xs font-bold hover:bg-line transition">Batal</button>
-                    <button type="submit" class="px-4 py-2.5 bg-gold text-white rounded-lg text-xs font-bold shadow-sm hover:opacity-90 transition">Simpan Nilai</button>
+                    <button type="button" onclick="closeNilaiModal()" class="px-3 py-2 bg-neutral-bg text-neutral-text rounded-lg text-xs font-semibold hover:bg-neutral-border transition">Batal</button>
+                    <button type="submit" class="px-3 py-2 bg-unmul-green text-white rounded-lg text-xs font-bold hover:bg-unmul-dark transition shadow-sm">Simpan Nilai</button>
                 </div>
             </form>
         </div>
     </div>
+    @endif
 
 
     <!-- MODAL KUMPULKAN TUGAS (FASTAPI 2) - KHUSUS MAHASISWA & ADMIN -->
     @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
-    <div id="kumpulModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-paper rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line">
+    <div id="kumpulModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-neutral-border">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="font-display font-semibold text-lg text-forestd flex items-center gap-2">
+                <h3 class="font-bold text-base text-neutral-text flex items-center gap-2">
                     <span>📤</span> Kumpulkan Tugas (Google Drive)
                 </h3>
-                <button onclick="closeKumpulModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
+                <button onclick="closeKumpulModal()" class="text-neutral-muted hover:text-neutral-text text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
             <form action="{{ route('kumpul.store') }}" method="POST" class="space-y-4">
@@ -500,96 +468,101 @@
                 <input type="hidden" id="kumpul_id_tugas" name="id_tugas">
 
                 <div>
-                    <label class="block text-[11px] font-semibold text-inkmute uppercase tracking-wide mb-1">Judul Tugas</label>
-                    <input type="text" id="kumpul_nama_tugas" readonly class="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm text-ink/70 font-semibold focus:outline-none">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Judul Tugas</label>
+                    <input type="text" id="kumpul_nama_tugas" readonly class="w-full bg-neutral-bg border border-neutral-border rounded-lg px-3 py-2 text-xs font-semibold text-neutral-text focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Nama Mahasiswa</label>
-                    <input type="text" name="nama_mahasiswa" value="{{ auth()->user()->name }}" readonly class="w-full bg-line/30 border border-line rounded-lg px-3 py-2.5 text-sm text-ink/80 font-semibold focus:outline-none">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Nama Mahasiswa</label>
+                    <input type="text" name="nama_mahasiswa" value="{{ auth()->user()->name }}" readonly class="w-full bg-neutral-bg border border-neutral-border rounded-lg px-3 py-2 text-xs font-semibold text-neutral-text focus:outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1">Link Google Drive Tugas <span class="text-rose-500">*</span></label>
-                    <input type="url" name="file_mahasiswa" required placeholder="https://drive.google.com/file/d/..." class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
-                    <p class="text-[10px] text-ink/50 mt-1">Pastikan link Google Drive sudah di-setting <strong>"Anyone with the link can view"</strong> (Publik).</p>
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Link Google Drive Tugas <span class="text-red-500">*</span></label>
+                    <input type="url" name="file_mahasiswa" required placeholder="https://drive.google.com/file/d/..." class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
+                    <p class="text-[10px] text-neutral-muted mt-1">Pastikan link Google Drive sudah di-setting <strong>"Anyone with the link can view"</strong> (Publik).</p>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeKumpulModal()" class="px-4 py-2.5 bg-line/60 text-ink/70 rounded-lg text-xs font-bold hover:bg-line transition">Batal</button>
-                    <button type="submit" class="px-4 py-2.5 bg-forest text-white rounded-lg text-xs font-bold shadow-sm hover:bg-forestd transition">Kumpulkan Tugas</button>
+                    <button type="button" onclick="closeKumpulModal()" class="px-3 py-2 bg-neutral-bg text-neutral-text rounded-lg text-xs font-semibold hover:bg-neutral-border transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-unmul-green text-white rounded-lg text-xs font-bold hover:bg-unmul-dark transition shadow-sm">Kumpulkan Tugas</button>
                 </div>
             </form>
         </div>
     </div>
+    @endif
 
 
     <!-- MODAL TAMBAH TUGAS (KHUSUS DOSEN & ADMIN) -->
     @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-    <div id="addModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-paper rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line">
+    <div id="addModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-neutral-border">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="font-display font-semibold text-lg text-forestd">Tambah Tugas Kuliah Baru</h3>
-                <button onclick="closeAddModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
+                <h3 class="font-bold text-base text-neutral-text">Tambah Tugas Kuliah Baru</h3>
+                <button onclick="closeAddModal()" class="text-neutral-muted hover:text-neutral-text text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
             <form action="{{ route('tugas.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-[11px] font-semibold text-inkmute uppercase tracking-wide mb-1.5">Nama Tugas</label>
-                    <input type="text" name="nama_tugas" required placeholder="Contoh: Laporan Praktikum Bab 3" class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Nama Tugas</label>
+                    <input type="text" name="nama_tugas" required placeholder="Contoh: Laporan Praktikum Bab 3" class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Nama Dosen Pengampu</label>
-                    <input type="text" id="add_nama_dosen" name="nama_dosen" value="{{ auth()->user()->name }}" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Dosen Pengampu</label>
+                    <input type="text" id="add_nama_dosen" name="nama_dosen" value="{{ auth()->user()->name }}" required class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Tenggat Waktu (Deadline)</label>
-                    <input type="datetime-local" name="deadline_tugas" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Batas Waktu (Deadline)</label>
+                    <input type="datetime-local" name="deadline_tugas" required class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeAddModal()" class="px-4 py-2.5 bg-line/60 text-ink/70 rounded-lg text-xs font-bold hover:bg-line transition">Batal</button>
-                    <button type="submit" class="px-4 py-2.5 bg-forest text-white rounded-lg text-xs font-bold shadow-sm hover:bg-forestd transition">Simpan Tugas</button>
+                    <button type="button" onclick="closeAddModal()" class="px-3 py-2 bg-neutral-bg text-neutral-text rounded-lg text-xs font-semibold hover:bg-neutral-border transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-unmul-green text-white rounded-lg text-xs font-bold hover:bg-unmul-dark transition shadow-sm">Simpan Tugas</button>
                 </div>
             </form>
         </div>
     </div>
+    @endif
 
 
     <!-- MODAL EDIT TUGAS (KHUSUS DOSEN & ADMIN) -->
-    <div id="editModal" class="fixed inset-0 z-50 hidden bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-paper rounded-2xl max-w-md w-full p-6 shadow-2xl border border-line">
+    @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+    <div id="editModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-neutral-border">
             <div class="flex items-center justify-between mb-5">
-                <h3 class="font-display font-semibold text-lg text-forestd">Ubah Tugas Kuliah</h3>
-                <button onclick="closeEditModal()" class="text-ink/30 hover:text-ink/70 text-xl leading-none transition" aria-label="Tutup">&times;</button>
+                <h3 class="font-bold text-base text-neutral-text">Ubah Tugas Kuliah</h3>
+                <button onclick="closeEditModal()" class="text-neutral-muted hover:text-neutral-text text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
             <form id="editForm" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')
                 <div>
-                    <label class="block text-[11px] font-semibold text-inkmute uppercase tracking-wide mb-1.5">Nama Tugas</label>
-                    <input type="text" id="edit_nama_tugas" name="nama_tugas" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Nama Tugas</label>
+                    <input type="text" id="edit_nama_tugas" name="nama_tugas" required class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Nama Dosen Pengampu</label>
-                    <input type="text" id="edit_nama_dosen" name="nama_dosen" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Dosen Pengampu</label>
+                    <input type="text" id="edit_nama_dosen" name="nama_dosen" required class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-ink/60 uppercase tracking-wide mb-1.5">Tenggat Waktu (Deadline)</label>
-                    <input type="datetime-local" id="edit_deadline_tugas" name="deadline_tugas" required class="w-full bg-white border border-line rounded-lg px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition">
+                    <label class="block text-[11px] font-semibold text-neutral-muted uppercase mb-1">Batas Waktu (Tenggat)</label>
+                    <input type="datetime-local" id="edit_deadline_tugas" name="deadline_tugas" required class="w-full bg-white border border-neutral-border rounded-lg px-3 py-2 text-xs text-neutral-text focus:outline-none focus:border-unmul-green transition">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeEditModal()" class="px-4 py-2.5 bg-line/60 text-ink/70 rounded-lg text-xs font-bold hover:bg-line transition">Batal</button>
-                    <button type="submit" class="px-4 py-2.5 bg-gold text-white rounded-lg text-xs font-bold shadow-sm hover:opacity-90 transition">Simpan Perubahan</button>
+                    <button type="button" onclick="closeEditModal()" class="px-3 py-2 bg-neutral-bg text-neutral-text rounded-lg text-xs font-semibold hover:bg-neutral-border transition">Batal</button>
+                    <button type="submit" class="px-3 py-2 bg-unmul-green text-white rounded-lg text-xs font-bold hover:bg-unmul-dark transition shadow-sm">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
     </div>
+    @endif
 
 
+    <!-- Javascript Interaktivitas -->
     <script>
         let currentSelectedDosen = null;
 
@@ -599,24 +572,32 @@
         }
 
         function openNilaiModal(subId, namaMhs, currentNilai) {
-            document.getElementById('nilaiForm').action = `/kumpul-tugas/${subId}/nilai`;
-            document.getElementById('nilai_nama_mahasiswa').value = namaMhs;
-            document.getElementById('nilai_input').value = currentNilai !== null ? currentNilai : '';
-            document.getElementById('nilaiModal').classList.remove('hidden');
+            const form = document.getElementById('nilaiForm');
+            if (form) {
+                form.action = `/kumpul-tugas/${subId}/nilai`;
+                document.getElementById('nilai_nama_mahasiswa').value = namaMhs;
+                document.getElementById('nilai_input').value = currentNilai !== null ? currentNilai : '';
+                document.getElementById('nilaiModal').classList.remove('hidden');
+            }
         }
 
         function closeNilaiModal() {
-            document.getElementById('nilaiModal').classList.add('hidden');
+            const modal = document.getElementById('nilaiModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function openKumpulModal(idTugas, namaTugas) {
-            document.getElementById('kumpul_id_tugas').value = idTugas;
-            document.getElementById('kumpul_nama_tugas').value = namaTugas;
-            document.getElementById('kumpulModal').classList.remove('hidden');
+            const modal = document.getElementById('kumpulModal');
+            if (modal) {
+                document.getElementById('kumpul_id_tugas').value = idTugas;
+                document.getElementById('kumpul_nama_tugas').value = namaTugas;
+                modal.classList.remove('hidden');
+            }
         }
 
         function closeKumpulModal() {
-            document.getElementById('kumpulModal').classList.add('hidden');
+            const modal = document.getElementById('kumpulModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function filterByDosen(dosenName) {
@@ -630,24 +611,23 @@
             const noTaskEl = document.getElementById('no-task-filtered');
 
             if (!dosenName) {
-                // Tampilkan semua tugas
                 taskRows.forEach(row => row.classList.remove('hidden'));
-                allCard.className = "dosen-card cursor-pointer bg-gold text-forestd border-2 border-gold rounded-xl p-3.5 flex items-center justify-between transition shadow-md";
-                document.getElementById('badge-all-dosen').className = "text-xs font-bold bg-forestd text-paper px-2.5 py-1 rounded-full";
+                
+                allCard.className = "dosen-card cursor-pointer bg-unmul-lightgreen border border-unmul-green/40 rounded-lg p-3 flex items-center justify-between transition hover:border-unmul-green";
+                const allBadge = document.getElementById('badge-all-dosen');
+                if (allBadge) allBadge.className = "text-[10px] font-bold bg-unmul-green text-white px-2 py-0.5 rounded";
 
-                // Nonaktifkan style card dosen lainnya
                 dosenCards.forEach(c => {
                     if (c.id !== 'dosen-card-all') {
-                        c.className = "dosen-card cursor-pointer bg-surface border border-line rounded-xl p-3.5 flex items-center justify-between hover:border-gold/50 hover:shadow-sm transition";
+                        c.className = "dosen-card cursor-pointer bg-neutral-bg border border-neutral-border rounded-lg p-3 flex items-center justify-between hover:border-unmul-green hover:bg-white transition";
                     }
                 });
 
-                resetBtn.classList.add('hidden');
-                badgeEl.classList.add('hidden');
-                titleEl.innerHTML = `<span>Tugas</span>`;
+                if (resetBtn) resetBtn.classList.add('hidden');
+                if (badgeEl) badgeEl.classList.add('hidden');
+                if (titleEl) titleEl.innerHTML = `<span>Semua Tugas</span>`;
                 if (noTaskEl) noTaskEl.classList.add('hidden');
             } else {
-                // Filter baris tugas berdasarkan nama dosen
                 let visibleCount = 0;
                 const searchDosen = dosenName.toLowerCase();
 
@@ -661,24 +641,24 @@
                     }
                 });
 
-                allCard.className = "dosen-card cursor-pointer bg-forestd/40 border border-paper/15 rounded-xl p-3.5 flex items-center justify-between hover:border-gold/60 hover:bg-forestd/70 transition text-paper";
-                document.getElementById('badge-all-dosen').className = "hidden";
+                allCard.className = "dosen-card cursor-pointer bg-neutral-bg border border-neutral-border rounded-lg p-3 flex items-center justify-between hover:border-unmul-green hover:bg-white transition";
+                const allBadge = document.getElementById('badge-all-dosen');
+                if (allBadge) allBadge.className = "hidden";
 
-                // Highlight card dosen yang dipilih
                 dosenCards.forEach(c => {
                     if (c.id !== 'dosen-card-all') {
                         const targetDosen = c.getAttribute('data-dosen-name');
                         if (targetDosen === searchDosen) {
-                            c.className = "dosen-card cursor-pointer bg-goldl border-2 border-gold rounded-xl p-3.5 flex items-center justify-between transition shadow-sm text-ink font-semibold";
+                            c.className = "dosen-card cursor-pointer bg-unmul-lightgreen border-2 border-unmul-green rounded-lg p-3 flex items-center justify-between transition shadow-sm font-semibold";
                         } else {
-                            c.className = "dosen-card cursor-pointer bg-surface border border-line rounded-xl p-3.5 flex items-center justify-between hover:border-gold/50 hover:shadow-sm transition opacity-60";
+                            c.className = "dosen-card cursor-pointer bg-neutral-bg border border-neutral-border rounded-lg p-3 flex items-center justify-between hover:border-unmul-green hover:bg-white transition opacity-60";
                         }
                     }
                 });
 
-                resetBtn.classList.remove('hidden');
-                badgeEl.classList.remove('hidden');
-                titleEl.innerHTML = `<span>Tugas dari: <strong class="text-ink">${dosenName}</strong> (${visibleCount})</span>`;
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                if (badgeEl) badgeEl.classList.remove('hidden');
+                if (titleEl) titleEl.innerHTML = `<span>Tugas Dosen: <strong class="text-unmul-green">${dosenName}</strong> (${visibleCount})</span>`;
 
                 if (visibleCount === 0 && noTaskEl) {
                     noTaskEl.classList.remove('hidden');
@@ -691,60 +671,66 @@
         function openAddModalWithDosen() {
             openAddModal();
             if (currentSelectedDosen) {
-                document.getElementById('add_nama_dosen').value = currentSelectedDosen;
+                const el = document.getElementById('add_nama_dosen');
+                if (el) el.value = currentSelectedDosen;
             }
         }
 
         function setTab(name) {
             document.querySelectorAll('[id^="tab-Jurusan-"]').forEach(el => {
-                el.className = "folder-tab px-5 py-2.5 bg-paper text-inkmute hover:bg-line/70 hover:text-ink transition";
-                el.setAttribute('aria-selected', 'false');
+                el.className = "px-4 py-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white transition";
             });
             const active = document.getElementById(`tab-${name.replace(' ', '-')}`);
             if (active) {
-                active.className = "folder-tab px-5 py-2.5 bg-forest text-white font-semibold transition shadow-sm";
-                active.setAttribute('aria-selected', 'true');
+                active.className = "px-4 py-2 rounded-md bg-unmul-green text-white font-semibold transition shadow-sm";
             }
-            document.getElementById('active-tab-label').innerText = name;
+            const label = document.getElementById('active-tab-label');
+            if (label) label.innerText = name;
         }
 
         function openAddModal() {
-            if (currentSelectedDosen) {
-                document.getElementById('add_nama_dosen').value = currentSelectedDosen;
-            } else {
-                document.getElementById('add_nama_dosen').value = '';
+            const modal = document.getElementById('addModal');
+            if (modal) {
+                const el = document.getElementById('add_nama_dosen');
+                if (el && currentSelectedDosen) {
+                    el.value = currentSelectedDosen;
+                }
+                modal.classList.remove('hidden');
             }
-            document.getElementById('addModal').classList.remove('hidden');
         }
 
         function closeAddModal() {
-            document.getElementById('addModal').classList.add('hidden');
+            const modal = document.getElementById('addModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function openEditModal(tugas) {
-            const id = tugas.id_tugas || tugas.id;
-            document.getElementById('editForm').action = `/tugas/${id}`;
-            document.getElementById('edit_nama_tugas').value = tugas.nama_tugas || '';
-            document.getElementById('edit_nama_dosen').value = tugas.nama_dosen || '';
+            const modal = document.getElementById('editModal');
+            if (modal) {
+                const id = tugas.id_tugas || tugas.id;
+                document.getElementById('editForm').action = `/tugas/${id}`;
+                document.getElementById('edit_nama_tugas').value = tugas.nama_tugas || '';
+                document.getElementById('edit_nama_dosen').value = tugas.nama_dosen || '';
 
-            if (tugas.deadline_tugas) {
-                const dt = new Date(tugas.deadline_tugas);
-                const year = dt.getFullYear();
-                const month = String(dt.getMonth() + 1).padStart(2, '0');
-                const day = String(dt.getDate()).padStart(2, '0');
-                const hours = String(dt.getHours()).padStart(2, '0');
-                const minutes = String(dt.getMinutes()).padStart(2, '0');
-                document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                if (tugas.deadline_tugas) {
+                    const dt = new Date(tugas.deadline_tugas);
+                    const year = dt.getFullYear();
+                    const month = String(dt.getMonth() + 1).padStart(2, '0');
+                    const day = String(dt.getDate()).padStart(2, '0');
+                    const hours = String(dt.getHours()).padStart(2, '0');
+                    const minutes = String(dt.getMinutes()).padStart(2, '0');
+                    document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                }
+
+                modal.classList.remove('hidden');
             }
-
-            document.getElementById('editModal').classList.remove('hidden');
         }
 
         function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
+            const modal = document.getElementById('editModal');
+            if (modal) modal.classList.add('hidden');
         }
 
-        // Tutup modal dengan tombol Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeAddModal();
