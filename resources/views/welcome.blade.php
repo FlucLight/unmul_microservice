@@ -40,14 +40,20 @@
     </a>
 
     <div class="header-actions">
-      <!-- Tombol ke Halaman Tugas -->
+      <!-- Tombol ke Halaman Tugas & Modul -->
       @auth
         <a href="{{ route('tugas.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-          <span> Tugas Kuliah</span>
+          <span>📋 Tugas Kuliah</span>
+        </a>
+        <a href="{{ route('modul.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
+          <span>📖 Modul Kuliah</span>
         </a>
       @else
         <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
-          <span> Tugas Kuliah</span>
+          <span>📋 Tugas Kuliah</span>
+        </button>
+        <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
+          <span>📖 Modul Kuliah</span>
         </button>
       @endauth
 

@@ -52,15 +52,26 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
                 
-                <!-- Identitas Kampus & Fakultas -->
-                <div class="flex items-center gap-3">
-    <img src="{{ asset('logo.png') }}" alt="Logo Fakultas Teknik UNMUL" class="w-10 h-10 object-contain shrink-0">
-    
-    <div>
-        <h1 class="font-bold text-base text-unmul-dark leading-tight">Fakultas Teknik</h1>
-        <p class="text-[11px] font-medium text-neutral-muted uppercase tracking-wider">Universitas Mulawarman</p>
-    </div>
-</div>
+                <!-- Identitas Kampus & Fakultas + Page Switcher -->
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <img src="{{ asset('logo.png') }}" alt="Logo Fakultas Teknik UNMUL" class="w-10 h-10 object-contain shrink-0">
+                        <div>
+                            <h1 class="font-bold text-base text-unmul-dark leading-tight">Fakultas Teknik</h1>
+                            <p class="text-[11px] font-medium text-neutral-muted uppercase tracking-wider">Universitas Mulawarman</p>
+                        </div>
+                    </div>
+
+                    <!-- Page Navigation Switcher -->
+                    <div class="hidden md:flex items-center gap-1 bg-neutral-bg p-1 rounded-lg border border-neutral-border text-xs font-semibold">
+                        <a href="{{ route('tugas.index') }}" class="px-3 py-1.5 rounded-md bg-unmul-green text-white shadow-sm flex items-center gap-1 font-bold">
+                            📋 Tugas Kuliah
+                        </a>
+                        <a href="{{ route('modul.index') }}" class="px-3 py-1.5 rounded-md text-neutral-text hover:bg-neutral-border transition flex items-center gap-1">
+                            📖 Modul Kuliah
+                        </a>
+                    </div>
+                </div>
 
                 <!-- Status API Services & Logged-in User Profile -->
                 <div class="flex items-center gap-3">
