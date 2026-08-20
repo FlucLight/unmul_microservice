@@ -13,94 +13,177 @@
 
 Proyek ini merupakan **Proyek Pertama** hasil kolaborasi tim Praktik Kerja Lapangan (PKL) yang beranggotakan 3 siswa (SMK Negeri 1 Tenggarong) dalam periode **Juli – Agustus 2026**.
 
-Sistem ini dirancang sebagai platform **Learning Management System (LMS) / Pengelola Tugas Kuliah** untuk Fakultas Teknik Universitas Mulawarman (UNMUL) dengan menerapkan **Arsitektur Microservices** yang memisahkan antara frontend web dan layanan backend pengolah data.
+Sistem ini dirancang sebagai platform **Learning Management System (LMS) / Pengelola Tugas & Modul Kuliah** untuk Fakultas Teknik Universitas Mulawarman (UNMUL) dengan menerapkan **Arsitektur Microservices** yang memisahkan antara frontend web dan layanan backend pengolah data.
 
 ---
 
 ## Arsitektur Sistem (Microservices)
 
-Sistem ini terdiri dari 3 komponen utama yang saling terhubung:
+Sistem ini terdiri dari 4 komponen utama yang saling terhubung via HTTP REST API Client:
 
 ```mermaid
 graph TD
-    User([🌐 Web Browser / User]) <--> Laravel[Laravel 11 Web Frontend / Port 8080]
+    User([Web Browser / User]) <--> Laravel[Laravel 11 Web Frontend / Port 8080]
     Laravel <-->|HTTP REST Client| API1[FastAPI Service 1 / Port 8000<br/>Master Tugas Dosen]
-    Laravel <-->|HTTP REST Client| API2[FastAPI Service 2 / Port 8001<br/>Pengumpulan Tugas Mahasiswa]
+    Laravel <-->|HTTP REST Client| API2[FastAPI Service 2 / Port 8001<br/>Pengumpulan & Penilaian Tugas]
+    Laravel <-->|HTTP REST Client| API3[FastAPI Service 3 / Port 8002<br/>Modul Kuliah]
+    Laravel <--> DBLaravel[(MySQL: unmul_microservice)]
     API1 <--> DB1[(MySQL: db_crudt)]
     API2 <--> DB2[(MySQL: db_tugas)]
+    API3 <--> DB3[(MySQL: db_modul)]
 ```
 
-### Komponen Microservices:
+### Komponen Utama:
 1. **Laravel Web Frontend (Port 8080)**: 
-   Aplikasi Web utama berbasis **Laravel 11 + Jetstream (Livewire/Blade) + Tailwind CSS** yang menyajikan antarmuka interaktif bagi mahasiswa dan dosen.
+   Aplikasi Web utama berbasis **Laravel 11 + Jetstream (Blade) + Tailwind CSS** yang menyajikan antarmuka interaktif, autentikasi pengguna, otorisasi berbasis peran (RBAC), serta pemanggilan REST API ke microservices backend. Database: `unmul_microservice`.
 2. **FastAPI Service 1 — Master Tugas (Port 8000)**: 
-   Microservice Python (FastAPI + SQLModel) yang menangani CRUD Master Data Tugas Kuliah & Dosen Pengampu (Database: `db_crudt`).
-3. **FastAPI Service 2 — Pengumpulan Tugas (Port 8001)**: 
-   Microservice Python (FastAPI + SQLModel) yang menangani pengumpulan tugas oleh mahasiswa (Database: `db_tugas`).
+   Microservice Python (`API_Tugas-Mahasiswa`) berbasis FastAPI & SQLModel untuk mengelola data master tugas kuliah (CRUD Tugas) dari dosen. Database: `db_crudt`.
+3. **FastAPI Service 2 — Pengumpulan & Penilaian (Port 8001)**: 
+   Microservice Python (`API_Penilaian-Tugas-Mahasiswa`) berbasis FastAPI & SQLModel untuk menangani pengumpulan tugas oleh mahasiswa serta pemberian nilai oleh dosen. Database: `db_tugas`.
+4. **FastAPI Service 3 — Modul Kuliah (Port 8002)**: 
+   Microservice Python (`API_Modul-Kuliah`) berbasis FastAPI & SQLModel untuk mengelola modul materi perkuliahan (CRUD Modul) yang diunggah oleh dosen. Database: `db_modul`.
 
 ---
 
-## Fitur Utama
+## Otorisasi Berbasis Peran (Role-Based Access Control / RBAC)
 
-- **UI Modern & Responsive**: Berbasis Tailwind CSS dengan gaya *Earth & Heritage* (Hijau Hutan & Emas) serta tema *Figma Desktop*.
-- **Navigasi Jurusan (Multi-Tab)**: Tab navigasi untuk setiap jurusan Fakultas Teknik UNMUL.
-- **Manajemen Tugas Kuliah**: Fitur Tambah, Edit, Hapus, dan Ubah Tugas secara visual.
-- **Filter Tugas per Dosen**: Klik Card Dosen untuk memfilter daftar tugas dari dosen tersebut secara *real-time*.
-- **Sistem Pengumpulan Tugas Mahasiswa**: Fitur mahasiswa untuk mengumpulkan tugas dan melihat siapa saja yang sudah mengumpulkan.
-- **Dual API Connection Status Checker**: Indikator status koneksi *real-time* ke FastAPI Service 1 dan Service 2 di bagian header.
+Sistem mengimplementasikan middleware `CheckRole` pada Laravel untuk mengatur hak akses berdasarkan peran pengguna (`role`):
+
+- **Admin**: Akses penuh ke seluruh fitur sistem (Manajemen Tugas, Pengumpulan Tugas, Penilaian, dan Modul Kuliah).
+- **Dosen**: Dapat membuat, memperbarui, dan menghapus Tugas Kuliah; memberikan nilai pada tugas mahasiswa; serta mengunggah, mengedit, dan menghapus Modul Kuliah.
+- **Mahasiswa**: Dapat melihat daftar Tugas Kuliah dan Modul Kuliah, serta mengumpulkan tugas melalui tautan Google Drive / file.
+
+---
+
+## Fitur Utama Sistem
+
+- **UI Modern & Responsive**: Berbasis Tailwind CSS dengan gaya *Earth & Heritage* (Hijau Hutan & Emas) serta antarmuka yang adaptif.
+- **Manajemen Tugas Kuliah**: Fitur Tambah, Edit, Hapus, dan Lihat Tugas Kuliah terintegrasi dengan FastAPI 1 (Port 8000).
+- **Sistem Pengumpulan & Penilaian**: Mahasiswa dapat mengumpulkan tugas (tautan file), dan Dosen/Admin dapat memberikan nilai (0–100) terintegrasi dengan FastAPI 2 (Port 8001).
+- **Manajemen Modul Kuliah**: Dosen dapat mengunggah modul materi kuliah dan mahasiswa dapat mengunduh / mengaksesnya terintegrasi dengan FastAPI 3 (Port 8002).
+- **Triple API Connection Status Checker**: Indikator status koneksi real-time untuk mengecek ketersediaan FastAPI Service 1, Service 2, dan Service 3.
+
+---
+
+## Detail Endpoint Microservices
+
+### FastAPI Service 1 — Master Tugas (Port 8000)
+- `GET /`: Cek status server.
+- `GET /ambil-tugas`: Mengambil daftar seluruh tugas kuliah.
+- `POST /tambah`: Menambahkan data tugas baru (`nama_tugas`, `nama_dosen`, `deadline_tugas`).
+- `PATCH /edit/{tugas_id}`: Mengubah data tugas berdasarkan ID.
+- `DELETE /hapus/{tugas_id}`: Menghapus data tugas berdasarkan ID.
+
+### FastAPI Service 2 — Pengumpulan & Penilaian (Port 8001)
+- `GET /`: Cek status server.
+- `GET /ambil-kumpul`: Mengambil data seluruh pengumpulan tugas mahasiswa.
+- `POST /kumpul-tugas`: Mengumpulkan tugas baru (`id_tugas`, `nama_mahasiswa`, `file_mahasiswa`, `tanggal_kumpul`).
+- `PATCH /edit-kumpul/{kumpul_id}`: Mengubah data pengumpulan tugas.
+- `PATCH /beri-nilai/{kumpul_id}`: Memberikan nilai pada pengumpulan tugas (`nilai`: 0 - 100).
+- `DELETE /hapus-kumpul/{kumpul_id}`: Menghapus data pengumpulan tugas.
+
+### FastAPI Service 3 — Modul Kuliah (Port 8002)
+- `GET /`: Cek status server.
+- `GET /ambil-modul`: Mengambil daftar seluruh modul kuliah.
+- `POST /Tambah-modul`: Menambahkan modul baru (`nama_modul`, `nama_dosen`, `file_modul`, `tanggal_diupload`).
+- `PATCH /edit-modul/{modul_id}`: Mengubah data modul perkuliahan.
+- `DELETE /hapus-modul/{modul_id}`: Menghapus data modul perkuliahan.
 
 ---
 
 ## Teknologi yang Digunakan
 
-- **Frontend**: PHP 8.2+, Laravel 11, Blade Templates, Tailwind CSS, Livewire, JavaScript.
-- **Backend Services**: Python 3.10+, FastAPI, SQLModel, Uvicorn.
-- **Database**: MySQL (PyMySQL / Laragon).
-- **Auth & Security**: Laravel Jetstream, Sanctum, Fortify.
+- **Frontend Web**: PHP 8.2+, Laravel 11, Blade Templates, Tailwind CSS, Livewire, JavaScript, Vite.
+- **Backend Services**: Python 3.10+, FastAPI, SQLModel, PyMySQL, Uvicorn.
+- **Database**: MySQL Server (Laragon / XAMPP).
+- **Autentikasi & Keamanan**: Laravel Jetstream, Sanctum, Fortify, Custom RBAC Middleware (`CheckRole`).
 
 ---
 
 ## Petunjuk Menjalankan Project
 
-### 1. Persiapan Database (MySQL / Laragon)
-Pastikan Laragon/MySQL sudah aktif. Buka phpMyAdmin (`http://localhost/phpmyadmin`) dan buat 2 database baru:
-1. `db_crudt` (Untuk FastAPI 1 - Master Tugas)
-2. `db_tugas` (Untuk FastAPI 2 - Pengumpulan Tugas)
+### 1. Persiapan Database (MySQL)
+Pastikan MySQL Server sudah aktif. Buat 4 database baru di MySQL:
+1. `unmul_microservice` (Untuk Web Application Laravel)
+2. `db_crudt` (Untuk FastAPI 1 - Master Tugas)
+3. `db_tugas` (Untuk FastAPI 2 - Pengumpulan & Penilaian)
+4. `db_modul` (Untuk FastAPI 3 - Modul Kuliah)
 
----
-
-### 2. Jalankan FastAPI Service 1 (Port 8000)
-Buka Terminal 1:
-```bash
-cd fastAPI
-uvicorn main:app --reload --port 8000
+Perintah SQL via MySQL CLI:
+```sql
+CREATE DATABASE IF NOT EXISTS unmul_microservice;
+CREATE DATABASE IF NOT EXISTS db_crudt;
+CREATE DATABASE IF NOT EXISTS db_tugas;
+CREATE DATABASE IF NOT EXISTS db_modul;
 ```
 
 ---
 
-### 3. Jalankan FastAPI Service 2 (Port 8001)
-Buka Terminal 2:
+### 2. Instalasi Dependency & Konfigurasi Laravel
+1. Copy file environment dan sesuaikan konfigurasi database:
+   ```bash
+   cp .env.example .env
+   ```
+2. Jalankan instalasi dependensi PHP & JavaScript:
+   ```bash
+   composer install --ignore-platform-reqs
+   npm install
+   npm run build
+   ```
+3. Generate Key & jalankan migrasi database Laravel:
+   ```bash
+   php artisan key:generate
+   php artisan migrate
+   ```
+
+---
+
+### 3. Instalasi Dependency Python (Microservices)
+Pastikan Python 3.10+ telah terinstal, kemudian jalankan perintah berikut untuk menginstal dependensi yang dibutuhkan oleh ketiga microservice:
 ```bash
-cd fastAPI2
-uvicorn main:app --reload --port 8001
+pip install fastapi uvicorn sqlmodel pymysql pydantic
 ```
 
 ---
 
-### 4. Jalankan Laravel Web Server (Port 8080)
-Buka Terminal 3:
-```bash
-php artisan serve --port 8080
-```
+### 4. Menjalankan Seluruh Service
+
+Buka 4 terminal terpisah untuk menjalankan masing-masing service:
+
+- **Terminal 1 — FastAPI Service 1 (Master Tugas / Port 8000)**:
+  ```bash
+  cd API_Tugas-Mahasiswa
+  python -m uvicorn main:app --reload --port 8000
+  ```
+
+- **Terminal 2 — FastAPI Service 2 (Pengumpulan & Penilaian / Port 8001)**:
+  ```bash
+  cd API_Penilaian-Tugas-Mahasiswa
+  python -m uvicorn main:app --reload --port 8001
+  ```
+
+- **Terminal 3 — FastAPI Service 3 (Modul Kuliah / Port 8002)**:
+  ```bash
+  cd API_Modul-Kuliah
+  python -m uvicorn main:app --reload --port 8002
+  ```
+
+- **Terminal 4 — Laravel Web Server (Port 8080)**:
+  ```bash
+  php artisan serve --port 8080
+  ```
 
 ---
 
-### 5. Akses Aplikasi
+### 5. Akses Aplikasi & Dokumentasi API
+
 Buka browser dan akses alamat berikut:
-- **Halaman Utam (Welcome)**: `http://127.0.0.1:8080/`
+- **Halaman Utama (Welcome)**: `http://127.0.0.1:8080/`
 - **Halaman Tugas Kuliah**: `http://127.0.0.1:8080/tugas`
-- **Swagger Documentation API 1**: `http://127.0.0.1:8000/docs`
-- **Swagger Documentation API 2**: `http://127.0.0.1:8001/docs`
+- **Halaman Modul Kuliah**: `http://127.0.0.1:8080/modul`
+- **Swagger Documentation API 1 (Master Tugas)**: `http://127.0.0.1:8000/docs`
+- **Swagger Documentation API 2 (Pengumpulan Tugas)**: `http://127.0.0.1:8001/docs`
+- **Swagger Documentation API 3 (Modul Kuliah)**: `http://127.0.0.1:8002/docs`
 
 ---
 
