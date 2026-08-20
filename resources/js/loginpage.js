@@ -53,147 +53,55 @@ function setupApp() {
   const btnCloseHidebar = document.getElementById('btnCloseHidebar');
   const hidebarLinks = document.querySelectorAll('.hidebar-link');
 
-  // Modal Login & Form Views
+  // Modal Login, Register, & Forgot Password Views
   const loginModalOverlay = document.getElementById('loginModalOverlay');
   const btnCloseModal = document.getElementById('btnCloseModal');
   const loginView = document.getElementById('loginView');
   const registerView = document.getElementById('registerView');
+  const forgotPasswordView = document.getElementById('forgotPasswordView');
 
   const linkToRegister = document.getElementById('linkToRegister');
   const linkToLogin = document.getElementById('linkToLogin');
+  const linkToForgotPassword = document.getElementById('linkToForgotPassword');
+  const linkForgotToLogin = document.getElementById('linkForgotToLogin');
+
+  // Forgot Password Elements
+  const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+  const forgotAlertBox = document.getElementById('forgotAlertBox');
+  const btnForgotSendCode = document.getElementById('btnForgotSendCode');
+  const btnForgotSendCodeText = document.getElementById('btnForgotSendCodeText');
+  const forgotNomerInduk = document.getElementById('forgotNomerInduk');
+  const forgotEmail = document.getElementById('forgotEmail');
+  const forgotCode = document.getElementById('forgotCode');
+  const forgotPassword = document.getElementById('forgotPassword');
+  const forgotPasswordConfirmation = document.getElementById('forgotPasswordConfirmation');
+  const btnForgotSubmit = document.getElementById('btnForgotSubmit');
 
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const btnGoogleLogin = document.getElementById('btnGoogleLogin');
 
+  // Helper untuk menampilkan notifikasi pesan di form Lupa Password
+  function showForgotAlert(type, message) {
+    if (!forgotAlertBox) return;
+    forgotAlertBox.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border', 'border-red-200', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+    if (type === 'error') {
+      forgotAlertBox.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+    } else {
+      forgotAlertBox.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200');
+    }
+    forgotAlertBox.innerHTML = `<span>${message}</span>`;
+  }
+
+  function hideForgotAlert() {
+    if (!forgotAlertBox) return;
+    forgotAlertBox.classList.add('hidden');
+    forgotAlertBox.innerHTML = '';
+  }
+
   // Footer & Scroll Elements
   const footer = document.querySelector('.footer-standard');
   const scrollIndicator = document.getElementById('scrollIndicator');
-
-  // ==========================================
-  // RESTORE SESI LOGIN DARI SESSION STORAGE
-  // ==========================================
-  const savedUser = sessionStorage.getItem('loggedInUser');
-  if (savedUser) {
-    const user = JSON.parse(savedUser);
-    handleUserLoggedIn(user.name, user.picture, false);
-  }
-
-  // ==========================================
-  // GOOGLE IDENTITY SERVICES SETUP
-  // ==========================================
-  function handleGoogleCredential(response) {
-    if (response && response.credential) {
-      if (typeof window.onGoogleSignIn === 'function') {
-        window.onGoogleSignIn(response.credential);
-      }
-    }
-  }
-
-  // Fungsi ini dipanggil oleh handleGoogleCredential
-  window.onGoogleSignIn = function (credentialToken) {
-    const payload = decodeJWT(credentialToken);
-    if (!payload) {
-      showToast('Login Google gagal. Coba lagi.', '❌');
-      return;
-    }
-
-    const userName = payload.name || payload.given_name || 'Pengguna Google';
-    const userEmail = payload.email || '';
-    const userPicture = payload.picture || '';
-
-    // Simpan sesi
-    sessionStorage.setItem('loggedInUser', JSON.stringify({
-      name: userName,
-      email: userEmail,
-      picture: userPicture
-    }));
-
-    showToast(`Selamat datang, ${userName}! 🎉`, '');
-    handleUserLoggedIn(userName, userPicture, true);
-    closeModal();
-  };
-
-  // Inisialisasi Google Identity Services setelah library siap
-  function initGoogleSignIn() {
-    try {
-      if (typeof google === 'undefined' || !google.accounts) {
-        // Library belum siap, coba lagi setelah 500ms
-        setTimeout(initGoogleSignIn, 500);
-        return;
-      }
-
-      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) {
-        return;
-      }
-
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-
-      console.log('✅ Google Identity Services berhasil diinisialisasi.');
-    } catch (e) {
-      console.warn('Google Sign-In initialization notice:', e);
-    }
-  }
-
-  initGoogleSignIn();
-
-  // ==========================================
-  // TOMBOL GOOGLE LOGIN — Picu Popup Google
-  // ==========================================
-  if (btnGoogleLogin) {
-    btnGoogleLogin.addEventListener('click', () => {
-      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes('GANTI_DENGAN')) {
-        showToast('⚠️ Client ID Google belum diisi di script.js!', '');
-        return;
-      }
-
-      if (typeof google === 'undefined' || !google.accounts) {
-        showToast('Library Google belum siap. Coba refresh halaman.', '⚠️');
-        return;
-      }
-
-      // Tampilkan popup pilih akun Google
-      google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed()) {
-          // Fallback: Buka OAuth popup manual
-          google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: 'openid profile email',
-            callback: () => { },
-          });
-
-          // Gunakan renderButton sebagai fallback
-          showToast('Klik tombol Google di bawah ini untuk login.', '👇');
-          const tempDiv = document.createElement('div');
-          tempDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:white;padding:20px;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,0.3);';
-          tempDiv.innerHTML = '<p style="margin-bottom:12px;font-weight:700;text-align:center;">Pilih Akun Google</p>';
-          const googleBtnContainer = document.createElement('div');
-          googleBtnContainer.id = 'googleBtnFallback';
-          tempDiv.appendChild(googleBtnContainer);
-          const closeBtn = document.createElement('button');
-          closeBtn.textContent = '✕ Tutup';
-          closeBtn.style.cssText = 'margin-top:12px;width:100%;padding:8px;border:none;border-radius:8px;background:#f1f5f9;cursor:pointer;font-weight:700;';
-          closeBtn.onclick = () => document.body.removeChild(tempDiv);
-          tempDiv.appendChild(closeBtn);
-          document.body.appendChild(tempDiv);
-
-          google.accounts.id.renderButton(googleBtnContainer, {
-            type: 'standard',
-            size: 'large',
-            width: 280,
-            text: 'signin_with',
-            shape: 'rectangular',
-            logo_alignment: 'left',
-          });
-        }
-      });
-    });
-  }
 
   // ==========================================
   // SCROLL TRIGGER: SEMBUNYIKAN FOOTER SEBELUM DI-SCROLL
@@ -215,64 +123,92 @@ function setupApp() {
   handleScrollFooter();
 
   // ==========================================
-  // HIDEBAR DRAWER LOGIC
+  // HIDEBAR DRAWER LOGIC (JURUSAN)
   // ==========================================
   function openHidebar() {
-    hidebarOverlay.classList.add('active');
-    hidebarPanel.classList.add('active');
+    if (hidebarOverlay) hidebarOverlay.classList.add('active');
+    if (hidebarPanel) hidebarPanel.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
 
   function closeHidebar() {
-    hidebarOverlay.classList.remove('active');
-    hidebarPanel.classList.remove('active');
+    if (hidebarOverlay) hidebarOverlay.classList.remove('active');
+    if (hidebarPanel) hidebarPanel.classList.remove('active');
     document.body.style.overflow = '';
   }
 
-  if (btnHidebarToggle) btnHidebarToggle.addEventListener('click', openHidebar);
-  if (btnCloseHidebar) btnCloseHidebar.addEventListener('click', closeHidebar);
-  if (hidebarOverlay) hidebarOverlay.addEventListener('click', closeHidebar);
-
-  hidebarLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      const url = link.getAttribute('href');
-      if (url === '#') {
-        e.preventDefault();
-        const menuText = link.querySelector('.hidebar-link-text').innerText;
-        showToast(`Membuka: ${menuText}`, '');
-        closeHidebar();
-        return;
-      }
+  if (btnHidebarToggle) {
+    btnHidebarToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      openHidebar();
+    });
+  }
+  if (btnCloseHidebar) {
+    btnCloseHidebar.addEventListener('click', (e) => {
+      e.preventDefault();
       closeHidebar();
     });
-  });
+  }
+  if (hidebarOverlay) {
+    hidebarOverlay.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeHidebar();
+    });
+  }
+
+  if (hidebarLinks && hidebarLinks.length > 0) {
+    hidebarLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const url = link.getAttribute('href');
+        if (url === '#') {
+          e.preventDefault();
+          const menuText = link.querySelector('.hidebar-link-text')?.innerText || 'Jurusan';
+          showToast(`Membuka: ${menuText}`, '');
+          closeHidebar();
+          return;
+        }
+        closeHidebar();
+      });
+    });
+  }
 
   // ==========================================
-  // POP-UP LOGIN MODAL LOGIC
+  // POP-UP LOGIN / REGISTER / FORGOT PASSWORD MODAL LOGIC
   // ==========================================
   function openModal(view = 'login') {
     if (view === 'register') {
       showRegisterView();
+    } else if (view === 'forgot-password') {
+      showForgotPasswordView();
     } else {
       showLoginView();
     }
-    loginModalOverlay.classList.add('active');
+    if (loginModalOverlay) loginModalOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
-    loginModalOverlay.classList.remove('active');
+    if (loginModalOverlay) loginModalOverlay.classList.remove('active');
     document.body.style.overflow = '';
   }
 
   function showLoginView() {
-    registerView.classList.add('hidden');
-    loginView.classList.remove('hidden');
+    if (registerView) registerView.classList.add('hidden');
+    if (forgotPasswordView) forgotPasswordView.classList.add('hidden');
+    if (loginView) loginView.classList.remove('hidden');
   }
 
   function showRegisterView() {
-    loginView.classList.add('hidden');
-    registerView.classList.remove('hidden');
+    if (loginView) loginView.classList.add('hidden');
+    if (forgotPasswordView) forgotPasswordView.classList.add('hidden');
+    if (registerView) registerView.classList.remove('hidden');
+  }
+
+  function showForgotPasswordView() {
+    if (loginView) loginView.classList.add('hidden');
+    if (registerView) registerView.classList.add('hidden');
+    if (forgotPasswordView) forgotPasswordView.classList.remove('hidden');
+    hideForgotAlert();
   }
 
   if (btnLoginHeader) {
@@ -309,6 +245,183 @@ function setupApp() {
       e.preventDefault();
       showLoginView();
     });
+  }
+
+  if (linkToForgotPassword) {
+    linkToForgotPassword.addEventListener('click', (e) => {
+      e.preventDefault();
+      showForgotPasswordView();
+    });
+  }
+
+  if (linkForgotToLogin) {
+    linkForgotToLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLoginView();
+    });
+  }
+
+  // ==========================================
+  // AJAX: KIRIM KODE VERIFIKASI LUPA PASSWORD
+  // ==========================================
+  if (btnForgotSendCode) {
+    btnForgotSendCode.addEventListener('click', async () => {
+      const email = forgotEmail ? forgotEmail.value.trim() : '';
+      const nomerInduk = forgotNomerInduk ? forgotNomerInduk.value.trim() : '';
+
+      if (!nomerInduk) {
+        showForgotAlert('error', 'Silakan masukkan Nomor Induk (NIM / NIP) terlebih dahulu.');
+        if (forgotNomerInduk) forgotNomerInduk.focus();
+        return;
+      }
+
+      if (!email) {
+        showForgotAlert('error', 'Silakan masukkan Email akun Anda terlebih dahulu.');
+        if (forgotEmail) forgotEmail.focus();
+        return;
+      }
+
+      // Tampilkan status loading tombol
+      btnForgotSendCode.disabled = true;
+      const originalText = btnForgotSendCodeText ? btnForgotSendCodeText.innerText : 'Kirim Verifikasi';
+      if (btnForgotSendCodeText) btnForgotSendCodeText.innerText = 'Mengirim...';
+
+      hideForgotAlert();
+
+      try {
+        const csrfToken = document.querySelector('input[name="_token"]')?.value || '';
+        const response = await fetch('/forgot-password/send-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+          },
+          body: JSON.stringify({
+            email: email,
+            nomer_induk: nomerInduk,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showForgotAlert('success', data.message);
+          showToast('Kode verifikasi berhasil dikirim!', '');
+          if (forgotCode) {
+            forgotCode.focus();
+            if (data.code) {
+              forgotCode.value = data.code; // Membantu otomatis saat mode lokal
+            }
+          }
+        } else {
+          showForgotAlert('error', data.message || 'Gagal mengirim kode verifikasi.');
+          showToast(data.message || 'Gagal mengirim kode.', '');
+        }
+      } catch (err) {
+        console.error(err);
+        showForgotAlert('error', 'Terjadi gangguan koneksi server. Silakan coba lagi.');
+        showToast('Terjadi gangguan koneksi.', '');
+      } finally {
+        btnForgotSendCode.disabled = false;
+        if (btnForgotSendCodeText) btnForgotSendCodeText.innerText = originalText;
+      }
+    });
+  }
+
+  // ==========================================
+  // AJAX: SUBMIT RESET PASSWORD DENGAN KODE
+  // ==========================================
+  if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = forgotEmail ? forgotEmail.value.trim() : '';
+      const nomerInduk = forgotNomerInduk ? forgotNomerInduk.value.trim() : '';
+      const code = forgotCode ? forgotCode.value.trim() : '';
+      const newPassword = forgotPassword ? forgotPassword.value : '';
+      const newPasswordConfirm = forgotPasswordConfirmation ? forgotPasswordConfirmation.value : '';
+
+      if (!nomerInduk || !email || !code || !newPassword || !newPasswordConfirm) {
+        showForgotAlert('error', 'Semua kolom formulir wajib diisi.');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        showForgotAlert('error', 'Password baru minimal harus 8 karakter.');
+        return;
+      }
+
+      if (newPassword !== newPasswordConfirm) {
+        showForgotAlert('error', 'Konfirmasi password tidak sesuai dengan password baru.');
+        return;
+      }
+
+      if (btnForgotSubmit) {
+        btnForgotSubmit.disabled = true;
+        btnForgotSubmit.innerText = 'Menyimpan Password...';
+      }
+
+      hideForgotAlert();
+
+      try {
+        const csrfToken = document.querySelector('input[name="_token"]')?.value || '';
+        const response = await fetch('/forgot-password/reset-with-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+          },
+          body: JSON.stringify({
+            email: email,
+            nomer_induk: nomerInduk,
+            code: code,
+            password: newPassword,
+            password_confirmation: newPasswordConfirm,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showForgotAlert('success', data.message);
+          showToast('Password berhasil diperbarui!', '');
+
+          setTimeout(() => {
+            forgotPasswordForm.reset();
+            showLoginView();
+            const loginEmailInput = document.getElementById('inputEmailLogin');
+            if (loginEmailInput) {
+              loginEmailInput.value = email;
+            }
+            showToast('Silakan masuk dengan password baru.', '');
+          }, 1800);
+        } else {
+          showForgotAlert('error', data.message || 'Gagal mengatur ulang password.');
+          showToast(data.message || 'Gagal reset password.', '');
+        }
+      } catch (err) {
+        console.error(err);
+        showForgotAlert('error', 'Terjadi kesalahan sistem. Silakan coba lagi.');
+      } finally {
+        if (btnForgotSubmit) {
+          btnForgotSubmit.disabled = false;
+          btnForgotSubmit.innerText = 'Simpan Password Baru';
+        }
+      }
+    });
+  }
+
+  // Cek parameter URL untuk membuka modal secara otomatis jika diperlukan
+  const urlParams = new URLSearchParams(window.location.search);
+  const actionParam = urlParams.get('action');
+  if (actionParam === 'forgot-password') {
+    openModal('forgot-password');
+  } else if (actionParam === 'register') {
+    openModal('register');
+  } else if (actionParam === 'login') {
+    openModal('login');
   }
 
   document.addEventListener('keydown', (e) => {
@@ -400,7 +513,7 @@ function setupApp() {
           userAvatarImg.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
         }
 
-        showToast('Berhasil logout 👋', '');
+        showToast('Berhasil logout', '');
       }
     });
   }
@@ -408,12 +521,12 @@ function setupApp() {
   // ==========================================
   // TOAST HELPER
   // ==========================================
-  function showToast(msg, icon = '💡') {
+  function showToast(msg, icon = '') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerText = `${icon} ${msg}`.trim();
+    toast.innerText = icon ? `${icon} ${msg}`.trim() : msg;
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
