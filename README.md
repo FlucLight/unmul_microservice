@@ -1,4 +1,4 @@
-# PKL 2026 — Learning Management System (LMS) & Microservices
+# Learning Management System (LMS) & Microservices
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 11">
