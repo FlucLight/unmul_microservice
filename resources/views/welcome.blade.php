@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fakultas Teknik UNMUL — Learning Management System</title>
+  <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
   <meta name="description"
     content="Portal Learning Management System (LMS) Fakultas Teknik Universitas Mulawarman">
 

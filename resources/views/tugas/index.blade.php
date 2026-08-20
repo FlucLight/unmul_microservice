@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tugas Kuliah — Fakultas Teknik UNMUL</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -164,29 +165,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Sub-header Navigation Tabs Jurusan -->
-        <div class="bg-slate-100/90 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800/80 transition-colors duration-300">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <nav class="flex space-x-1.5 overflow-x-auto py-2 text-xs font-medium" aria-label="Jurusan">
-                    <button onclick="setTab('Jurusan 1')" id="tab-Jurusan-1" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold transition shadow-sm shadow-orange-500/20">
-                        Jurusan 1
-                    </button>
-                    <button onclick="setTab('Jurusan 2')" id="tab-Jurusan-2" class="px-4 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition">
-                        Jurusan 2
-                    </button>
-                    <button onclick="setTab('Jurusan 3')" id="tab-Jurusan-3" class="px-4 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition">
-                        Jurusan 3
-                    </button>
-                    <button onclick="setTab('Jurusan 4')" id="tab-Jurusan-4" class="px-4 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition">
-                        Jurusan 4
-                    </button>
-                    <button onclick="setTab('Jurusan 5')" id="tab-Jurusan-5" class="px-4 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition">
-                        Jurusan 5
-                    </button>
-                </nav>
-            </div>
-        </div>
     </header>
 
     <!-- CONTENT WRAPPER WITH SMOOTH TRANSITION -->
@@ -220,9 +198,6 @@
             <!-- Top Title & Action Button -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <span id="active-tab-label" class="inline-block text-[11px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider bg-orange-500/10 px-2.5 py-1 rounded-lg mb-1 border border-orange-500/20">
-                        Jurusan 1
-                    </span>
                     <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Daftar Tugas Kuliah</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Kelola dan kumpulkan seluruh penugasan semester ini secara tepat waktu.</p>
                 </div>
