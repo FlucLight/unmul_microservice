@@ -5,10 +5,17 @@ use App\Http\Controllers\TugasController;
 use App\Http\Controllers\KumpulTugasController;
 use App\Http\Controllers\ModulController;
 
+use App\Http\Controllers\ForgotPasswordPopupController;
+
 // Halaman Utama - Welcome Page
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Route Khusus Pop-Up Lupa Password (AJAX)
+Route::post('/forgot-password/send-code', [ForgotPasswordPopupController::class, 'sendCode'])->name('password.popup.send_code');
+Route::post('/forgot-password/reset-with-code', [ForgotPasswordPopupController::class, 'resetWithCode'])->name('password.popup.reset_with_code');
+
 
 // Group Route yang membutuhkan Login Auth
 Route::middleware([

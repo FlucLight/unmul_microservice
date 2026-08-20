@@ -378,16 +378,16 @@
           google.accounts.id.disableAutoSelect();
         }
         sessionStorage.removeItem('loggedInUser');
-        showToast('Berhasil logout 👋', '');
+        showToast('Berhasil logout', '');
         setTimeout(() => window.location.href = 'index.html', 1000);
       }
     });
 
-    function showToast(msg, icon = '💡') {
+    function showToast(msg, icon = '') {
       const c = document.getElementById('toastContainer');
       const t = document.createElement('div');
       t.className = 'toast';
-      t.innerText = (icon + ' ' + msg).trim();
+      t.innerText = (icon ? icon + ' ' : '') + msg;
       c.appendChild(t);
       setTimeout(() => t.classList.add('show'), 10);
       setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);

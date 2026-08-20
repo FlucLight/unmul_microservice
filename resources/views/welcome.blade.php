@@ -43,17 +43,17 @@
       <!-- Tombol ke Halaman Tugas & Modul -->
       @auth
         <a href="{{ route('tugas.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-          <span>📋 Tugas Kuliah</span>
+          <span>Tugas Kuliah</span>
         </a>
         <a href="{{ route('modul.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-          <span>📖 Modul Kuliah</span>
+          <span> Modul Kuliah</span>
         </a>
       @else
         <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
-          <span>📋 Tugas Kuliah</span>
+          <span> Tugas Kuliah</span>
         </button>
         <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
-          <span>📖 Modul Kuliah</span>
+          <span> Modul Kuliah</span>
         </button>
       @endauth
 
@@ -153,7 +153,15 @@
 
           <div>
             <label for="inputPasswordLogin" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Password</label>
-            <input type="password" id="inputPasswordLogin" name="password" required autocomplete="current-password" placeholder="Masukkan password" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+            <div class="relative">
+              <input type="password" id="inputPasswordLogin" name="password" required autocomplete="current-password" placeholder="Masukkan password" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+              <button type="button" onclick="togglePasswordVisibility('inputPasswordLogin', this)" class="absolute right-0 top-0 h-full px-3.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div class="flex items-center justify-between text-xs pt-1">
@@ -161,9 +169,7 @@
               <input type="checkbox" name="remember" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
               <span class="text-slate-600 font-medium">Ingat Saya</span>
             </label>
-            @if (Route::has('password.request'))
-              <a href="{{ route('password.request') }}" class="text-amber-700 font-semibold hover:underline">Lupa password?</a>
-            @endif
+            <a href="#" id="linkToForgotPassword" class="text-amber-700 font-semibold hover:underline">Lupa password?</a>
           </div>
 
           <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2">
@@ -197,8 +203,8 @@
           <div>
             <label for="regRole" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Daftar Sebagai (Role)</label>
             <select id="regRole" name="role" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 bg-white transition">
-              <option value="mahasiswa">👨‍🎓 Mahasiswa</option>
-              <option value="dosen">👨‍🏫 Dosen</option>
+              <option value="mahasiswa"> Mahasiswa</option>
+              <option value="dosen"> Dosen</option>
             </select>
           </div>
 
@@ -215,12 +221,28 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label for="regPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password</label>
-              <input type="password" id="regPassword" name="password" required placeholder="Min. 8 karakter" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+              <div class="relative">
+                <input type="password" id="regPassword" name="password" required placeholder="Min. 8 karakter" class="w-full pl-3.5 pr-10 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+                <button type="button" onclick="togglePasswordVisibility('regPassword', this)" class="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div>
               <label for="regPasswordConfirm" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
-              <input type="password" id="regPasswordConfirm" name="password_confirmation" required placeholder="Ulangi password" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+              <div class="relative">
+                <input type="password" id="regPasswordConfirm" name="password_confirmation" required placeholder="Ulangi password" class="w-full pl-3.5 pr-10 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+                <button type="button" onclick="togglePasswordVisibility('regPasswordConfirm', this)" class="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -231,8 +253,139 @@
 
         <p class="auth-footer-text">Sudah punya akun? <a href="#" id="linkToLogin">Log in di sini</a></p>
       </div>
+
+      <!-- FORM LUPA PASSWORD VIEW (MODAL POPUP) -->
+      <div class="modal-view hidden" id="forgotPasswordView">
+        <div class="auth-logo">
+          <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
+          <div class="auth-logo-text">
+            <span class="l1">FAKULTAS TEKNIK</span>
+            <span class="l2">UNIVERSITAS MULAWARMAN</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <h2 class="auth-title mb-0 text-xl font-extrabold">Lupa Password?</h2>
+        </div>
+        <p class="auth-subtitle mb-3 text-xs text-slate-500">Verifikasi akun dengan NIM/NIP & email untuk mereset kata sandi.</p>
+
+        <!-- Dynamic Alert Container for AJAX status -->
+        <div id="forgotAlertBox" class="hidden mb-3 p-3 rounded-xl text-xs font-semibold"></div>
+
+        <form id="forgotPasswordForm" class="space-y-3">
+          @csrf
+
+          <!-- Nomor Induk (NIM / NIP) -->
+          <div>
+            <label for="forgotNomerInduk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM / NIP)</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                </svg>
+              </div>
+              <input type="text" id="forgotNomerInduk" name="nomer_induk" required placeholder="Contoh: 2109106001 / 19850101..." class="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+            </div>
+          </div>
+
+          <!-- Email Terdaftar + Tombol Kirim Verifikasi di sebelahnya -->
+          <div>
+            <label for="forgotEmail" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Terdaftar</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                  </svg>
+                </div>
+                <input type="email" id="forgotEmail" name="email" required placeholder="nama@unmul.ac.id" class="w-full pl-9 pr-2 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+              </div>
+              <button type="button" id="btnForgotSendCode" class="shrink-0 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-md shadow-amber-500/20 text-xs whitespace-nowrap transition transform active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span id="btnForgotSendCodeText">Kirim Verifikasi</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Kode Verifikasi (6 Digit) -->
+          <div>
+            <label for="forgotCode" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Kode Verifikasi (6 Digit)</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <input type="text" id="forgotCode" name="code" required maxlength="6" placeholder="Masukkan 6 digit kode dari email" class="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm tracking-widest font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+            </div>
+            <span class="text-[10px] text-slate-400 mt-0.5 block">Klik "Kirim Verifikasi" di atas untuk mendapatkan kode</span>
+          </div>
+
+          <!-- Password Baru Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label for="forgotPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password Baru</label>
+              <div class="relative">
+                <input type="password" id="forgotPassword" name="password" required minlength="8" placeholder="Min. 8 karakter" class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+                <button type="button" onclick="togglePasswordVisibility('forgotPassword', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="forgotPasswordConfirmation" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
+              <div class="relative">
+                <input type="password" id="forgotPasswordConfirmation" name="password_confirmation" required minlength="8" placeholder="Ulangi password" class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+                <button type="button" onclick="togglePasswordVisibility('forgotPasswordConfirmation', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="btnForgotSubmit" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-xs sm:text-sm transition transform active:scale-[0.99] mt-1 cursor-pointer">
+            Simpan Password Baru
+          </button>
+        </form>
+
+        <p class="auth-footer-text mt-3">Sudah ingat password? <a href="#" id="linkForgotToLogin">Log in di sini</a></p>
+      </div>
     </div>
   </div>
+
+  <script>
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.setAttribute('title', isPassword ? 'Sembunyikan Password' : 'Tampilkan Password');
+      btn.setAttribute('aria-label', isPassword ? 'Sembunyikan Password' : 'Tampilkan Password');
+      btn.innerHTML = isPassword ? `
+        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+        </svg>
+      ` : `
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      `;
+    }
+  </script>
 
   <main class="main-polos">
     <div class="scroll-indicator" id="scrollIndicator">
