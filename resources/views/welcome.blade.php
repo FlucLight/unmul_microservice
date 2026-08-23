@@ -41,21 +41,14 @@
     </a>
 
     <div class="header-actions">
-      <!-- Tombol ke Halaman Tugas & Modul -->
+      <!-- Tombol ke Halaman Tugas & Modul (Hanya untuk yang sudah login - Poin 5) -->
       @auth
         <a href="{{ route('tugas.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
           <span>Tugas Kuliah</span>
         </a>
         <a href="{{ route('modul.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-          <span> Modul Kuliah</span>
+          <span>Modul Kuliah</span>
         </a>
-      @else
-        <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
-          <span> Tugas Kuliah</span>
-        </button>
-        <button type="button" class="btn-hidebar btn-open-login-modal" style="text-decoration: none; color: inherit;">
-          <span> Modul Kuliah</span>
-        </button>
       @endauth
 
       <!-- Tombol Hidebar -->
@@ -144,7 +137,10 @@
           </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+        <!-- Dynamic Alert Container untuk status AJAX Login (Poin 7) -->
+        <div id="loginAlertBox" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-semibold"></div>
+
+        <form method="POST" action="{{ route('login') }}" id="loginForm" class="space-y-4">
           @csrf
 
           <div>
@@ -155,7 +151,7 @@
           <div>
             <label for="inputPasswordLogin" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Password</label>
             <div class="relative">
-              <input type="password" id="inputPasswordLogin" name="password" required autocomplete="current-password" placeholder="Masukkan password" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+              <input type="password" id="inputPasswordLogin" name="password" required minlength="8" autocomplete="current-password" placeholder="Masukkan password (min. 8 karakter)" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
               <button type="button" onclick="togglePasswordVisibility('inputPasswordLogin', this)" class="absolute right-0 top-0 h-full px-3.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -173,89 +169,17 @@
             <a href="#" id="linkToForgotPassword" class="text-amber-700 font-semibold hover:underline">Lupa password?</a>
           </div>
 
-          <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2">
+          <button type="submit" id="btnLoginSubmit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2">
             Log In Sekarang
           </button>
         </form>
 
-        <p class="auth-footer-text">Belum punya akun? <a href="#" id="linkToRegister">Daftar Akun di sini</a></p>
+        <p class="auth-footer-text">Akun LMS hanya dapat dibuat oleh <strong>Operator Fakultas</strong>. Hubungi operator jika belum memiliki akun.</p>
       </div>
 
-      <!-- FORM REGISTER VIEW -->
-      <div class="modal-view hidden" id="registerView">
-        <div class="auth-logo">
-          <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
-          <div class="auth-logo-text">
-            <span class="l1">FAKULTAS TEKNIK</span>
-            <span class="l2">UNIVERSITAS MULAWARMAN</span>
-          </div>
-        </div>
-        <h2 class="auth-title">Daftar Akun LMS</h2>
-        <p class="auth-subtitle">Pilih role Anda sebagai Dosen atau Mahasiswa</p>
+      <!-- FORM REGISTER DIHAPUS (Poin 8): Registrasi akun hanya dilakukan oleh Operator -->
 
-        <form method="POST" action="{{ route('register') }}" class="space-y-3.5">
-          @csrf
-
-          <div>
-            <label for="regName" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nama Lengkap</label>
-            <input type="text" id="regName" name="name" value="{{ old('name') }}" required placeholder="Contoh: Dr. Budi, S.T. / Ahmad Fulan" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-          </div>
-
-          <div>
-            <label for="regRole" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Daftar Sebagai (Role)</label>
-            <select id="regRole" name="role" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 bg-white transition">
-              <option value="mahasiswa"> Mahasiswa</option>
-              <option value="dosen"> Dosen</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="regNomerInduk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM / NIP)</label>
-            <input type="text" id="regNomerInduk" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="NIM untuk Mahasiswa, NIP/NIDN untuk Dosen" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-          </div>
-
-          <div>
-            <label for="regEmail" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Aktif</label>
-            <input type="email" id="regEmail" name="email" value="{{ old('email') }}" required placeholder="email@unmul.ac.id" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label for="regPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password</label>
-              <div class="relative">
-                <input type="password" id="regPassword" name="password" required placeholder="Min. 8 karakter" class="w-full pl-3.5 pr-10 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-                <button type="button" onclick="togglePasswordVisibility('regPassword', this)" class="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label for="regPasswordConfirm" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
-              <div class="relative">
-                <input type="password" id="regPasswordConfirm" name="password_confirmation" required placeholder="Ulangi password" class="w-full pl-3.5 pr-10 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-                <button type="button" onclick="togglePasswordVisibility('regPasswordConfirm', this)" class="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2">
-            Daftar Akun Sekarang
-          </button>
-        </form>
-
-        <p class="auth-footer-text">Sudah punya akun? <a href="#" id="linkToLogin">Log in di sini</a></p>
-      </div>
-
-      <!-- FORM LUPA PASSWORD VIEW (MODAL POPUP) -->
+      <!-- FORM LUPA PASSWORD VIEW - LANGKAH 1: NIM + EMAIL + KODE VERIFIKASI (Poin 6) -->
       <div class="modal-view hidden" id="forgotPasswordView">
         <div class="auth-logo">
           <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
@@ -323,17 +247,47 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <input type="text" id="forgotCode" name="code" required maxlength="6" placeholder="Masukkan 6 digit kode dari email" class="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm tracking-widest font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+              <input type="text" id="forgotCode" name="code" required maxlength="6" inputmode="numeric" placeholder="Masukkan 6 digit kode dari email" class="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm tracking-widest font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
             </div>
             <span class="text-[10px] text-slate-400 mt-0.5 block">Klik "Kirim Verifikasi" di atas untuk mendapatkan kode</span>
           </div>
 
+          <button type="submit" id="btnForgotVerify" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-xs sm:text-sm transition transform active:scale-[0.99] mt-1 cursor-pointer">
+            Verifikasi Kode
+          </button>
+        </form>
+
+        <p class="auth-footer-text mt-3">Sudah ingat password? <a href="#" id="linkForgotToLogin">Log in di sini</a></p>
+      </div>
+
+      <!-- FORM LUPA PASSWORD VIEW - LANGKAH 2: PASSWORD BARU (Poin 6) -->
+      <div class="modal-view hidden" id="forgotResetView">
+        <div class="auth-logo">
+          <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
+          <div class="auth-logo-text">
+            <span class="l1">FAKULTAS TEKNIK</span>
+            <span class="l2">UNIVERSITAS MULAWARMAN</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 class="auth-title mb-0 text-xl font-extrabold">Verifikasi Berhasil!</h2>
+        </div>
+        <p class="auth-subtitle mb-3 text-xs text-slate-500">Akun Anda terverifikasi. Sekarang buat password baru untuk akun Anda.</p>
+
+        <form id="forgotResetForm" class="space-y-3">
+          @csrf
+
           <!-- Password Baru Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div class="space-y-2.5">
             <div>
               <label for="forgotPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password Baru</label>
               <div class="relative">
-                <input type="password" id="forgotPassword" name="password" required minlength="8" placeholder="Min. 8 karakter" class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+                <input type="password" id="forgotPassword" name="password" required minlength="8" placeholder="Min. 8 karakter" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
                 <button type="button" onclick="togglePasswordVisibility('forgotPassword', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -344,9 +298,9 @@
             </div>
 
             <div>
-              <label for="forgotPasswordConfirmation" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
+              <label for="forgotPasswordConfirmation" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password Baru</label>
               <div class="relative">
-                <input type="password" id="forgotPasswordConfirmation" name="password_confirmation" required minlength="8" placeholder="Ulangi password" class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+                <input type="password" id="forgotPasswordConfirmation" name="password_confirmation" required minlength="8" placeholder="Ulangi password baru" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
                 <button type="button" onclick="togglePasswordVisibility('forgotPasswordConfirmation', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -362,7 +316,7 @@
           </button>
         </form>
 
-        <p class="auth-footer-text mt-3">Sudah ingat password? <a href="#" id="linkForgotToLogin">Log in di sini</a></p>
+        <p class="auth-footer-text mt-3">Sudah ingat password? <a href="#" id="linkResetToLogin">Log in di sini</a></p>
       </div>
     </div>
   </div>
@@ -409,7 +363,10 @@
           <div class="footer-col-title">Navigasi</div>
           <ul class="footer-nav">
             <li><a href="{{ route('home') }}">Beranda</a></li>
-            <li><a href="{{ route('tugas.index') }}">Tugas Kuliah</a></li>
+            @auth
+              <li><a href="{{ route('tugas.index') }}">Tugas Kuliah</a></li>
+              <li><a href="{{ route('modul.index') }}">Modul Kuliah</a></li>
+            @endauth
           </ul>
         </div>
       </div>
