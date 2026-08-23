@@ -107,25 +107,34 @@
 
                     <!-- Page Navigation Switcher Tabs -->
                     <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
-                        <a href="{{ route('tugas.index') }}" class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 transition-all flex items-center gap-1.5 no-underline">
-                            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        <a href="{{ route('tugas.index') }}"
+                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
+                                  {{ request()->routeIs('tugas.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
+                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('tugas.*') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                             <span class="hidden md:inline">Tugas Kuliah</span><span class="md:hidden">Tugas</span>
                         </a>
-                        <a href="{{ route('modul.index') }}" class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60 transition-all flex items-center gap-1.5 no-underline">
-                            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+
+                        <a href="{{ route('modul.index') }}"
+                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
+                                  {{ request()->routeIs('modul.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
+                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('modul.*') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                             <span class="hidden md:inline">Modul Kuliah</span><span class="md:hidden">Modul</span>
                         </a>
-                        <a href="{{ route('admin.pengguna') }}" class="px-3 sm:px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 flex items-center gap-1.5 no-underline active-tab">
-                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+
+                        @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.pengguna') }}"
+                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
+                                  {{ request()->routeIs('admin.pengguna') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
+                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('admin.pengguna') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                             <span class="hidden md:inline">Manajemen Akun</span><span class="md:hidden">Akun</span>
                         </a>
+                        @endif
                     </div>
                 </div>
 
                 <!-- Right: Theme Slider & Mini Profile Trigger -->
                 <div class="flex items-center gap-3 shrink-0">
-                    <button type="button" onclick="toggleTheme()" class="theme-slider-btn relative inline-flex items-center w-14 h-7 p-0.5 rounded-full cursor-pointer transition-colors duration-300 bg-slate-200 dark:bg-slate-700/90 border border-slate-300 dark:border-slate-600 focus:outline-none" aria-label="Ganti Mode Tema" title="Ganti Tema (Kiri: Terang, Kanan: Gelap)">
-                        <span class="absolute left-1.5 flex items-center justify-center pointer-events-none opacity-80 dark:opacity-30 transition-opacity">
+<button type="button" onclick="toggleTheme()" class="theme-slider-btn relative hidden md:inline-flex items-center w-14 h-7 p-0.5 rounded-full cursor-pointer transition-colors duration-300 bg-slate-200 dark:bg-slate-700/90 border border-slate-300 dark:border-slate-600 focus:outline-none" aria-label="Ganti Mode Tema" title="Ganti Tema (Kiri: Terang, Kanan: Gelap)">                        <span class="absolute left-1.5 flex items-center justify-center pointer-events-none opacity-80 dark:opacity-30 transition-opacity">
                             <svg class="w-3.5 h-3.5 text-amber-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                         </span>
                         <span class="absolute right-1.5 flex items-center justify-center pointer-events-none opacity-30 dark:opacity-80 transition-opacity">
