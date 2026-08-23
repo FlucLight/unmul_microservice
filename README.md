@@ -49,23 +49,43 @@ graph TD
 
 Sistem mengimplementasikan middleware `CheckRole` pada Laravel untuk mengatur hak akses berdasarkan peran pengguna (`role`):
 
-- **Admin**: Akses penuh ke seluruh fitur sistem (Manajemen Tugas, Pengumpulan Tugas, Penilaian, dan Modul Kuliah).
-- **Dosen**: Dapat membuat, memperbarui, dan menghapus Tugas Kuliah; memberikan nilai pada tugas mahasiswa; serta mengunggah, mengedit, dan menghapus Modul Kuliah.
+- **Admin**: Akses penuh ke seluruh fitur sistem (Manajemen Tugas, Pengumpulan Tugas, Penilaian, Modul Kuliah) serta **Manajemen Akun** — mendaftarkan, mengubah, dan menghapus akun Mahasiswa/Dosen/Admin melalui Nomor Induk (NIM/NIP).
+- **Dosen**: Dapat membuat, memperbarui, dan menghapus Tugas Kuliah; memberikan nilai beserta catatan penilaian pada tugas mahasiswa; serta mengunggah, mengedit, dan menghapus Modul Kuliah.
 - **Mahasiswa**: Dapat melihat daftar Tugas Kuliah dan Modul Kuliah, serta mengumpulkan tugas melalui tautan Google Drive / file.
+
+> ⚠️ **Registrasi mandiri (publik) dinonaktifkan.** Akun hanya dapat dibuat oleh **Admin/Operator Fakultas** melalui halaman **Manajemen Akun** (`/admin/pengguna`). Pengguna baru yang mendaftar sebelum fitur ini secara otomatis berperan sebagai *Mahasiswa*.
 
 ---
 
 ## Fitur Utama Sistem
 
-- **UI Modern & Responsive**: Berbasis Tailwind CSS dengan gaya *Earth & Heritage* (Hijau Hutan & Emas) serta antarmuka yang adaptif.
-- **Manajemen Tugas Kuliah**: Fitur Tambah, Edit, Hapus, dan Lihat Tugas Kuliah terintegrasi dengan FastAPI 1 (Port 8000).
-- **Sistem Pengumpulan & Penilaian**: Mahasiswa dapat mengumpulkan tugas (tautan file), dan Dosen/Admin dapat memberikan nilai (0–100) terintegrasi dengan FastAPI 2 (Port 8001).
+- **UI Modern & Responsive**: Berbasis Tailwind CSS dengan dukungan **Mode Gelap/Terang** (tersimpan di `localStorage`) serta antarmuka adaptif untuk desktop & mobile.
+- **Manajemen Akun oleh Admin (Baru)**: Admin dapat mendaftarkan akun baru lengkap dengan **Nomor Induk (NIM/NIP)**, email, dan role (Mahasiswa/Dosen/Admin), lengkap dengan pencarian real-time, filter per-role, kartu statistik pengguna, edit data, reset password, dan hapus akun.
+- **Lupa Password 2 Langkah (Baru)**: Pengguna memasukkan email + NIM/NIP → sistem mengirim **kode verifikasi 6-digit** (berlaku 60 menit) → setelah kode terverifikasi, pengguna dapat membuat password baru.
+- **Manajemen Tugas Kuliah**: Fitur Tambah, Edit, Hapus, dan Lihat Tugas Kuliah terintegrasi dengan FastAPI 1 (Port 8000), termasuk filter tugas berdasarkan dosen pengampu.
+- **Sistem Pengumpulan & Penilaian + Catatan Dosen**: Mahasiswa dapat mengumpulkan tugas (tautan file), dan Dosen/Admin dapat memberikan nilai (0–100) **beserta catatan/feedback penilaian** terintegrasi dengan FastAPI 2 (Port 8001).
 - **Manajemen Modul Kuliah**: Dosen dapat mengunggah modul materi kuliah dan mahasiswa dapat mengunduh / mengaksesnya terintegrasi dengan FastAPI 3 (Port 8002).
 - **Triple API Connection Status Checker**: Indikator status koneksi real-time untuk mengecek ketersediaan FastAPI Service 1, Service 2, dan Service 3.
 
 ---
 
 ## Detail Endpoint Microservices
+
+### Laravel Web Routes (Port 8080, memerlukan login)
+- `GET /tugas`: Halaman daftar tugas kuliah.
+- `GET /modul`: Halaman daftar modul kuliah.
+- `POST/PUT/DELETE /tugas...`: CRUD Tugas (Dosen & Admin).
+- `POST /kumpul-tugas`: Pengumpulan tugas mahasiswa (Mahasiswa & Admin).
+- `PATCH /kumpul-tugas/{id}/nilai`: Memberi nilai + catatan dosen (Dosen & Admin).
+- **Khusus Admin — Manajemen Akun**:
+  - `GET /admin/pengguna`: Halaman manajemen akun pengguna.
+  - `POST /admin/pengguna`: Mendaftarkan akun baru (`name`, `email`, `nomer_induk`, `role`, `password`).
+  - `PUT /admin/pengguna/{id}`: Mengubah data akun / reset password.
+  - `DELETE /admin/pengguna/{id}`: Menghapus akun (tidak dapat menghapus akun sendiri).
+- **Lupa Password (AJAX, tanpa login)**:
+  - `POST /forgot-password/send-code`: Kirim kode verifikasi 6-digit ke email (validasi email + NIM/NIP).
+  - `POST /forgot-password/verify-code`: Verifikasi kode (langkah 2).
+  - `POST /forgot-password/reset-with-code`: Set password baru dengan kode terverifikasi.
 
 ### FastAPI Service 1 — Master Tugas (Port 8000)
 - `GET /`: Cek status server.
@@ -79,7 +99,7 @@ Sistem mengimplementasikan middleware `CheckRole` pada Laravel untuk mengatur ha
 - `GET /ambil-kumpul`: Mengambil data seluruh pengumpulan tugas mahasiswa.
 - `POST /kumpul-tugas`: Mengumpulkan tugas baru (`id_tugas`, `nama_mahasiswa`, `file_mahasiswa`, `tanggal_kumpul`).
 - `PATCH /edit-kumpul/{kumpul_id}`: Mengubah data pengumpulan tugas.
-- `PATCH /beri-nilai/{kumpul_id}`: Memberikan nilai pada pengumpulan tugas (`nilai`: 0 - 100).
+- `PATCH /beri-nilai/{kumpul_id}`: Memberikan nilai pada pengumpulan tugas (`nilai`: 0 - 100, `catatan_dosen`: opsional).
 - `DELETE /hapus-kumpul/{kumpul_id}`: Menghapus data pengumpulan tugas.
 
 ### FastAPI Service 3 — Modul Kuliah (Port 8002)
@@ -175,12 +195,32 @@ Buka 4 terminal terpisah untuk menjalankan masing-masing service:
 
 ---
 
-### 5. Akses Aplikasi & Dokumentasi API
+### 5. Membuat Akun Admin Pertama
+Karena registrasi publik dinonaktifkan, buat akun admin pertama secara manual via Artisan Tinker:
+```bash
+php artisan tinker
+```
+```php
+App\Models\User::create([
+    'name' => 'Operator Fakultas',
+    'email' => 'operator@unmul.ac.id',
+    'nomer_induk' => 'NIP-OPERATOR-001',
+    'role' => 'admin',
+    'password' => bcrypt('password-anda'),
+]);
+```
+Setelah login sebagai Admin, akun Mahasiswa/Dosen lain dapat didaftarkan melalui menu **Manajemen Akun** (`/admin/pengguna`).
+
+---
+
+### 6. Akses Aplikasi & Dokumentasi API
 
 Buka browser dan akses alamat berikut:
 - **Halaman Utama (Welcome)**: `http://127.0.0.1:8080/`
+- **Halaman Login**: `http://127.0.0.1:8080/login`
 - **Halaman Tugas Kuliah**: `http://127.0.0.1:8080/tugas`
 - **Halaman Modul Kuliah**: `http://127.0.0.1:8080/modul`
+- **Manajemen Akun (Admin)**: `http://127.0.0.1:8080/admin/pengguna`
 - **Swagger Documentation API 1 (Master Tugas)**: `http://127.0.0.1:8000/docs`
 - **Swagger Documentation API 2 (Pengumpulan Tugas)**: `http://127.0.0.1:8001/docs`
 - **Swagger Documentation API 3 (Modul Kuliah)**: `http://127.0.0.1:8002/docs`
