@@ -6,6 +6,7 @@ use App\Http\Controllers\KumpulTugasController;
 use App\Http\Controllers\ModulController;
 
 use App\Http\Controllers\ForgotPasswordPopupController;
+use App\Http\Controllers\Admin\UserManagementController;
 
 // Halaman Utama - Welcome Page
 Route::get('/', function () {
@@ -14,6 +15,7 @@ Route::get('/', function () {
 
 // Route Khusus Pop-Up Lupa Password (AJAX)
 Route::post('/forgot-password/send-code', [ForgotPasswordPopupController::class, 'sendCode'])->name('password.popup.send_code');
+Route::post('/forgot-password/verify-code', [ForgotPasswordPopupController::class, 'verifyCode'])->name('password.popup.verify_code');
 Route::post('/forgot-password/reset-with-code', [ForgotPasswordPopupController::class, 'resetWithCode'])->name('password.popup.reset_with_code');
 
 
@@ -50,6 +52,14 @@ Route::middleware([
     // Khusus MAHASISWA & ADMIN: Kumpulkan Tugas (Link Drive)
     Route::middleware(['role:mahasiswa,admin'])->group(function () {
         Route::post('/kumpul-tugas', [KumpulTugasController::class, 'store'])->name('kumpul.store');
+    });
+
+    // Khusus ADMIN: Manajemen Pengguna (Daftarkan Mahasiswa/Dosen via NIM/NIP)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/pengguna', [UserManagementController::class, 'index'])->name('admin.pengguna');
+        Route::post('/admin/pengguna', [UserManagementController::class, 'store'])->name('admin.pengguna.store');
+        Route::put('/admin/pengguna/{id}', [UserManagementController::class, 'update'])->name('admin.pengguna.update');
+        Route::delete('/admin/pengguna/{id}', [UserManagementController::class, 'destroy'])->name('admin.pengguna.destroy');
     });
 
 });

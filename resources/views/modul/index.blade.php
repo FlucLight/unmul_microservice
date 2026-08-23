@@ -271,13 +271,9 @@
                                                     <button onclick='openEditModulModal({{ json_encode($modul) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Modul">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
-                                                    <form action="{{ route('modul.destroy', $idModul) }}" method="POST" class="inline" onsubmit="return confirm('Hapus modul ini?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Hapus Modul">
-                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" onclick="confirmDelete('{{ route('modul.destroy', $idModul) }}', 'Modul: {{ addslashes($modul['nama_modul']) }}')" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition cursor-pointer" title="Hapus Modul">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
                                                 @endif
                                             </div>
                                         </div>
@@ -440,6 +436,12 @@
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     Modul Kuliah
                 </a>
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.pengguna') }}" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-500/10 hover:text-orange-500 border border-slate-200 dark:border-slate-700/60 text-xs font-semibold text-slate-700 dark:text-slate-300 transition no-underline">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    Manajemen Akun
+                </a>
+                @endif
             </div>
 
             <!-- API Services Status In Drawer -->
@@ -477,13 +479,10 @@
 
         <!-- Drawer Footer (Logout Button) -->
         <div class="p-5 border-t border-slate-200 dark:border-slate-800">
-            <form action="{{ route('logout') }}" method="POST" class="w-full">
-                @csrf
-                <button type="submit" class="w-full py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    Keluar dari Akun
-                </button>
-            </form>
+            <button type="button" onclick="openLogoutModal()" class="w-full py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Keluar dari Akun
+            </button>
         </div>
 
     </aside>
@@ -562,6 +561,51 @@
         </div>
     </div>
     @endif
+
+
+    <!-- MODAL CUSTOM POPUP DELETE (Poin 3) -->
+    <div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg shrink-0">!</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Konfirmasi Hapus</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="deleteTargetTitle">Apakah Anda yakin ingin menghapus data ini?</p>
+                </div>
+            </div>
+
+            <form id="deleteConfirmForm" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">Ya, Hapus Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP LOGOUT (Poin 4) -->
+    <div id="logoutConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg shrink-0">!</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Konfirmasi Keluar</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Apakah Anda yakin ingin keluar dari akun Anda?</p>
+                </div>
+            </div>
+
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeLogoutModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">Ya, Keluar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     <script>
@@ -705,11 +749,41 @@
             if (modal) modal.classList.add('hidden');
         }
 
+        // POPUP CONFIRM DELETE (Poin 3)
+        function confirmDelete(actionUrl, targetTitle) {
+            const modal = document.getElementById('deleteConfirmModal');
+            const form = document.getElementById('deleteConfirmForm');
+            const titleEl = document.getElementById('deleteTargetTitle');
+            if (modal && form) {
+                form.action = actionUrl;
+                if (titleEl) titleEl.innerText = `Apakah Anda yakin ingin menghapus ${targetTitle}?`;
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // POPUP CONFIRM LOGOUT (Poin 4)
+        function openLogoutModal() {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeProfileDrawer();
                 closeAddModulModal();
                 closeEditModulModal();
+                closeDeleteModal();
+                closeLogoutModal();
             }
         });
 

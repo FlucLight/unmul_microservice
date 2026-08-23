@@ -294,13 +294,9 @@
                                                     <button onclick='openEditModal({{ json_encode($tugas) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Tugas">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
-                                                    <form action="{{ route('tugas.destroy', $id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus tugas ini?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Hapus Tugas">
-                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" onclick="confirmDelete('{{ route('tugas.destroy', $id) }}', 'Tugas: {{ addslashes($tugas['nama_tugas']) }}')" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Hapus Tugas">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
                                                 @endif
                                             </div>
                                         </div>
@@ -365,17 +361,24 @@
                                                         <!-- KHUSUS DOSEN & ADMIN: Beri Nilai & Hapus Pengumpulan -->
                                                         @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
                                                             <div class="flex items-center gap-2">
-                                                                <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }})' class="px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-lg font-bold text-[11px] transition">
+                                                                <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }}, "{{ addslashes($sub['catatan_dosen'] ?? '') }}")' class="px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-lg font-bold text-[11px] transition">
                                                                     {{ $nilaiVal !== null ? 'Ubah Nilai' : 'Beri Nilai' }}
                                                                 </button>
-                                                                <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengumpulan ini?');">
+                                                                <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline">
                                                                     @csrf
                                                                     @method('DELETE')
-                                                                    <button type="submit" class="text-slate-400 hover:text-rose-500 px-1 text-xs font-semibold transition" title="Hapus Pengumpulan">&times;</button>
+                                                                    <button type="button" onclick="confirmDelete('{{ route('kumpul.destroy', $subId) }}', 'pengumpulan tugas dari {{ addslashes($sub['nama_mahasiswa']) }}')" class="text-slate-400 hover:text-rose-500 px-1 text-xs font-semibold transition cursor-pointer" title="Hapus Pengumpulan">&times;</button>
                                                                 </form>
                                                             </div>
                                                         @endif
                                                     </div>
+
+                                                    <!-- TAMPILAN CATATAN DOSEN -->
+                                                    @if(!empty($sub['catatan_dosen']))
+                                                        <div class="bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg border-l-2 border-amber-500 text-[11px] text-slate-600 dark:text-slate-300 italic ml-2">
+                                                            <span class="font-bold text-amber-600 dark:text-amber-400 not-italic">Catatan Dosen:</span> {{ $sub['catatan_dosen'] }}
+                                                        </div>
+                                                    @endif
                                                 @endforeach
                                             </div>
                                         @endif
@@ -548,6 +551,12 @@
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     Modul Kuliah
                 </a>
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.pengguna') }}" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-500/10 hover:text-orange-500 border border-slate-200 dark:border-slate-700/60 text-xs font-semibold text-slate-700 dark:text-slate-300 transition no-underline">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    Manajemen Akun
+                </a>
+                @endif
             </div>
 
             <!-- API Services Status In Drawer -->
@@ -581,13 +590,10 @@
 
         <!-- Drawer Footer (Logout Button) -->
         <div class="p-5 border-t border-slate-200 dark:border-slate-800">
-            <form action="{{ route('logout') }}" method="POST" class="w-full">
-                @csrf
-                <button type="submit" class="w-full py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    Keluar dari Akun
-                </button>
-            </form>
+            <button type="button" onclick="openLogoutModal()" class="w-full py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Keluar dari Akun
+            </button>
         </div>
 
     </aside>
@@ -617,6 +623,12 @@
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nilai (0 - 100)</label>
                     <input type="number" id="nilai_input" name="nilai" min="0" max="100" required placeholder="Contoh: 85" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                </div>
+
+                <!-- CATATAN / FEEDBACK DOSEN (Poin 2) -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Catatan / Deskripsi Penilaian</label>
+                    <textarea id="nilai_catatan" name="catatan_dosen" rows="3" placeholder="Masukkan feedback atau masukan untuk mahasiswa..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"></textarea>
                 </div>
 
                 <div class="flex justify-end gap-2.5 pt-2">
@@ -744,6 +756,51 @@
     @endif
 
 
+    <!-- MODAL CUSTOM POPUP DELETE (Poin 3) -->
+    <div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg shrink-0">!</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Konfirmasi Hapus</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="deleteTargetTitle">Apakah Anda yakin ingin menghapus data ini?</p>
+                </div>
+            </div>
+
+            <form id="deleteConfirmForm" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">Ya, Hapus Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP LOGOUT (Poin 4) -->
+    <div id="logoutConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg shrink-0">!</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Konfirmasi Keluar</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Apakah Anda yakin ingin keluar dari akun Anda?</p>
+                </div>
+            </div>
+
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeLogoutModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">Ya, Keluar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <!-- Javascript Interaktivitas -->
     <script>
         let currentSelectedDosen = null;
@@ -805,18 +862,48 @@
             if (el) el.classList.toggle('hidden');
         }
 
-        function openNilaiModal(subId, namaMhs, currentNilai) {
+        function openNilaiModal(subId, namaMhs, currentNilai, catatanDosen = '') {
             const form = document.getElementById('nilaiForm');
             if (form) {
                 form.action = `/kumpul-tugas/${subId}/nilai`;
                 document.getElementById('nilai_nama_mahasiswa').value = namaMhs;
-                document.getElementById('nilai_input').value = currentNilai !== null ? currentNilai : '';
+                document.getElementById('nilai_input').value = (currentNilai !== null && currentNilai !== 'null') ? currentNilai : '';
+                const catEl = document.getElementById('nilai_catatan');
+                if (catEl) catEl.value = (catatanDosen && catatanDosen !== 'undefined') ? catatanDosen : '';
                 document.getElementById('nilaiModal').classList.remove('hidden');
             }
         }
 
         function closeNilaiModal() {
             const modal = document.getElementById('nilaiModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // POPUP CONFIRM DELETE (Poin 3)
+        function confirmDelete(actionUrl, targetTitle) {
+            const modal = document.getElementById('deleteConfirmModal');
+            const form = document.getElementById('deleteConfirmForm');
+            const titleEl = document.getElementById('deleteTargetTitle');
+            if (modal && form) {
+                form.action = actionUrl;
+                if (titleEl) titleEl.innerText = `Apakah Anda yakin ingin menghapus ${targetTitle}?`;
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // POPUP CONFIRM LOGOUT (Poin 4)
+        function openLogoutModal() {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutConfirmModal');
             if (modal) modal.classList.add('hidden');
         }
 
@@ -972,6 +1059,8 @@
                 closeEditModal();
                 closeKumpulModal();
                 closeNilaiModal();
+                closeDeleteModal();
+                closeLogoutModal();
             }
         });
 

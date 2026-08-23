@@ -122,7 +122,7 @@
         </div>
       </div>
       <h1 class="auth-title">Daftar Akun LMS</h1>
-      <p class="auth-subtitle">Pilih role Anda sebagai Dosen atau Mahasiswa</p>
+      <p class="auth-subtitle">Akun yang Anda daftarkan berperan sebagai Mahasiswa. Akun Dosen & Admin dibuat oleh Admin melalui menu Manajemen Akun.</p>
 
       @if ($errors->any())
         <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
@@ -146,19 +146,10 @@
           <input type="text" id="name" name="name" value="{{ old('name') }}" required placeholder="Contoh: Dr. Budi, S.T. / Ahmad Fulan" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
         </div>
 
-        <!-- Role: Dosen / Mahasiswa -->
+        <!-- Nomor Induk (NIM) -->
         <div>
-          <label for="role" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Daftar Sebagai (Role)</label>
-          <select id="role" name="role" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 bg-white transition">
-            <option value="mahasiswa" {{ old('role') == 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
-            <option value="dosen" {{ old('role') == 'dosen' ? 'selected' : '' }}>Dosen</option>
-          </select>
-        </div>
-
-        <!-- Nomor Induk (NIP / NIM) -->
-        <div>
-          <label for="nomer_induk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM / NIP)</label>
-          <input type="text" id="nomer_induk" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="NIM untuk Mahasiswa, NIP/NIDN untuk Dosen" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+          <label for="nomer_induk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM)</label>
+          <input type="text" id="nomer_induk" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="Masukkan NIM Anda" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
         </div>
 
         <!-- Email -->

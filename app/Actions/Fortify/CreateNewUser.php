@@ -23,16 +23,17 @@ class CreateNewUser implements CreatesNewUsers
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'nomer_induk' => ['required', 'string', 'max:50', 'unique:users'],
-            'role' => ['required', 'string', 'in:dosen,mahasiswa'],
             'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
+        // Registrasi mandiri selalu ber-role 'mahasiswa'.
+        // Akun Dosen / Admin hanya dapat dibuat oleh Admin melalui menu Manajemen Akun.
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'nomer_induk' => $input['nomer_induk'],
-            'role' => $input['role'],
+            'role' => 'mahasiswa',
             'password' => Hash::make($input['password']),
         ]);
     }
