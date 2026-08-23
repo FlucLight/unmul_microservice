@@ -10,6 +10,7 @@ class kumpul(SQLModel, table=True):
     file_mahasiswa: Optional[str] = Field(default="", index=True)
     tanggal_kumpul: datetime = Field(...)
     nilai: Optional[int] = Field(default=None)
+    catatan_dosen: Optional[str] = Field(default=None)
 
 class kumpul_update(SQLModel):
     id_tugas: Optional[int] = None
@@ -18,6 +19,8 @@ class kumpul_update(SQLModel):
     file_mahasiswa: Optional[str] = None
     tanggal_kumpul: Optional[datetime] = None
     nilai: Optional[int] = None
+    catatan_dosen: Optional[str] = None
 
 class beri_nilai(SQLModel):
     nilai: int = Field(ge=0, le=100)
+    catatan_dosen: Optional[str] = Field(default=None)

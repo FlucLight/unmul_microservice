@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from sqlalchemy import text
 from sqlmodel import Session, select
 from config.db import engine, create_db
 from models.kumpul import kumpul, kumpul_update, beri_nilai
@@ -11,9 +12,19 @@ def kumpul_nilai_id(kumpul_id: int):
         return result
 
 
+# migrasi ringan: tambah kolom catatan_dosen jika belum ada (untuk database lama)
+def migrate_db():
+    with engine.begin() as conn:
+        try:
+            conn.execute(text("ALTER TABLE kumpul ADD COLUMN catatan_dosen TEXT NULL"))
+        except Exception:
+            pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db()
+    migrate_db()
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -63,8 +74,12 @@ async def berinilai(kumpul_id: int, data_nilai: beri_nilai):
         if not db_kumpul:
             raise HTTPException(status_code=404, detail="Data pengumpulan tidak ditemukan")
         else:
-            db_kumpul.nilai = data_nilai.nilai
-            db_kumpul.nilai_mahasiswa = float(data_nilai.nilai)
+            data_update = data_nilai.model_dump(exclude_unset=True)
+            if "nilai" in data_update:
+                db_kumpul.nilai = data_nilai.nilai
+                db_kumpul.nilai_mahasiswa = float(data_nilai.nilai)
+            if "catatan_dosen" in data_update:
+                db_kumpul.catatan_dosen = data_nilai.catatan_dosen
             session.add(db_kumpul)
             session.commit()
             session.refresh(db_kumpul)

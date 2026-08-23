@@ -53,19 +53,22 @@ class KumpulTugasController extends Controller
     {
         $request->validate([
             'nilai' => 'required|integer|min:0|max:100',
+            'catatan_dosen' => 'nullable|string|max:1000',
         ], [
             'nilai.required' => 'Nilai wajib diisi.',
             'nilai.min' => 'Nilai minimal 0.',
             'nilai.max' => 'Nilai maksimal 100.',
+            'catatan_dosen.max' => 'Catatan maksimal 1000 karakter.',
         ]);
 
         try {
             $response = Http::timeout(3)->patch("{$this->api2BaseUrl}/beri-nilai/{$id}", [
                 'nilai' => (int) $request->nilai,
+                'catatan_dosen' => $request->filled('catatan_dosen') ? trim($request->catatan_dosen) : '',
             ]);
 
             if ($response->successful()) {
-                return redirect()->back()->with('success', 'Nilai tugas berhasil disimpan!');
+                return redirect()->back()->with('success', 'Nilai & catatan penilaian berhasil disimpan!');
             }
 
             return redirect()->back()->with('error', 'Gagal memberikan nilai: ' . $response->body());
