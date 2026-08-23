@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // Dinonaktifkan (Poin 8): registrasi akun hanya dilakukan oleh Operator
         Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),

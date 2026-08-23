@@ -88,6 +88,66 @@ class ForgotPasswordPopupController extends Controller
     }
 
     /**
+     * Verifikasi kode saja (langkah 2), sebelum menampilkan form password baru.
+     */
+    public function verifyCode(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email'],
+            'nomer_induk' => ['required', 'string'],
+            'code' => ['required', 'string', 'size:6'],
+        ], [
+            'code.required' => 'Kode verifikasi 6-digit wajib dimasukkan.',
+            'code.size' => 'Kode verifikasi harus berjumlah 6 digit.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || trim($user->nomer_induk) !== trim($request->nomer_induk)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pengguna tidak valid atau tidak cocok.',
+            ], 422);
+        }
+
+        $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
+
+        if (!$record) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan verifikasi tidak ditemukan. Silakan klik "Kirim Verifikasi" terlebih dahulu.',
+            ], 422);
+        }
+
+        if (Carbon::parse($record->created_at)->addMinutes(60)->isPast()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode verifikasi telah kadaluarsa. Silakan minta kode baru.',
+            ], 422);
+        }
+
+        if (!Hash::check($request->code, $record->token) && $request->code !== $record->token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode verifikasi yang Anda masukkan salah. Periksa kembali email Anda.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode verifikasi benar! Silakan buat password baru Anda.',
+        ]);
+    }
+
+    /**
      * Verifikasi kode dan atur ulang password baru.
      */
     public function resetWithCode(Request $request): JsonResponse

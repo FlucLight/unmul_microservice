@@ -787,3 +787,116 @@ main.main-polos {
   opacity: 1;
   transform: translateY(0);
 }
+/* ==========================================================================
+   RESPONSIVE / MOBILE-FIRST (Poin 1 & 9)
+   ========================================================================== */
+
+/* Tablet & Below (<= 768px) */
+@media (max-width: 768px) {
+  /* Header lebih ramping */
+  .header-bar {
+    height: 54px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .header-logo-img {
+    height: 34px;
+    max-width: 120px;
+  }
+
+  .brand-line-1 { font-size: 0.72rem; }
+  .brand-line-2 { font-size: 0.6rem; }
+
+  .header-actions {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .btn-hidebar {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+
+  .btn-hidebar svg { width: 15px; height: 15px; }
+
+  .btn-login-header {
+    height: 34px;
+    padding: 0 14px;
+    font-size: 0.78rem;
+  }
+
+  .user-logged-in-badge span {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  /* Modal login: scrollable & pas di layar kecil */
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    margin: auto;
+    padding: 28px 20px 24px 20px;
+    border-radius: 18px;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+
+  .auth-title { font-size: 1.25rem; }
+  .auth-subtitle { font-size: 0.8rem; }
+  .auth-logo img { height: 36px; }
+  .auth-logo-text .l1 { font-size: 0.72rem; }
+  .auth-logo-text .l2 { font-size: 0.62rem; }
+
+  /* Footer menumpuk vertikal */
+  .footer-standard { padding: 30px 16px 18px 16px; }
+  .footer-container { flex-direction: column; gap: 22px; }
+  .footer-brand { max-width: 100%; }
+  .footer-links-group { gap: 24px; }
+  .footer-bottom { flex-direction: column; text-align: center; align-items: center; }
+
+  .toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .toast { width: 100%; box-sizing: border-box; }
+}
+
+/* Ponsel Kecil (<= 480px) */
+@media (max-width: 480px) {
+  .header-bar { padding: 0 10px; }
+
+  /* Sembunyikan teks brand, cukup logo */
+  .header-brand-text { display: none; }
+
+  .btn-hidebar span { display: none; }
+  .btn-hidebar { padding: 0 9px; }
+
+  .user-logged-in-badge { padding: 3px 8px 3px 4px; }
+  .user-logged-in-badge span { max-width: 80px; font-size: 0.7rem; }
+
+  .hidebar-panel { width: 88vw; }
+
+  .modal-card { padding: 24px 16px 20px 16px; border-radius: 16px; }
+
+  .scroll-indicator { font-size: 0.65rem; bottom: 16px; }
+}
+
+/* Layar Besar (>= 1440px): batasi lebar konten agar tetap proporsional */
+@media (min-width: 1440px) {
+  .footer-container,
+  .footer-bottom { max-width: 1280px; }
+}
+

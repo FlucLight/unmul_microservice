@@ -154,7 +154,7 @@
         <div>
           <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Password</label>
           <div class="relative">
-            <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Masukkan password" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
+            <input type="password" id="password" name="password" required minlength="8" autocomplete="current-password" placeholder="Masukkan password (min. 8 karakter)" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
             <button type="button" id="togglePassword" onclick="togglePasswordVisibility('password', this)" class="absolute right-0 top-0 h-full px-3.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -177,7 +177,7 @@
         </button>
       </form>
 
-      <p class="auth-footer-text">Belum punya akun? <a href="{{ route('register') }}">Daftar Akun di sini</a></p>
+      <p class="auth-footer-text">Akun LMS hanya dapat dibuat oleh <strong>Operator Fakultas</strong>. Hubungi operator jika belum memiliki akun.</p>
     </div>
 
     <!-- FORGOT PASSWORD CARD (IN-PLACE POPUP/VIEW) -->
