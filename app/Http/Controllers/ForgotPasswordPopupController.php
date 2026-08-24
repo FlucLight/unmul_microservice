@@ -71,7 +71,7 @@ class ForgotPasswordPopupController extends Controller
         // Coba kirimkan email jika mail driver aktif
         try {
             if (config('mail.default') && config('mail.default') !== 'null') {
-                Mail::raw("Halo {$user->name},\n\nBerikut adalah Kode Verifikasi Reset Password akun LMS Fakultas Teknik UNMUL Anda:\n\nKODE VERIFIKASI: {$code}\n\nKode ini berlaku selama 60 menit. Jangan berikan kode ini kepada siapapun.\n\nSalam,\nLMS Fakultas Teknik UNMUL", function ($message) use ($user) {
+                Mail::send('emails.reset-password-code', ['user' => $user, 'code' => $code], function ($message) use ($user) {
                     $message->to($user->email)
                         ->subject('Kode Verifikasi Reset Password — LMS FT UNMUL');
                 });
