@@ -83,7 +83,6 @@ class ForgotPasswordPopupController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Kode verifikasi 6-digit telah dikirim ke {$user->email}. Silakan cek kotak masuk/spam Anda.",
-            'code' => app()->environment('local') ? $code : null, // Memudahkan pengujian saat di localhost
         ]);
     }
 

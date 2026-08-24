@@ -325,9 +325,6 @@ function setupApp() {
           showToast('Kode verifikasi berhasil dikirim!', '');
           if (forgotCode) {
             forgotCode.focus();
-            if (data.code) {
-              forgotCode.value = data.code; // Membantu otomatis saat mode lokal
-            }
           }
         } else {
           showForgotAlert('error', data.message || 'Gagal mengirim kode verifikasi.');
