@@ -100,9 +100,8 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: translateZ(0) scale(1.06);
+  transform: translateZ(0);
   backface-visibility: hidden;
-  filter: blur(5px);
 }
 
 .video-overlay {
@@ -112,7 +111,7 @@ body {
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.68) 0%, rgba(15, 23, 42, 0.9) 100%);
+  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.99) 0%, rgba(15, 23, 42, 0.99) 100%);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   transform: translateZ(0);
@@ -781,6 +780,15 @@ main.main-polos {
   margin: 0 auto;
   text-align: center;
   color: #ffffff;
+
+  /* Panel gelap transparan agar teks tetap terbaca di atas video terang */
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.62), rgba(15, 23, 42, 0.42));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  padding: clamp(30px, 5vw, 54px) clamp(18px, 4vw, 48px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .hero-badge {
@@ -804,7 +812,7 @@ main.main-polos {
   line-height: 1.14;
   letter-spacing: -0.02em;
   margin: 22px 0 18px;
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65), 0 4px 40px rgba(0, 0, 0, 0.45);
 }
 
 .hero-title-accent {
@@ -817,9 +825,10 @@ main.main-polos {
 .hero-desc {
   font-size: clamp(0.92rem, 2vw, 1.08rem);
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.88);
   max-width: 620px;
   margin: 0 auto 34px;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
 }
 
 .hero-actions {
@@ -884,14 +893,16 @@ main.main-polos {
   font-size: 1.7rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .hero-stat span {
   font-size: 0.76rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.72);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
 }
 
 /* ---------- KARTU FITUR ---------- */
@@ -905,20 +916,21 @@ main.main-polos {
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(15, 23, 42, 0.38));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
   padding: 26px 24px;
   color: #ffffff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
   transition: transform var(--transition-normal), background var(--transition-normal), border-color var(--transition-normal);
 }
 
 .feature-card:hover {
   transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.11);
-  border-color: rgba(255, 122, 0, 0.45);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.68), rgba(15, 23, 42, 0.48));
+  border-color: rgba(255, 122, 0, 0.55);
 }
 
 .feature-icon {
@@ -942,7 +954,8 @@ main.main-polos {
 .feature-card p {
   font-size: 0.86rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
 
 /* Scroll Indicator Subtle Icon at bottom of screen */
