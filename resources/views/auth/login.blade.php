@@ -50,6 +50,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      filter: blur(5px);
+      transform: scale(1.06);
     }
     .video-overlay {
       position: fixed;
@@ -58,7 +60,7 @@
       width: 100vw;
       height: 100vh;
       z-index: 1;
-      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.8) 100%);
+      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.93) 100%);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
     }

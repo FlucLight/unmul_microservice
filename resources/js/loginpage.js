@@ -158,12 +158,13 @@ function setupApp() {
     document.body.style.overflow = '';
   }
 
-  if (btnHidebarToggle) {
-    btnHidebarToggle.addEventListener('click', (e) => {
+  // Semua tombol pembuka drawer (nav desktop, hamburger mobile, hero)
+  document.querySelectorAll('.js-open-hidebar').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
       openHidebar();
     });
-  }
+  });
   if (btnCloseHidebar) {
     btnCloseHidebar.addEventListener('click', (e) => {
       e.preventDefault();
@@ -192,6 +193,19 @@ function setupApp() {
       });
     });
   }
+
+  // ==========================================
+  // NAVBAR: GANTI STATE TRANSPARAN -> SOLID SAAT SCROLL
+  // ==========================================
+  const headerBar = document.getElementById('headerBar');
+
+  function handleHeaderState() {
+    if (!headerBar) return;
+    headerBar.classList.toggle('scrolled', (window.scrollY || window.pageYOffset) > 24);
+  }
+
+  window.addEventListener('scroll', handleHeaderState, { passive: true });
+  handleHeaderState();
 
   // ==========================================
   // POP-UP LOGIN / REGISTER / FORGOT PASSWORD MODAL LOGIC
@@ -565,6 +579,31 @@ function setupApp() {
           // Login sukses -> pindah ke halaman tujuan
           showToast('Login berhasil! Mengalihkan...', '');
           window.location.href = response.url;
+          return;
+        }
+
+        // Fortify membalas JSON (tanpa redirect) saat request mengirim Accept: application/json
+        if (response.ok) {
+          let data = null;
+          try {
+            data = await response.json();
+          } catch (parseErr) {
+            data = null;
+          }
+
+          if (data && typeof data.two_factor !== 'undefined') {
+            if (data.two_factor) {
+              window.location.href = '/two-factor-challenge';
+            } else {
+              showToast('Login berhasil! Mengalihkan...', '');
+              window.location.href = '/dashboard';
+            }
+            return;
+          }
+        }
+
+        if (response.status === 419) {
+          showLoginAlert('Sesi Anda telah kedaluwarsa. Muat ulang halaman lalu coba lagi.');
           return;
         }
 

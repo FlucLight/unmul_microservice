@@ -30,49 +30,49 @@
     <div class="video-overlay"></div>
   </div>
 
-  <!-- HEADER BAR -->
+  <!-- NAVBAR -->
   <header class="header-bar" id="headerBar">
-    <a href="{{ route('home') }}" class="header-logo-container">
-      <img src="{{ asset('logo.png') }}" alt="Logo" class="header-logo-img">
-      <div class="header-brand-text">
-        <span class="brand-line-1">FAKULTAS TEKNIK</span>
-        <span class="brand-line-2">UNIVERSITAS MULAWARMAN</span>
-      </div>
-    </a>
+    <div class="header-inner">
+      <a href="{{ route('home') }}" class="header-logo-container" aria-label="Beranda LMS FT UNMUL">
+        <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL" class="header-logo-img">
+        <div class="header-brand-text">
+          <span class="brand-line-1">FAKULTAS TEKNIK</span>
+          <span class="brand-line-2">UNIVERSITAS MULAWARMAN</span>
+        </div>
+      </a>
 
-    <div class="header-actions">
-      <!-- Tombol ke Halaman Tugas & Modul (Hanya untuk yang sudah login - Poin 5) -->
-      @auth
-        <a href="{{ route('tugas.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-          <span>Tugas Kuliah</span>
-        </a>
-        <a href="{{ route('modul.index') }}" class="btn-hidebar" style="text-decoration: none; color: inherit;">
-          <span>Modul Kuliah</span>
-        </a>
-      @endauth
+      <!-- Menu Desktop -->
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="{{ route('home') }}" class="main-nav-link active">Beranda</a>
+        @auth
+          <a href="{{ route('tugas.index') }}" class="main-nav-link">Tugas Kuliah</a>
+          <a href="{{ route('modul.index') }}" class="main-nav-link">Modul Kuliah</a>
+        @endauth
+        <button type="button" class="main-nav-link js-open-hidebar">Jurusan</button>
+      </nav>
 
-      <!-- Tombol Hidebar -->
-      <button type="button" class="btn-hidebar" id="btnHidebarToggle" aria-label="Buka Menu Hidebar">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        <span>Jurusan</span>
-      </button>
+      <div class="header-actions">
+        @guest
+          <button type="button" class="btn-login-header btn-open-login-modal" id="btnLoginHeader">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            <span>Log In</span>
+          </button>
+        @else
+          <a href="{{ route('tugas.index') }}" class="user-logged-in-badge" aria-label="Ke halaman tugas">
+            <div class="user-avatar-initial">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+            <span>{{ auth()->user()->name }} ({{ ucfirst(auth()->user()->role) }})</span>
+          </a>
+        @endguest
 
-      @auth
-        <!-- User Badge if Logged In -->
-        <a href="{{ route('tugas.index') }}" class="user-logged-in-badge flex items-center gap-2" style="display: flex; text-decoration: none; color: inherit;">
-          <div style="width:28px; height:28px; border-radius:50%; background:#B4832A; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px;">
-            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-          </div>
-          <span>{{ auth()->user()->name }} ({{ ucfirst(auth()->user()->role) }})</span>
-        </a>
-      @else
-        <!-- Tombol Login -->
-        <button type="button" class="btn-login-header btn-open-login-modal" id="btnLoginHeader">
-          <span>Log In</span>
+        <!-- Hamburger Mobile -->
+        <button type="button" class="btn-mobile-menu js-open-hidebar" aria-label="Buka menu">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
-      @endauth
+      </div>
     </div>
   </header>
 
@@ -85,6 +85,26 @@
     </div>
 
     <div class="hidebar-body">
+      <!-- Quick Nav (hanya tampil di mobile) -->
+      <div class="hidebar-quicknav">
+        <span class="hidebar-quicknav-title">Menu</span>
+        <a href="{{ route('home') }}" class="hidebar-quicknav-link">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10" /></svg>
+          Beranda
+        </a>
+        @auth
+          <a href="{{ route('tugas.index') }}" class="hidebar-quicknav-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+            Tugas Kuliah
+          </a>
+          <a href="{{ route('modul.index') }}" class="hidebar-quicknav-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            Modul Kuliah
+          </a>
+        @endauth
+      </div>
+
+      <span class="hidebar-section-label">Daftar Jurusan FT UNMUL</span>
       <ul class="hidebar-menu-list">
         <li><a href="https://ts.ft.unmul.ac.id/" class="hidebar-link" target="_blank"><span class="hidebar-link-text">TEKNIK SIPIL</span><span class="hidebar-arrow">&rsaquo;</span></a></li>
         <li><a href="https://s1tambang.ft.unmul.ac.id/" class="hidebar-link" target="_blank"><span class="hidebar-link-text">TEKNIK PERTAMBANGAN</span><span class="hidebar-arrow">&rsaquo;</span></a></li>
@@ -343,6 +363,90 @@
   </script>
 
   <main class="main-polos">
+    <!-- HERO SECTION -->
+    <section class="hero">
+      <span class="hero-badge">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        Learning Management System
+      </span>
+
+      <h1 class="hero-title">
+        Portal Pembelajaran<br>
+        <span class="hero-title-accent">Fakultas Teknik</span> Universitas Mulawarman
+      </h1>
+
+      <p class="hero-desc">
+        Kelola tugas kuliah, akses modul pembelajaran, dan pantau penilaian dalam satu platform
+        terpadu untuk mahasiswa, dosen, dan admin Fakultas Teknik.
+      </p>
+
+      <div class="hero-actions">
+        @guest
+          <button type="button" class="hero-btn primary btn-open-login-modal">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            Masuk ke LMS
+          </button>
+        @else
+          <a href="{{ route('tugas.index') }}" class="hero-btn primary">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+            Lihat Tugas Kuliah
+          </a>
+        @endguest
+        <button type="button" class="hero-btn ghost js-open-hidebar">
+          Jelajahi Jurusan
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <b>10</b>
+          <span>Program Studi</span>
+        </div>
+        <div class="hero-stat">
+          <b>100%</b>
+          <span>Daring &amp; Terpadu</span>
+        </div>
+        <div class="hero-stat">
+          <b>24/7</b>
+          <span>Akses Kapan Saja</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FITUR UNGGULAN -->
+    <section class="features" aria-label="Fitur unggulan">
+      <article class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+        </div>
+        <h3>Manajemen Tugas</h3>
+        <p>Dosen membagikan tugas beserta deadline, mahasiswa mengumpulkan lewat link Drive, dan penilaian tercatat rapi.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+        </div>
+        <h3>Modul Kuliah Digital</h3>
+        <p>Materi dan modul setiap mata kuliah tersedia terpusat, mudah diakses kapan pun dibutuhkan.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+        </div>
+        <h3>Penilaian Transparan</h3>
+        <p>Nilai dari dosen tersimpan aman dan dapat dipantau langsung oleh mahasiswa tanpa proses berbelit.</p>
+      </article>
+    </section>
+
     <div class="scroll-indicator" id="scrollIndicator">
       <span>Scroll Ke Bawah</span>
       <span>&darr;</span>
