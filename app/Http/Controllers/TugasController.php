@@ -13,9 +13,9 @@ class TugasController extends Controller
     private string $api2BaseUrl = 'http://127.0.0.1:8001';
 
     /**
-     * Menampilkan halaman daftar tugas (UI Utama)
+     * Mengambil data tugas (FastAPI 1) & pengumpulan (FastAPI 2)
      */
-    public function index()
+    private function fetchData(): array
     {
         $tugasList = [];
         $kumpulList = [];
@@ -52,7 +52,79 @@ class TugasController extends Controller
             Log::error("API FastAPI 2 Error: " . $e->getMessage());
         }
 
+        return [$tugasList, $kumpulList, $apiConnected, $api2Connected, $errorMessage];
+    }
+
+    /**
+     * Filter privasi berdasarkan role:
+     * - ADMIN      : TIDAK difilter sama sekali -> bisa mengakses semua tugas & semua pengumpulan
+     *                (tidak diberi validasi "khusus dosen" / "khusus mahasiswa").
+     * - Dosen      : hanya melihat tugas miliknya sendiri.
+     * - Mahasiswa  : hanya melihat pengumpulan miliknya sendiri.
+     */
+    private function applyRoleFilters(array $tugasList, array $kumpulList): array
+    {
+        $user = auth()->user();
+
+        // CATATAN: admin langsung lolos dari kedua filter di bawah ini.
+        if ($user && $user->isDosen() && !$user->isAdmin()) {
+            $tugasList = array_values(array_filter($tugasList, function ($t) use ($user) {
+                return strcasecmp($t['nama_dosen'] ?? '', $user->name) === 0;
+            }));
+        }
+
+        if ($user && $user->isMahasiswa()) {
+            $kumpulList = array_values(array_filter($kumpulList, function ($k) use ($user) {
+                return strcasecmp($k['nama_mahasiswa'] ?? '', $user->name) === 0;
+            }));
+        }
+
+        return [$tugasList, $kumpulList];
+    }
+
+    /**
+     * Menampilkan halaman daftar tugas (UI Utama)
+     */
+    public function index()
+    {
+        [$tugasList, $kumpulList, $apiConnected, $api2Connected, $errorMessage] = $this->fetchData();
+        [$tugasList, $kumpulList] = $this->applyRoleFilters($tugasList, $kumpulList);
+
         return view('tugas.index', compact('tugasList', 'kumpulList', 'apiConnected', 'api2Connected', 'errorMessage'));
+    }
+
+    /**
+     * Halaman Arsip: tugas yang sudah melewati deadline (data tetap tersimpan di database).
+     *
+     * CATATAN PERUBAHAN:
+     * - Tidak ada penghapusan data; tugas lewat deadline hanya "diarsipkan" dari halaman utama.
+     * - Admin tetap melihat seluruh arsip tanpa validasi khusus dosen.
+     * - Sorting sisi server: deadline_desc (default) | deadline_asc.
+     */
+    public function arsip(Request $request)
+    {
+        [$tugasList, $kumpulList, $apiConnected, $api2Connected, $errorMessage] = $this->fetchData();
+
+        // Saring hanya tugas yang deadline-nya sudah terlewat
+        $tugasList = array_values(array_filter($tugasList, function ($t) {
+            if (!isset($t['deadline_tugas'])) {
+                return false;
+            }
+            return \Carbon\Carbon::parse($t['deadline_tugas'])->isPast();
+        }));
+
+        // Sorting sisi server untuk halaman arsip
+        $sort = $request->query('sort', 'deadline_desc');
+        $deadlineAsc = $sort === 'deadline_asc';
+        usort($tugasList, function ($a, $b) use ($deadlineAsc) {
+            $ta = \Carbon\Carbon::parse($a['deadline_tugas'] ?? now())->timestamp;
+            $tb = \Carbon\Carbon::parse($b['deadline_tugas'] ?? now())->timestamp;
+            return $deadlineAsc ? $ta <=> $tb : $tb <=> $ta;
+        });
+
+        [$tugasList, $kumpulList] = $this->applyRoleFilters($tugasList, $kumpulList);
+
+        return view('tugas.arsip', compact('tugasList', 'kumpulList', 'apiConnected', 'api2Connected', 'errorMessage'));
     }
 
     /**
@@ -71,11 +143,14 @@ class TugasController extends Controller
         $namaDosen = $request->nama_dosen ?? auth()->user()->name ?? 'Dosen';
         $deadlineFormatted = date('Y-m-d\TH:i:s', strtotime($request->deadline_tugas));
 
+        // CATATAN PERUBAHAN: kirim 'show_nilai' ke FastAPI 1.
+        // Ini izin dari dosen apakah nilai boleh dilihat mahasiswa atau tidak.
         try {
             $response = Http::post("{$this->apiBaseUrl}/tambah", [
                 'nama_tugas' => $request->nama_tugas,
                 'nama_dosen' => $namaDosen,
                 'deadline_tugas' => $deadlineFormatted,
+                'show_nilai' => $request->boolean('show_nilai'),
             ]);
 
             if ($response->successful()) {
@@ -106,6 +181,7 @@ class TugasController extends Controller
                 'nama_tugas' => $request->nama_tugas,
                 'nama_dosen' => $request->nama_dosen,
                 'deadline_tugas' => $deadlineFormatted,
+                'show_nilai' => $request->boolean('show_nilai'),
             ]);
 
             if ($response->successful()) {

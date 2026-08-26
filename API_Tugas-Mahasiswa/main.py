@@ -1,8 +1,19 @@
 from fastapi import FastAPI, HTTPException
+from sqlalchemy import text
 from sqlmodel import Session, select
 from config.database import engine, create_db_all
 from models.tugas import tugas, tugas_update
 from contextlib import asynccontextmanager
+
+
+# migrasi ringan: tambah kolom show_nilai jika belum ada (untuk database lama)
+def migrate_db():
+    with engine.begin() as conn:
+        try:
+            conn.execute(text("ALTER TABLE tugas ADD COLUMN show_nilai BOOLEAN NULL DEFAULT 1"))
+        except Exception:
+            pass
+
 
 
 # untuk ambil id
@@ -15,6 +26,7 @@ def tugas_nilai_id(tugas_id: int):
 @asynccontextmanager 
 async def lifespan(app: FastAPI):
     create_db_all()
+    migrate_db()
     yield
 
 

@@ -32,6 +32,7 @@ Route::middleware([
 
     // Halaman Lihat Tugas & Modul Kuliah (Dosen, Mahasiswa, Admin)
     Route::get('/tugas', [TugasController::class, 'index'])->name('tugas.index');
+    Route::get('/tugas/arsip', [TugasController::class, 'arsip'])->name('tugas.arsip');
     Route::get('/modul', [ModulController::class, 'index'])->name('modul.index');
 
     // Khusus DOSEN & ADMIN: CRUD Tugas, Beri Nilai, & CRUD Modul Kuliah
@@ -41,6 +42,8 @@ Route::middleware([
         Route::put('/tugas/{id}', [TugasController::class, 'update'])->name('tugas.update');
         Route::delete('/tugas/{id}', [TugasController::class, 'destroy'])->name('tugas.destroy');
         Route::patch('/kumpul-tugas/{id}/nilai', [KumpulTugasController::class, 'updateNilai'])->name('kumpul.nilai');
+        Route::patch('/kumpul-tugas/{id}/setujui', [KumpulTugasController::class, 'approve'])->name('kumpul.approve');
+        Route::patch('/kumpul-tugas/{id}/tolak', [KumpulTugasController::class, 'reject'])->name('kumpul.reject');
         Route::delete('/kumpul-tugas/{id}', [KumpulTugasController::class, 'destroy'])->name('kumpul.destroy');
 
         // Modul Kuliah (FastAPI 3 - Port 8002)
