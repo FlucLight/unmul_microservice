@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from datetime import datetime
 from sqlalchemy import text
 from sqlmodel import Session, select
 from config.db import engine, create_db
@@ -17,6 +18,14 @@ def migrate_db():
     with engine.begin() as conn:
         try:
             conn.execute(text("ALTER TABLE kumpul ADD COLUMN catatan_dosen TEXT NULL"))
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE kumpul ADD COLUMN dinilai_at DATETIME NULL"))
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE kumpul ADD COLUMN resubmit_status VARCHAR NULL DEFAULT 'none'"))
         except Exception:
             pass
 
@@ -75,9 +84,12 @@ async def berinilai(kumpul_id: int, data_nilai: beri_nilai):
             raise HTTPException(status_code=404, detail="Data pengumpulan tidak ditemukan")
         else:
             data_update = data_nilai.model_dump(exclude_unset=True)
+            # CATATAN PERUBAHAN: nilai lama langsung diganti (overwrite) dan
+            # 'dinilai_at' dicatat ulang setiap kali dosen memberi/mengubah nilai.
             if "nilai" in data_update:
                 db_kumpul.nilai = data_nilai.nilai
                 db_kumpul.nilai_mahasiswa = float(data_nilai.nilai)
+                db_kumpul.dinilai_at = datetime.now()
             if "catatan_dosen" in data_update:
                 db_kumpul.catatan_dosen = data_nilai.catatan_dosen
             session.add(db_kumpul)

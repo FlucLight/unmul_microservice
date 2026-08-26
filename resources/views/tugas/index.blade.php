@@ -131,6 +131,13 @@
                             <span class="hidden md:inline">Modul Kuliah</span><span class="md:hidden">Modul</span>
                         </a>
 
+                        <a href="{{ route('tugas.arsip') }}"
+                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
+                                  {{ request()->routeIs('tugas.arsip') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
+                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('tugas.arsip') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                            <span class="hidden md:inline">Arsip</span>
+                        </a>
+
                         @if(auth()->user()->role === 'admin')
                         <a href="{{ route('admin.pengguna') }}"
                            class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
@@ -224,37 +231,92 @@
                 @endif
             </div>
 
+            {{-- CATATAN: variabel role HARUS didefinisikan di sini (sebelum dipakai layout grid) --}}
+            @php
+                $isDosenOnly = auth()->user()->isDosen() && !auth()->user()->isAdmin();
+                $canManage = auth()->user()->isDosen() || auth()->user()->isAdmin();
+                $canSubmit = auth()->user()->isMahasiswa() || auth()->user()->isAdmin();
+                $showMySummary = $canSubmit;
+            @endphp
+
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
                 <!-- LEFT COLUMN: Ledger / Daftar Tugas -->
-                <div class="lg:col-span-8 space-y-4">
+                <div class="{{ $isDosenOnly ? 'lg:col-span-12' : 'lg:col-span-8' }} space-y-4">
                     <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
                         
-                        <div class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
+                        <div class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-5 py-3 flex items-center justify-between flex-wrap gap-2">
                             <div id="task-table-title" class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>Semua Tugas Kuliah</span>
                                 <span id="filter-badge" class="hidden bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded text-[10px] font-mono">Filter Aktif</span>
                             </div>
-                            <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tenggat Waktu</span>
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4 4m0 0l4-4m-4 4V7"/></svg>
+                                    Urutkan
+                                    <select id="sort-select" onchange="sortTasks(this.value)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer">
+                                        <option value="deadline_asc">Deadline Terdekat</option>
+                                        <option value="deadline_desc">Terbaru &rarr; Terlama</option>
+                                        <option value="nama_asc">Abjad A &rarr; Z</option>
+                                        <option value="nama_desc">Abjad Z &rarr; A</option>
+                                    </select>
+                                </label>
+                                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tenggat Waktu</span>
+                            </div>
                         </div>
 
                         <div id="task-list-container" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                            @php
+                                /*
+                                 | CATATAN HAK AKSES (ROLE):
+                                 | - $isDosenOnly : dosen murni -> hanya melihat tugas miliknya sendiri
+                                 | - $canManage   : dosen & admin -> boleh mengelola tugas, memberi nilai, setujui/tolak kirim ulang
+                                 | - $canSubmit   : mahasiswa & ADMIN -> boleh mengumpulkan / mengajukan kirim ulang tugas
+                                 |                  (admin dikecualikan dari validasi "khusus dosen/mahasiswa" dan bisa akses semuanya)
+                                 | Variabel ini sudah didefinisikan di atas (sebelum grid), di sini hanya helper grade.
+                                 */
+                                $gradeBadgeClass = function ($huruf) {
+                                    return match ($huruf) {
+                                        'A' => 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+                                        'B' => 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30',
+                                        'C' => 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+                                        'D' => 'bg-orange-500/15 text-orange-600 dark:text-orange-300 border-orange-500/30',
+                                        default => 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30',
+                                    };
+                                };
+                            @endphp
                             @forelse($tugasList as $index => $tugas)
                                 @php
                                     $id = $tugas['id_tugas'] ?? $tugas['id'] ?? null;
                                     $deadline = isset($tugas['deadline_tugas']) ? \Carbon\Carbon::parse($tugas['deadline_tugas']) : null;
                                     $isPast = $deadline ? $deadline->isPast() : false;
-                                    
+                                    $showNilai = array_key_exists('show_nilai', $tugas) ? (bool) $tugas['show_nilai'] : true;
+
                                     // Data pengumpulan dari FastAPI 2
                                     $submissions = collect($kumpulList)->where('id_tugas', $id);
-                                    
-                                    // Cek apakah mahasiswa ini sudah mengumpulkan tugas ini
+
+                                    // Mahasiswa hanya melihat datanya sendiri (sudah difilter di controller)
                                     $mySubmission = $submissions->firstWhere('nama_mahasiswa', auth()->user()->name);
+                                    $myPending = $submissions->first(function ($s) {
+                                        return strcasecmp($s['nama_mahasiswa'] ?? '', auth()->user()->name) === 0
+                                            && ($s['resubmit_status'] ?? 'none') === 'pending';
+                                    });
+
+                                    $getNilai = function ($sub) {
+                                        if (isset($sub['nilai']) && $sub['nilai'] !== null && $sub['nilai'] !== '') {
+                                            return (int) $sub['nilai'];
+                                        }
+                                        if (isset($sub['nilai_mahasiswa']) && $sub['nilai_mahasiswa'] !== null && $sub['nilai_mahasiswa'] !== '' && (float) $sub['nilai_mahasiswa'] > 0) {
+                                            return (int) $sub['nilai_mahasiswa'];
+                                        }
+                                        return null;
+                                    };
 
                                     if ($isPast) {
                                         $statusBadge = 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30';
                                         $statusText = 'Lewat Tenggat';
-                                    } elseif ($index % 3 == 0) {
+                                    } elseif ($canSubmit && $mySubmission && ($mySubmission['resubmit_status'] ?? 'none') !== 'pending') {
+                                        // [PERUBAHAN] Status "Selesai" berlaku untuk mahasiswa & admin yang sudah mengumpulkan
                                         $statusBadge = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30';
                                         $statusText = 'Selesai';
                                     } else {
@@ -263,7 +325,10 @@
                                     }
                                 @endphp
 
-                                <div class="task-row p-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150 space-y-3" data-dosen="{{ strtolower($tugas['nama_dosen'] ?? '') }}">
+                                <div class="task-row p-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150 space-y-3"
+                                     data-dosen="{{ strtolower($tugas['nama_dosen'] ?? '') }}"
+                                     data-deadline="{{ $deadline ? $deadline->timestamp : 0 }}"
+                                     data-nama="{{ mb_strtolower($tugas['nama_tugas'] ?? '') }}">
                                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                         <div class="min-w-0 flex-1">
                                             <div class="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -279,23 +344,28 @@
 
                                         <div class="flex items-center sm:flex-col sm:items-end justify-between gap-2 shrink-0">
                                             <span class="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                                                {{ $deadline ? $deadline->translatedFormat('j M Y, H:i') : 'Tanpa Tenggat' }}
+                                                {{ $deadline ? $deadline->translatedFormat('l, j F Y \• H:i') : 'Tanpa Tenggat' }}
                                             </span>
 
                                             <div class="flex items-center gap-2">
-                                                <!-- FITUR MAHASISWA / ADMIN: Kumpulkan Tugas & Status Pengumpulan -->
-                                                @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
-                                                    @if($mySubmission)
+                                                {{-- [PERUBAHAN] Tombol Kumpulkan/Kirim Ulang: mahasiswa & ADMIN (admin tidak dibatasi validasi khusus mahasiswa) --}}
+                                                @if($canSubmit)
+                                                    @if($myPending)
+                                                        <span class="px-2.5 py-1 bg-sky-500/15 text-sky-600 dark:text-sky-300 border border-sky-500/30 text-xs font-bold rounded-lg inline-flex items-center gap-1.5" title="Menunggu persetujuan dosen untuk kirim ulang">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                            Kirim Ulang: Menunggu Izin
+                                                        </span>
+                                                    @elseif($mySubmission)
                                                         <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-lg inline-flex items-center gap-1.5">
                                                             <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                                             Sudah Dikumpulkan
                                                         </span>
-                                                        <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 transition flex items-center gap-1" title="Kirim Ulang / Perbarui Link">
+                                                        <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}", true)' class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 transition flex items-center gap-1" title="Kirim Ulang (Memerlukan Persetujuan Dosen)">
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                                             Kirim Ulang
                                                         </button>
                                                     @else
-                                                        <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}")' class="px-3 py-1 bg-gradient-to-r from-[#FF7A00] to-[#FF9225] hover:from-[#e06b00] hover:to-[#ff8314] text-white text-xs font-bold rounded-lg shadow-md shadow-orange-500/20 transition flex items-center gap-1.5">
+                                                        <button onclick='openKumpulModal({{ $id }}, "{{ addslashes($tugas['nama_tugas']) }}", false)' class="px-3 py-1 bg-gradient-to-r from-[#FF7A00] to-[#FF9225] hover:from-[#e06b00] hover:to-[#ff8314] text-white text-xs font-bold rounded-lg shadow-md shadow-orange-500/20 transition flex items-center gap-1.5">
                                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                                             Kumpulkan
                                                         </button>
@@ -303,7 +373,7 @@
                                                 @endif
 
                                                 <!-- FITUR DOSEN / ADMIN: Edit & Hapus Tugas -->
-                                                @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
+                                                @if($canManage)
                                                     <button onclick='openEditModal({{ json_encode($tugas) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Tugas">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
@@ -315,87 +385,182 @@
                                         </div>
                                     </div>
 
-                                    <!-- SECTION PENGUMPULAN MAHASISWA (FASTAPI 2 DATA + NILAI) -->
-                                    <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-3.5 text-xs space-y-2.5">
-                                        <div class="flex items-center justify-between font-medium">
-                                            <span class="text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
-                                                Total Pengumpulan: <strong class="text-orange-600 dark:text-orange-400">{{ count($submissions) }} Mahasiswa</strong>
-                                            </span>
-                                            @if(count($submissions) > 0)
-                                                <button onclick="toggleSubmissionList({{ $id }})" class="text-orange-600 dark:text-orange-400 hover:text-orange-500 hover:underline text-[11px] font-bold">
-                                                    Tampilkan Detail &raquo;
-                                                </button>
-                                            @endif
-                                        </div>
+                                    {{-- ====== MAHASISWA & ADMIN: RINGKASAN PENGUMPULAN MILIK SENDIRI ====== --}}
+                                    @if($showMySummary)
+                                        @if($myPending || $mySubmission)
+                                            @php
+                                                $activeSub = $myPending ?: $mySubmission;
+                                                $subId = $activeSub['id_kumpul'] ?? $activeSub['id'] ?? null;
+                                                $tglKumpul = isset($activeSub['tanggal_kumpul']) ? \Carbon\Carbon::parse($activeSub['tanggal_kumpul'])->translatedFormat('l, j F Y \jam H:i') : '-';
+                                                $tglNilai = isset($activeSub['dinilai_at']) && $activeSub['dinilai_at'] ? \Carbon\Carbon::parse($activeSub['dinilai_at'])->translatedFormat('l, j F Y \jam H:i') : null;
+                                                $nilaiVal = $showNilai ? $getNilai($activeSub) : null;
+                                                $gradeHuruf = $nilaiVal !== null ? \App\Support\Grade::huruf($nilaiVal) : null;
+                                                $fileUrl = $activeSub['file_mahasiswa'] ?? null;
+                                                $catatanVal = ($showNilai && !empty($activeSub['catatan_dosen'])) ? $activeSub['catatan_dosen'] : null;
+                                            @endphp
+                                            <div class="bg-slate-50 dark:bg-slate-950/60 border {{ $myPending ? 'border-sky-500/40' : 'border-slate-200 dark:border-slate-800/80' }} rounded-xl p-3.5 text-xs space-y-2.5">
+                                                @if($myPending)
+                                                    <div class="flex items-center gap-2 p-2 bg-sky-500/10 border border-sky-500/30 rounded-lg text-sky-700 dark:text-sky-300 font-semibold">
+                                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        Pengajuan kirim ulang kamu sedang menunggu persetujuan dosen. Pengumpulan lama tetap digunakan sampai disetujui.
+                                                    </div>
+                                                @endif
 
-                                        @if(count($submissions) > 0)
-                                            <div id="sub-list-{{ $id }}" class="hidden pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
-                                                @foreach($submissions as $sub)
-                                                    @php
-                                                        $subId = $sub['id_kumpul'] ?? $sub['id'] ?? null;
-                                                        $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('j M Y, H:i') : '-';
-                                                        
-                                                        // Evaluasi Nilai dari nilai / nilai_mahasiswa
-                                                        $nilaiVal = null;
-                                                        if (array_key_exists('nilai', $sub) && $sub['nilai'] !== null && $sub['nilai'] !== '') {
-                                                            $nilaiVal = (int) $sub['nilai'];
-                                                        } elseif (array_key_exists('nilai_mahasiswa', $sub) && $sub['nilai_mahasiswa'] !== null && $sub['nilai_mahasiswa'] !== '' && (float)$sub['nilai_mahasiswa'] > 0) {
-                                                            $nilaiVal = (int) $sub['nilai_mahasiswa'];
-                                                        }
-                                                        
-                                                        $fileUrl = $sub['file_mahasiswa'] ?? null;
-                                                    @endphp
-                                                    <div class="flex items-center justify-between bg-white dark:bg-slate-900/90 p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex-wrap gap-2">
-                                                        <div class="flex items-center gap-2 flex-wrap">
-                                                            <span class="font-bold text-slate-800 dark:text-slate-200">{{ $sub['nama_mahasiswa'] }}</span>
-                                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">({{ $tglKumpul }})</span>
+                                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <span class="font-bold text-slate-800 dark:text-slate-200">Pengumpulanmu</span>
+                                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Dikumpulkan: {{ $tglKumpul }}</span>
 
-                                                            <!-- Link Google Drive jika tersedia -->
-                                                            @if(!empty($fileUrl))
-                                                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Link Google Drive">
-                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                                                    Link Drive
-                                                                </a>
+                                                        @if(!empty($fileUrl))
+                                                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Link Google Drive">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                                Link Drive
+                                                            </a>
+                                                        @endif
+
+                                                        @if($showNilai && $nilaiVal !== null)
+                                                            <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-extrabold text-[11px]">
+                                                                Nilai: {{ $nilaiVal }} / 100
+                                                            </span>
+                                                            <span class="px-2 py-0.5 border rounded font-extrabold text-[11px] {{ $gradeBadgeClass($gradeHuruf) }}" title="Grade {{ $gradeHuruf }}">
+                                                                Grade: {{ $gradeHuruf }}
+                                                            </span>
+                                                            @if($tglNilai)
+                                                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Dinilai: {{ $tglNilai }}</span>
                                                             @endif
+                                                        @elseif($mySubmission && !$showNilai)
+                                                            <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-[10px] italic border border-slate-200 dark:border-slate-700">
+                                                                Nilai belum ditampilkan oleh dosen
+                                                            </span>
+                                                        @elseif(!$myPending)
+                                                            <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-[10px] italic border border-slate-200 dark:border-slate-700">
+                                                                Belum Dinilai
+                                                            </span>
+                                                        @endif
 
-                                                            <!-- Badge Status Nilai -->
-                                                            @if($nilaiVal !== null)
-                                                                <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-extrabold text-[11px]">
-                                                                    Nilai: {{ $nilaiVal }} / 100
-                                                                </span>
-                                                            @else
-                                                                <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-[10px] italic border border-slate-200 dark:border-slate-700">
-                                                                    Belum Dinilai
-                                                                </span>
-                                                            @endif
-                                                        </div>
-
-                                                        <!-- KHUSUS DOSEN & ADMIN: Beri Nilai & Hapus Pengumpulan -->
-                                                        @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                                            <div class="flex items-center gap-2">
-                                                                <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }}, "{{ addslashes($sub['catatan_dosen'] ?? '') }}")' class="px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-lg font-bold text-[11px] transition">
-                                                                    {{ $nilaiVal !== null ? 'Ubah Nilai' : 'Beri Nilai' }}
-                                                                </button>
-                                                                <form action="{{ route('kumpul.destroy', $subId) }}" method="POST" class="inline">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="button" onclick="confirmDelete('{{ route('kumpul.destroy', $subId) }}', 'pengumpulan tugas dari {{ addslashes($sub['nama_mahasiswa']) }}')" class="text-slate-400 hover:text-rose-500 px-1 text-xs font-semibold transition cursor-pointer" title="Hapus Pengumpulan">&times;</button>
-                                                                </form>
-                                                            </div>
+                                                        {{-- IKON REVIEW / CATATAN DOSEN (klik untuk lihat review) --}}
+                                                        @if($catatanVal)
+                                                            <button onclick='openReviewModal("{{ addslashes(auth()->user()->name) }}", "{{ addslashes($catatanVal) }}", "{{ $tglNilai ?? '-' }}")' class="w-6 h-6 inline-flex items-center justify-center bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-full transition" title="Lihat Review / Catatan Dosen">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                                            </button>
                                                         @endif
                                                     </div>
-
-                                                    <!-- TAMPILAN CATATAN DOSEN -->
-                                                    @if(!empty($sub['catatan_dosen']))
-                                                        <div class="bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg border-l-2 border-amber-500 text-[11px] text-slate-600 dark:text-slate-300 italic ml-2">
-                                                            <span class="font-bold text-amber-600 dark:text-amber-400 not-italic">Catatan Dosen:</span> {{ $sub['catatan_dosen'] }}
-                                                        </div>
-                                                    @endif
-                                                @endforeach
+                                                </div>
                                             </div>
                                         @endif
-                                    </div>
+                                    @endif
+
+                                    {{-- ====== DOSEN / ADMIN: DAFTAR PENGUMPULAN (PAGINATION 10 / HALAMAN) ====== --}}
+                                    @if($canManage)
+                                        <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-3.5 text-xs space-y-2.5">
+                                            <div class="flex items-center justify-between font-medium flex-wrap gap-2">
+                                                <span class="text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                                                    Total Pengumpulan: <strong class="text-orange-600 dark:text-orange-400">{{ count($submissions) }} Mahasiswa</strong>
+                                                </span>
+                                                @if(count($submissions) > 0)
+                                                    <button onclick="toggleSubmissionList({{ $id }})" class="text-orange-600 dark:text-orange-400 hover:text-orange-500 hover:underline text-[11px] font-bold">
+                                                        Tampilkan Detail &raquo;
+                                                    </button>
+                                                @endif
+                                            </div>
+
+                                            @if(count($submissions) > 0)
+                                                <div id="sub-list-{{ $id }}" class="hidden pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                                                    <div id="sub-items-{{ $id }}" class="space-y-2">
+                                                        @foreach($submissions as $sub)
+                                                            @php
+                                                                $subId = $sub['id_kumpul'] ?? $sub['id'] ?? null;
+                                                                $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('l, j F Y \jam H:i') : '-';
+                                                                $tglNilai = isset($sub['dinilai_at']) && $sub['dinilai_at'] ? \Carbon\Carbon::parse($sub['dinilai_at'])->translatedFormat('j M Y, H:i') : null;
+                                                                $nilaiVal = $getNilai($sub);
+                                                                $gradeHuruf = $nilaiVal !== null ? \App\Support\Grade::huruf($nilaiVal) : null;
+                                                                $fileUrl = $sub['file_mahasiswa'] ?? null;
+                                                                $isPendingResubmit = ($sub['resubmit_status'] ?? 'none') === 'pending';
+                                                            @endphp
+                                                            <div class="sub-item sub-item-{{ $id }}">
+                                                                <div class="flex items-center justify-between bg-white dark:bg-slate-900/90 p-3 rounded-lg border {{ $isPendingResubmit ? 'border-sky-500/50' : 'border-slate-200 dark:border-slate-800' }} flex-wrap gap-2">
+                                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $sub['nama_mahasiswa'] }}</span>
+                                                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Dikumpulkan: {{ $tglKumpul }}</span>
+
+                                                                        @if($isPendingResubmit)
+                                                                            <span class="px-2 py-0.5 bg-sky-500/15 text-sky-600 dark:text-sky-300 border border-sky-500/30 rounded font-bold text-[10px] uppercase tracking-wide">
+                                                                                Kirim Ulang: Menunggu Persetujuan
+                                                                            </span>
+                                                                        @endif
+
+                                                                        <!-- Link Google Drive jika tersedia -->
+                                                                        @if(!empty($fileUrl))
+                                                                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Link Google Drive">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                                                Link Drive
+                                                                            </a>
+                                                                        @endif
+
+                                                                        <!-- Badge Status Nilai + Grade -->
+                                                                        @if($nilaiVal !== null)
+                                                                            <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 rounded font-extrabold text-[11px]" title="{{ $tglNilai ? 'Dinilai pada '.$tglNilai : '' }}">
+                                                                                Nilai: {{ $nilaiVal }} / 100
+                                                                            </span>
+                                                                            <span class="px-2 py-0.5 border rounded font-extrabold text-[11px] {{ $gradeBadgeClass($gradeHuruf) }}" title="Grade {{ $gradeHuruf }}">
+                                                                                Grade: {{ $gradeHuruf }}
+                                                                            </span>
+                                                                            @if($tglNilai)
+                                                                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Dinilai: {{ $tglNilai }}</span>
+                                                                            @endif
+                                                                        @else
+                                                                            <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded text-[10px] italic border border-slate-200 dark:border-slate-700">
+                                                                                Belum Dinilai
+                                                                            </span>
+                                                                        @endif
+
+                                                                        <!-- IKON REVIEW / CATATAN DOSEN -->
+                                                                        @if(!empty($sub['catatan_dosen']))
+                                                                            <button onclick='openReviewModal("{{ addslashes($sub['nama_mahasiswa']) }}", "{{ addslashes($sub['catatan_dosen']) }}", "{{ $tglNilai ?? '-' }}")' class="w-6 h-6 inline-flex items-center justify-center bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-full transition" title="Lihat Review / Catatan">
+                                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                                                            </button>
+                                                                        @endif
+                                                                    </div>
+
+                                                                    <div class="flex items-center gap-2">
+                                                                        @if($isPendingResubmit)
+                                                                            <form action="{{ route('kumpul.approve', $subId) }}" method="POST" onsubmit="return confirm('Setujui kirim ulang dari {{ addslashes($sub['nama_mahasiswa']) }}? Data lama akan digantikan.')">
+                                                                                @csrf
+                                                                                @method('PATCH')
+                                                                                <button type="submit" class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/20 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 rounded-lg font-bold text-[11px] transition">
+                                                                                    Setujui
+                                                                                </button>
+                                                                            </form>
+                                                                            <form action="{{ route('kumpul.reject', $subId) }}" method="POST" onsubmit="return confirm('Tolak pengajuan kirim ulang dari {{ addslashes($sub['nama_mahasiswa']) }}? Pengumpulan lama tetap digunakan.')">
+                                                                                @csrf
+                                                                                @method('PATCH')
+                                                                                <button type="submit" class="px-2.5 py-1 bg-rose-100 dark:bg-rose-500/20 hover:bg-rose-200 dark:hover:bg-rose-500/30 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 rounded-lg font-bold text-[11px] transition">
+                                                                                    Tolak
+                                                                                </button>
+                                                                            </form>
+                                                                        @endif
+
+                                                                        <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }}, "{{ addslashes($sub['catatan_dosen'] ?? '') }}")' class="px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-lg font-bold text-[11px] transition">
+                                                                            {{ $nilaiVal !== null ? 'Ubah Nilai' : 'Beri Nilai' }}
+                                                                        </button>
+                                                                        <button type="button" onclick="confirmDelete('{{ route('kumpul.destroy', $subId) }}', 'pengumpulan tugas dari {{ addslashes($sub['nama_mahasiswa']) }}')" class="text-slate-400 hover:text-rose-500 px-1 text-xs font-semibold transition cursor-pointer" title="Hapus Pengumpulan">&times;</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+
+                                                    {{-- PAGINATION 10 PER HALAMAN --}}
+                                                    <div id="sub-controls-{{ $id }}" class="hidden flex items-center justify-between pt-1.5 px-1">
+                                                        <button type="button" id="sub-prev-{{ $id }}" onclick="changeSubPage({{ $id }}, -1)" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-[11px] transition disabled:opacity-40 disabled:cursor-not-allowed">&laquo; Previous</button>
+                                                        <span id="sub-pageinfo-{{ $id }}" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400"></span>
+                                                        <button type="button" id="sub-next-{{ $id }}" onclick="changeSubPage({{ $id }}, 1)" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-[11px] transition disabled:opacity-40 disabled:cursor-not-allowed">Next &raquo;</button>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
 
                                 </div>
                             @empty
@@ -423,7 +588,8 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: Dosen Pengampu Filter -->
+                <!-- RIGHT COLUMN: Dosen Pengampu Filter (disembunyikan untuk dosen, karena dosen hanya melihat tugasnya sendiri) -->
+                @if(!$isDosenOnly)
                 <div class="lg:col-span-4 space-y-4">
                     <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-xl dark:shadow-black/20 backdrop-blur-sm transition-colors duration-300">
                         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
@@ -482,6 +648,7 @@
 
                     </div>
                 </div>
+                @endif
 
             </div>
 
@@ -654,6 +821,39 @@
     @endif
 
 
+    <!-- MODAL REVIEW / CATATAN DOSEN -->
+    <div id="reviewModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    Review / Catatan Dosen
+                </h3>
+                <button onclick="closeReviewModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl leading-none transition" aria-label="Tutup">&times;</button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <span class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Mahasiswa</span>
+                    <p id="review_nama" class="text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5"></p>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Waktu Penilaian</span>
+                    <p id="review_waktu" class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5"></p>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Catatan Penilaian</span>
+                    <p id="review_isi" class="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border-l-2 border-amber-500 border-y border-r border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 italic leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- MODAL KUMPULKAN TUGAS (FASTAPI 2) - KHUSUS MAHASISWA & ADMIN -->
     @if(auth()->user()->isMahasiswa() || auth()->user()->isAdmin())
     <div id="kumpulModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
@@ -669,10 +869,15 @@
             <form action="{{ route('kumpul.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <input type="hidden" id="kumpul_id_tugas" name="id_tugas">
+                <input type="hidden" id="kumpul_kirim_ulang" name="kirim_ulang" value="0">
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Judul Tugas</label>
                     <input type="text" id="kumpul_nama_tugas" readonly class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none">
+                </div>
+
+                <div id="kumpul_resubmit_notice" class="hidden p-2.5 bg-sky-500/10 border border-sky-500/30 rounded-lg text-[11px] text-sky-700 dark:text-sky-300 font-semibold">
+                    Pengajuan <strong>Kirim Ulang</strong> akan dikirim ke dosen untuk persetujuan. Selama menunggu, pengumpulan lama kamu tetap digunakan.
                 </div>
 
                 <div>
@@ -688,7 +893,7 @@
 
                 <div class="flex justify-end gap-2.5 pt-2">
                     <button type="button" onclick="closeKumpulModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
-                    <button type="submit" class="px-4 py-2.5 bg-gradient-to-r from-[#FF7A00] to-[#FF9225] hover:from-[#e06b00] hover:to-[#ff8314] text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/20 transition">Kumpulkan Tugas</button>
+                    <button type="submit" id="kumpul_submit_btn" class="px-4 py-2.5 bg-gradient-to-r from-[#FF7A00] to-[#FF9225] hover:from-[#e06b00] hover:to-[#ff8314] text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/20 transition">Kumpulkan Tugas</button>
                 </div>
             </form>
         </div>
@@ -722,6 +927,14 @@
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Batas Waktu (Deadline)</label>
                     <input type="datetime-local" name="deadline_tugas" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
                 </div>
+
+                <label class="flex items-start gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 rounded-xl p-3.5 cursor-pointer select-none hover:border-orange-400 transition">
+                    <input type="checkbox" name="show_nilai" value="1" checked class="mt-0.5 w-4 h-4 accent-orange-500 cursor-pointer">
+                    <span>
+                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Tampilkan Nilai ke Mahasiswa?</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Jika tidak dicentang, mahasiswa hanya melihat status "sudah dinilai" tanpa angka nilai & catatan.</span>
+                    </span>
+                </label>
 
                 <div class="flex justify-end gap-2.5 pt-2">
                     <button type="button" onclick="closeAddModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
@@ -758,6 +971,14 @@
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Batas Waktu (Tenggat)</label>
                     <input type="datetime-local" id="edit_deadline_tugas" name="deadline_tugas" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
                 </div>
+
+                <label class="flex items-start gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 rounded-xl p-3.5 cursor-pointer select-none hover:border-orange-400 transition">
+                    <input type="checkbox" id="edit_show_nilai" name="show_nilai" value="1" checked class="mt-0.5 w-4 h-4 accent-orange-500 cursor-pointer">
+                    <span>
+                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Tampilkan Nilai ke Mahasiswa?</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Jika tidak dicentang, mahasiswa hanya melihat status "sudah dinilai" tanpa angka nilai & catatan.</span>
+                    </span>
+                </label>
 
                 <div class="flex justify-end gap-2.5 pt-2">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
@@ -920,11 +1141,16 @@
             if (modal) modal.classList.add('hidden');
         }
 
-        function openKumpulModal(idTugas, namaTugas) {
+        function openKumpulModal(idTugas, namaTugas, isKirimUlang = false) {
             const modal = document.getElementById('kumpulModal');
             if (modal) {
                 document.getElementById('kumpul_id_tugas').value = idTugas;
                 document.getElementById('kumpul_nama_tugas').value = namaTugas;
+                document.getElementById('kumpul_kirim_ulang').value = isKirimUlang ? '1' : '0';
+                const notice = document.getElementById('kumpul_resubmit_notice');
+                if (notice) notice.classList.toggle('hidden', !isKirimUlang);
+                const btn = document.getElementById('kumpul_submit_btn');
+                if (btn) btn.innerText = isKirimUlang ? 'Ajukan Kirim Ulang' : 'Kumpulkan Tugas';
                 modal.classList.remove('hidden');
             }
         }
@@ -933,6 +1159,91 @@
             const modal = document.getElementById('kumpulModal');
             if (modal) modal.classList.add('hidden');
         }
+
+        // ===== MODAL REVIEW / CATATAN DOSEN =====
+        function openReviewModal(namaMhs, catatan, waktuNilai) {
+            const modal = document.getElementById('reviewModal');
+            if (modal) {
+                document.getElementById('review_nama').innerText = namaMhs || '-';
+                document.getElementById('review_isi').innerText = catatan || '(Tidak ada catatan)';
+                document.getElementById('review_waktu').innerText = (waktuNilai && waktuNilai !== '-') ? ('Dinilai pada: ' + waktuNilai) : 'Belum ada waktu penilaian';
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // ===== SORTING TUGAS (Deadline / Abjad) =====
+        function sortTasks(mode) {
+            const container = document.getElementById('task-list-container');
+            if (!container) return;
+            const rows = Array.from(container.querySelectorAll('.task-row'));
+            if (rows.length === 0) return;
+
+            rows.sort((a, b) => {
+                if (mode === 'deadline_asc' || mode === 'deadline_desc') {
+                    const ta = parseInt(a.dataset.deadline || 0);
+                    const tb = parseInt(b.dataset.deadline || 0);
+                    return mode === 'deadline_asc' ? ta - tb : tb - ta;
+                }
+                // Abjad
+                const na = a.dataset.nama || '';
+                const nb = b.dataset.nama || '';
+                return mode === 'nama_desc' ? nb.localeCompare(na, 'id') : na.localeCompare(nb, 'id');
+            });
+
+            const anchor = document.getElementById('no-task-filtered');
+            rows.forEach(row => container.insertBefore(row, anchor));
+        }
+
+        // ===== PAGINATION PENGUMPULAN (10 PER HALAMAN) =====
+        const SUB_PAGE_SIZE = 10;
+        const subPageState = {};
+
+        function initSubPagination() {
+            document.querySelectorAll('[id^="sub-items-"]').forEach(wrapper => {
+                const id = wrapper.id.replace('sub-items-', '');
+                subPageState[id] = 1;
+                renderSubPage(id);
+            });
+        }
+
+        function renderSubPage(id) {
+            const wrapper = document.getElementById(`sub-items-${id}`);
+            if (!wrapper) return;
+            const items = Array.from(wrapper.querySelectorAll(':scope > .sub-item'));
+            const total = items.length;
+            const totalPages = Math.max(1, Math.ceil(total / SUB_PAGE_SIZE));
+            if (subPageState[id] > totalPages) subPageState[id] = totalPages;
+            const page = subPageState[id];
+
+            items.forEach((el, i) => {
+                el.classList.toggle('hidden', !(i >= (page - 1) * SUB_PAGE_SIZE && i < page * SUB_PAGE_SIZE));
+            });
+
+            const controls = document.getElementById(`sub-controls-${id}`);
+            if (controls) controls.classList.toggle('hidden', total <= SUB_PAGE_SIZE);
+
+            const info = document.getElementById(`sub-pageinfo-${id}`);
+            if (info) info.innerText = `Halaman ${page} dari ${totalPages} (${total} pengumpulan)`;
+
+            const prevBtn = document.getElementById(`sub-prev-${id}`);
+            const nextBtn = document.getElementById(`sub-next-${id}`);
+            if (prevBtn) prevBtn.disabled = page <= 1;
+            if (nextBtn) nextBtn.disabled = page >= totalPages;
+        }
+
+        function changeSubPage(id, delta) {
+            if (!subPageState[id]) subPageState[id] = 1;
+            subPageState[id] += delta;
+            if (subPageState[id] < 1) subPageState[id] = 1;
+            renderSubPage(id);
+        }
+
+        document.addEventListener('DOMContentLoaded', initSubPagination);
 
         function filterByDosen(dosenName) {
             currentSelectedDosen = dosenName;
@@ -1056,6 +1367,11 @@
                     document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
                 }
 
+                const showNilaiCb = document.getElementById('edit_show_nilai');
+                if (showNilaiCb) {
+                    showNilaiCb.checked = tugas.show_nilai === undefined ? true : !!tugas.show_nilai;
+                }
+
                 modal.classList.remove('hidden');
             }
         }
@@ -1072,6 +1388,7 @@
                 closeEditModal();
                 closeKumpulModal();
                 closeNilaiModal();
+                closeReviewModal();
                 closeDeleteModal();
                 closeLogoutModal();
             }
