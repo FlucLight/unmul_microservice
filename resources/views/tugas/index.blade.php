@@ -44,15 +44,33 @@
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        *, *::before, *::after { 
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 6px; /* Prevent layout shift */
         }
-        *::-webkit-scrollbar { 
-            display: none; 
-            width: 0; 
-            height: 0; 
+        
+        /* Modern Thin Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
         ::selection { background: #FF7A00; color: #fff; }
         :focus-visible { outline: 2px solid #FF7A00; outline-offset: 2px; }
 
@@ -61,19 +79,69 @@
             animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes pageFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .page-exit {
             opacity: 0 !important;
             transform: translateY(-6px) !important;
             transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Modal Animation Transitions */
+        .modal-backdrop {
+            transition: opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+        .modal-content {
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .modal-content.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Card Stagger Animation */
+        @keyframes cardSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .task-card {
+            animation: cardSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .task-card:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .task-card:hover {
+            border-color: rgba(255, 122, 0, 0.3);
+        }
+        .dark .task-card:hover {
+            border-color: rgba(255, 122, 0, 0.2);
+        }
+
+        /* Button Press Effect */
+        .btn-press:active {
+            transform: scale(0.96);
+        }
+
+        /* Subtle glow on focused inputs */
+        input:focus, select:focus, textarea:focus {
+            box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
+        }
+
+        /* Light mode: stronger card shadows */
+        .light .task-card {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
         }
 
         /* Hidebar Drawer Animation */
@@ -91,17 +159,17 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-slate-100 dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
+<body class="min-h-screen bg-[#e5e9f0] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
 
     <!-- Ambient Subtle Background Elements -->
     <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
+        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-400/8 dark:bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
     </div>
 
     <!-- MAIN HEADER BAR (COMPACT & UNIFIED) -->
-    <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
+    <header class="bg-[#f1f3f8]/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-300/80 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
                 
@@ -116,7 +184,7 @@
                     </a>
 
                     <!-- Page Navigation Switcher Tabs (Consistent Location) -->
-                    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
+                    <div class="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-300 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
                         <a href="{{ route('tugas.index') }}"
                            class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
                                   {{ request()->routeIs('tugas.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
@@ -194,7 +262,7 @@
         @if(session('success') || session('error') || $errorMessage)
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
             @if(session('success'))
-                <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm">
+                <div class="flash-msg p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-md">
                     <div class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         <span>{{ session('success') }}</span>
@@ -202,7 +270,7 @@
                 </div>
             @endif
             @if(session('error') || $errorMessage)
-                <div class="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm">
+                <div class="flash-msg p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-md">
                     <div class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         <span>{{ session('error') ?? $errorMessage }}</span>
@@ -235,7 +303,7 @@
             @php
                 $isDosenOnly = auth()->user()->isDosen() && !auth()->user()->isAdmin();
                 $canManage = auth()->user()->isDosen() || auth()->user()->isAdmin();
-                $canSubmit = auth()->user()->isMahasiswa() || auth()->user()->isAdmin();
+                $canSubmit = auth()->user()->isMahasiswa();
                 $showMySummary = $canSubmit;
             @endphp
 
@@ -243,29 +311,32 @@
 
                 <!-- LEFT COLUMN: Ledger / Daftar Tugas -->
                 <div class="{{ $isDosenOnly ? 'lg:col-span-12' : 'lg:col-span-8' }} space-y-4">
-                    <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
+                    <div class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-md dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
                         
-                        <div class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-5 py-3 flex items-center justify-between flex-wrap gap-2">
+                        <div class="bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 px-5 py-3 flex items-center justify-between flex-wrap gap-2">
                             <div id="task-table-title" class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>Semua Tugas Kuliah</span>
                                 <span id="filter-badge" class="hidden bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded text-[10px] font-mono">Filter Aktif</span>
                             </div>
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div class="relative">
+                                    <svg class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                    <input type="text" id="searchTugas" onkeyup="filterTugas()" placeholder="Cari tugas..." class="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-orange-500 w-36 sm:w-48 transition">
+                                </div>
                                 <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4 4m0 0l4-4m-4 4V7"/></svg>
                                     Urutkan
-                                    <select id="sort-select" onchange="sortTasks(this.value)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer">
+                                    <select id="sort-select" onchange="sortTasks(this.value)" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer">
                                         <option value="deadline_asc">Deadline Terdekat</option>
                                         <option value="deadline_desc">Terbaru &rarr; Terlama</option>
                                         <option value="nama_asc">Abjad A &rarr; Z</option>
                                         <option value="nama_desc">Abjad Z &rarr; A</option>
                                     </select>
                                 </label>
-                                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tenggat Waktu</span>
                             </div>
                         </div>
 
-                        <div id="task-list-container" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                        <div id="task-list-container" class="py-1">
                             @php
                                 /*
                                  | CATATAN HAK AKSES (ROLE):
@@ -277,11 +348,11 @@
                                  */
                                 $gradeBadgeClass = function ($huruf) {
                                     return match ($huruf) {
-                                        'A' => 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
-                                        'B' => 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30',
-                                        'C' => 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
-                                        'D' => 'bg-orange-500/15 text-orange-600 dark:text-orange-300 border-orange-500/30',
-                                        default => 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30',
+                                        'A' => 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
+                                        'B' => 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+                                        'C' => 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
+                                        'D' => 'bg-orange-50 dark:bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30',
+                                        default => 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30',
                                     };
                                 };
                             @endphp
@@ -296,7 +367,9 @@
                                     $submissions = collect($kumpulList)->where('id_tugas', $id);
 
                                     // Mahasiswa hanya melihat datanya sendiri (sudah difilter di controller)
-                                    $mySubmission = $submissions->firstWhere('nama_mahasiswa', auth()->user()->name);
+                                    $mySubmission = $submissions->first(function ($s) {
+                                        return strcasecmp($s['nama_mahasiswa'] ?? '', auth()->user()->name) === 0;
+                                    });
                                     $myPending = $submissions->first(function ($s) {
                                         return strcasecmp($s['nama_mahasiswa'] ?? '', auth()->user()->name) === 0
                                             && ($s['resubmit_status'] ?? 'none') === 'pending';
@@ -313,19 +386,19 @@
                                     };
 
                                     if ($isPast) {
-                                        $statusBadge = 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30';
+                                        $statusBadge = 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30';
                                         $statusText = 'Lewat Tenggat';
                                     } elseif ($canSubmit && $mySubmission && ($mySubmission['resubmit_status'] ?? 'none') !== 'pending') {
-                                        // [PERUBAHAN] Status "Selesai" berlaku untuk mahasiswa & admin yang sudah mengumpulkan
-                                        $statusBadge = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30';
+                                        $statusBadge = 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30';
                                         $statusText = 'Selesai';
                                     } else {
-                                        $statusBadge = 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30';
+                                        $statusBadge = 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30';
                                         $statusText = 'Sedang Berjalan';
                                     }
                                 @endphp
 
-                                <div class="task-row p-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150 space-y-3"
+                                <div class="task-card task-row m-3 p-5 bg-white dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/40 rounded-xl space-y-3"
+                                     style="animation-delay: {{ $index * 60 }}ms"
                                      data-dosen="{{ strtolower($tugas['nama_dosen'] ?? '') }}"
                                      data-deadline="{{ $deadline ? $deadline->timestamp : 0 }}"
                                      data-nama="{{ mb_strtolower($tugas['nama_tugas'] ?? '') }}">
@@ -340,11 +413,14 @@
                                             <h3 class="font-bold text-base text-slate-900 dark:text-white hover:text-orange-500 transition-colors truncate" title="{{ $tugas['nama_tugas'] }}">
                                                 {{ $tugas['nama_tugas'] }}
                                             </h3>
+                                            @if(!empty($tugas['deskripsi_tugas']))
+                                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2" title="{{ $tugas['deskripsi_tugas'] }}">{{ $tugas['deskripsi_tugas'] }}</p>
+                                            @endif
                                         </div>
 
                                         <div class="flex items-center sm:flex-col sm:items-end justify-between gap-2 shrink-0">
-                                            <span class="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700/60">
-                                                {{ $deadline ? $deadline->translatedFormat('l, j F Y \• H:i') : 'Tanpa Tenggat' }}
+                                            <span class="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                                                {{ $deadline ? $deadline->translatedFormat('D, j M Y \j\a\m H:i') : 'Tanpa Tenggat' }}
                                             </span>
 
                                             <div class="flex items-center gap-2">
@@ -374,7 +450,7 @@
 
                                                 <!-- FITUR DOSEN / ADMIN: Edit & Hapus Tugas -->
                                                 @if($canManage)
-                                                    <button onclick='openEditModal({{ json_encode($tugas) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Tugas">
+                                                    <button onclick='openEditModal({{ json_encode($tugas, JSON_HEX_APOS) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Tugas">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
                                                     <button type="button" onclick="confirmDelete('{{ route('tugas.destroy', $id) }}', 'Tugas: {{ addslashes($tugas['nama_tugas']) }}')" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Hapus Tugas">
@@ -391,14 +467,14 @@
                                             @php
                                                 $activeSub = $myPending ?: $mySubmission;
                                                 $subId = $activeSub['id_kumpul'] ?? $activeSub['id'] ?? null;
-                                                $tglKumpul = isset($activeSub['tanggal_kumpul']) ? \Carbon\Carbon::parse($activeSub['tanggal_kumpul'])->translatedFormat('l, j F Y \jam H:i') : '-';
-                                                $tglNilai = isset($activeSub['dinilai_at']) && $activeSub['dinilai_at'] ? \Carbon\Carbon::parse($activeSub['dinilai_at'])->translatedFormat('l, j F Y \jam H:i') : null;
+                                                $tglKumpul = isset($activeSub['tanggal_kumpul']) ? \Carbon\Carbon::parse($activeSub['tanggal_kumpul'])->translatedFormat('D, j M Y \j\a\m H:i') : '-';
+                                                $tglNilai = isset($activeSub['dinilai_at']) && $activeSub['dinilai_at'] ? \Carbon\Carbon::parse($activeSub['dinilai_at'])->translatedFormat('D, j M Y \j\a\m H:i') : null;
                                                 $nilaiVal = $showNilai ? $getNilai($activeSub) : null;
                                                 $gradeHuruf = $nilaiVal !== null ? \App\Support\Grade::huruf($nilaiVal) : null;
                                                 $fileUrl = $activeSub['file_mahasiswa'] ?? null;
                                                 $catatanVal = ($showNilai && !empty($activeSub['catatan_dosen'])) ? $activeSub['catatan_dosen'] : null;
                                             @endphp
-                                            <div class="bg-slate-50 dark:bg-slate-950/60 border {{ $myPending ? 'border-sky-500/40' : 'border-slate-200 dark:border-slate-800/80' }} rounded-xl p-3.5 text-xs space-y-2.5">
+                                            <div class="bg-slate-100/60 dark:bg-slate-950/60 border {{ $myPending ? 'border-sky-300 dark:border-sky-500/40' : 'border-slate-200 dark:border-slate-800/80' }} rounded-xl p-3.5 text-xs space-y-2.5">
                                                 @if($myPending)
                                                     <div class="flex items-center gap-2 p-2 bg-sky-500/10 border border-sky-500/30 rounded-lg text-sky-700 dark:text-sky-300 font-semibold">
                                                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -409,7 +485,7 @@
                                                 <div class="flex items-center justify-between flex-wrap gap-2">
                                                     <div class="flex items-center gap-2 flex-wrap">
                                                         <span class="font-bold text-slate-800 dark:text-slate-200">Pengumpulanmu</span>
-                                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Dikumpulkan: {{ $tglKumpul }}</span>
+                                                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Dikumpulkan: {{ $tglKumpul }}</span>
 
                                                         @if(!empty($fileUrl))
                                                             <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded font-semibold text-[10px] hover:underline flex items-center gap-1" title="Buka Link Google Drive">
@@ -471,8 +547,8 @@
                                                         @foreach($submissions as $sub)
                                                             @php
                                                                 $subId = $sub['id_kumpul'] ?? $sub['id'] ?? null;
-                                                                $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('l, j F Y \jam H:i') : '-';
-                                                                $tglNilai = isset($sub['dinilai_at']) && $sub['dinilai_at'] ? \Carbon\Carbon::parse($sub['dinilai_at'])->translatedFormat('j M Y, H:i') : null;
+                                                                $tglKumpul = isset($sub['tanggal_kumpul']) ? \Carbon\Carbon::parse($sub['tanggal_kumpul'])->translatedFormat('D, j M Y \j\a\m H:i') : '-';
+                                                                $tglNilai = isset($sub['dinilai_at']) && $sub['dinilai_at'] ? \Carbon\Carbon::parse($sub['dinilai_at'])->translatedFormat('D, j M Y \j\a\m H:i') : null;
                                                                 $nilaiVal = $getNilai($sub);
                                                                 $gradeHuruf = $nilaiVal !== null ? \App\Support\Grade::huruf($nilaiVal) : null;
                                                                 $fileUrl = $sub['file_mahasiswa'] ?? null;
@@ -482,7 +558,7 @@
                                                                 <div class="flex items-center justify-between bg-white dark:bg-slate-900/90 p-3 rounded-lg border {{ $isPendingResubmit ? 'border-sky-500/50' : 'border-slate-200 dark:border-slate-800' }} flex-wrap gap-2">
                                                                     <div class="flex items-center gap-2 flex-wrap">
                                                                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $sub['nama_mahasiswa'] }}</span>
-                                                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Dikumpulkan: {{ $tglKumpul }}</span>
+                                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Dikumpulkan: {{ $tglKumpul }}</span>
 
                                                                         @if($isPendingResubmit)
                                                                             <span class="px-2 py-0.5 bg-sky-500/15 text-sky-600 dark:text-sky-300 border border-sky-500/30 rounded font-bold text-[10px] uppercase tracking-wide">
@@ -525,20 +601,12 @@
 
                                                                     <div class="flex items-center gap-2">
                                                                         @if($isPendingResubmit)
-                                                                            <form action="{{ route('kumpul.approve', $subId) }}" method="POST" onsubmit="return confirm('Setujui kirim ulang dari {{ addslashes($sub['nama_mahasiswa']) }}? Data lama akan digantikan.')">
-                                                                                @csrf
-                                                                                @method('PATCH')
-                                                                                <button type="submit" class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/20 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 rounded-lg font-bold text-[11px] transition">
-                                                                                    Setujui
-                                                                                </button>
-                                                                            </form>
-                                                                            <form action="{{ route('kumpul.reject', $subId) }}" method="POST" onsubmit="return confirm('Tolak pengajuan kirim ulang dari {{ addslashes($sub['nama_mahasiswa']) }}? Pengumpulan lama tetap digunakan.')">
-                                                                                @csrf
-                                                                                @method('PATCH')
-                                                                                <button type="submit" class="px-2.5 py-1 bg-rose-100 dark:bg-rose-500/20 hover:bg-rose-200 dark:hover:bg-rose-500/30 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 rounded-lg font-bold text-[11px] transition">
-                                                                                    Tolak
-                                                                                </button>
-                                                                            </form>
+                                                                            <button type="button" onclick="openApproveModal('{{ route('kumpul.approve', $subId) }}', '{{ addslashes($sub['nama_mahasiswa']) }}')" class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/20 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 rounded-lg font-bold text-[11px] transition">
+                                                                                Setujui
+                                                                            </button>
+                                                                            <button type="button" onclick="openRejectModal('{{ route('kumpul.reject', $subId) }}', '{{ addslashes($sub['nama_mahasiswa']) }}')" class="px-2.5 py-1 bg-rose-100 dark:bg-rose-500/20 hover:bg-rose-200 dark:hover:bg-rose-500/30 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 rounded-lg font-bold text-[11px] transition">
+                                                                                Tolak
+                                                                            </button>
                                                                         @endif
 
                                                                         <button onclick='openNilaiModal({{ $subId }}, "{{ addslashes($sub['nama_mahasiswa']) }}", {{ $nilaiVal ?? "null" }}, "{{ addslashes($sub['catatan_dosen'] ?? '') }}")' class="px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 rounded-lg font-bold text-[11px] transition">
@@ -591,7 +659,7 @@
                 <!-- RIGHT COLUMN: Dosen Pengampu Filter (disembunyikan untuk dosen, karena dosen hanya melihat tugasnya sendiri) -->
                 @if(!$isDosenOnly)
                 <div class="lg:col-span-4 space-y-4">
-                    <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-xl dark:shadow-black/20 backdrop-blur-sm transition-colors duration-300">
+                    <div class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-md dark:shadow-xl dark:shadow-black/20 backdrop-blur-sm transition-colors duration-300">
                         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
                             <div>
                                 <h3 class="font-bold text-sm text-slate-900 dark:text-white">Dosen Pengampu</h3>
@@ -623,7 +691,7 @@
                             @forelse($groupedDosen as $dosenName => $items)
                                 <div onclick="filterByDosen('{{ addslashes($dosenName) }}')" 
                                      data-dosen-name="{{ strtolower($dosenName) }}"
-                                     class="dosen-card cursor-pointer bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 flex items-center justify-between hover:border-orange-500/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                     class="dosen-card cursor-pointer bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 flex items-center justify-between hover:border-orange-500/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <div class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center text-xs shrink-0">
                                             {{ strtoupper(substr($dosenName ?? '?', 0, 1)) }}
@@ -866,7 +934,7 @@
                 <button onclick="closeKumpulModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
-            <form action="{{ route('kumpul.store') }}" method="POST" class="space-y-4">
+            <form id="kumpulForm" action="{{ route('kumpul.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <input type="hidden" id="kumpul_id_tugas" name="id_tugas">
                 <input type="hidden" id="kumpul_kirim_ulang" name="kirim_ulang" value="0">
@@ -913,19 +981,32 @@
                 <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
-            <form action="{{ route('tugas.store') }}" method="POST" class="space-y-4">
+            <form id="tugasStoreForm" action="{{ route('tugas.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Tugas</label>
-                    <input type="text" name="nama_tugas" required placeholder="Contoh: Laporan Praktikum Bab 3" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" name="nama_tugas" value="{{ old('nama_tugas') }}" required placeholder="Contoh: Laporan Praktikum Bab 3" class="w-full bg-slate-50 dark:bg-slate-800 border @error('nama_tugas') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nama_tugas')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Deskripsi Tugas (opsional)</label>
+                    <textarea name="deskripsi_tugas" rows="3" maxlength="5000" placeholder="Contoh: Kerjakan soal 1-20 di buku halaman 5..." class="w-full bg-slate-50 dark:bg-slate-800 border @error('deskripsi_tugas') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition resize-none">{{ old('deskripsi_tugas') }}</textarea>
+                    @error('deskripsi_tugas')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Dosen Pengampu</label>
-                    <input type="text" id="add_nama_dosen" name="nama_dosen" value="{{ auth()->user()->name }}" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="add_nama_dosen" name="nama_dosen" value="{{ auth()->user()->name }}" readonly class="w-full bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Batas Waktu (Deadline)</label>
-                    <input type="datetime-local" name="deadline_tugas" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="datetime-local" name="deadline_tugas" value="{{ old('deadline_tugas') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('deadline_tugas') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('deadline_tugas')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <label class="flex items-start gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 rounded-xl p-3.5 cursor-pointer select-none hover:border-orange-400 transition">
@@ -959,17 +1040,34 @@
             <form id="editForm" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="edit_action_url" id="edit_action_url" value="{{ old('edit_action_url') }}">
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Tugas</label>
-                    <input type="text" id="edit_nama_tugas" name="nama_tugas" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="edit_nama_tugas" name="nama_tugas" value="{{ old('nama_tugas') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('nama_tugas') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nama_tugas')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Deskripsi Tugas (opsional)</label>
+                    <textarea id="edit_deskripsi_tugas" name="deskripsi_tugas" rows="3" maxlength="5000" placeholder="Deskripsi tugas..." class="w-full bg-slate-50 dark:bg-slate-800 border @error('deskripsi_tugas') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition resize-none">{{ old('deskripsi_tugas') }}</textarea>
+                    @error('deskripsi_tugas')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Dosen Pengampu</label>
-                    <input type="text" id="edit_nama_dosen" name="nama_dosen" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="edit_nama_dosen" name="nama_dosen" value="{{ old('nama_dosen') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('nama_dosen') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nama_dosen')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Batas Waktu (Tenggat)</label>
-                    <input type="datetime-local" id="edit_deadline_tugas" name="deadline_tugas" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="datetime-local" id="edit_deadline_tugas" name="deadline_tugas" value="{{ old('deadline_tugas') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('deadline_tugas') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('deadline_tugas')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <label class="flex items-start gap-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 rounded-xl p-3.5 cursor-pointer select-none hover:border-orange-400 transition">
@@ -1007,6 +1105,128 @@
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">Ya, Hapus Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP TAMBAH TUGAS -->
+    <div id="addTugasConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold text-lg shrink-0">+</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Tambah Tugas Baru</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="addTugasConfirmTitle">Apakah Anda yakin ingin menambahkan tugas ini?</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button type="button" onclick="closeAddTugasConfirmModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                <button type="button" onclick="submitTugasStoreForm()" class="px-4 py-2 bg-gradient-to-r from-[#FF7A00] to-[#FF9225] hover:from-[#e06b00] hover:to-[#ff8314] text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/20 transition">Ya, Tambah Tugas</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP EDIT TUGAS -->
+    <div id="editTugasConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg shrink-0">✎</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Ubah Tugas</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="editTugasConfirmTitle">Apakah Anda yakin ingin menyimpan perubahan tugas ini?</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button type="button" onclick="closeEditTugasConfirmModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                <button type="button" onclick="submitEditForm()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition">Ya, Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP KUMPUL TUGAS -->
+    <div id="kumpulTugasConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0">↑</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Kumpulkan Tugas</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="kumpulTugasConfirmTitle">Apakah Anda yakin ingin mengumpulkan tugas ini?</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button type="button" onclick="closeKumpulTugasConfirmModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                <button type="button" onclick="submitKumpulForm()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition">Ya, Kumpulkan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP BERI NILAI -->
+    <div id="nilaiTugasConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-lg shrink-0">★</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Beri Nilai</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="nilaiTugasConfirmTitle">Apakah Anda yakin ingin menyimpan nilai ini?</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button type="button" onclick="closeNilaiTugasConfirmModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                <button type="button" onclick="submitNilaiForm()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition">Ya, Simpan Nilai</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP SETUJUI KIRIM ULANG -->
+    <div id="approveConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0">✓</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Setujui Kirim Ulang</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="approveConfirmTitle">Setujui pengajuan kirim ulang? Data lama akan digantikan.</p>
+                </div>
+            </div>
+
+            <form id="approveConfirmForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeApproveModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition">Ya, Setujui</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL CUSTOM POPUP TOLAK KIRIM ULANG -->
+    <div id="rejectConfirmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700/80 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-lg shrink-0">✗</div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">Tolak Kirim Ulang</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="rejectConfirmTitle">Tolak pengajuan kirim ulang? Pengumpulan lama tetap digunakan.</p>
+                </div>
+            </div>
+
+            <form id="rejectConfirmForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <button type="button" onclick="closeRejectModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">Ya, Tolak</button>
                 </div>
             </form>
         </div>
@@ -1072,11 +1292,56 @@
             updateThemeStatusText(isDark);
         });
 
+        // Modal open/close helpers with transitions & body scroll lock
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            
+            document.body.classList.add('modal-open');
+            modal.classList.add('modal-backdrop');
+            modal.classList.remove('hidden');
+            
+            const content = modal.querySelector('.bg-white, .bg-slate-900');
+            if (content) {
+                content.classList.add('modal-content');
+            }
+            
+            void modal.offsetWidth; // force reflow
+            
+            modal.classList.add('show');
+            if (content) {
+                content.classList.add('show');
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            
+            modal.classList.remove('show');
+            const content = modal.querySelector('.bg-white, .bg-slate-900');
+            if (content) {
+                content.classList.remove('show');
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                
+                const anyOpen = Array.from(document.querySelectorAll('.fixed.z-50')).some(el => {
+                    return !el.classList.contains('hidden') && el.id !== 'profileDrawerOverlay' && el.id !== 'profileDrawer';
+                });
+                if (!anyOpen) {
+                    document.body.classList.remove('modal-open');
+                }
+            }, 200);
+        }
+
         // Profile Drawer Functions
         function openProfileDrawer() {
             const overlay = document.getElementById('profileDrawerOverlay');
             const drawer = document.getElementById('profileDrawer');
             if (overlay && drawer) {
+                document.body.classList.add('modal-open');
                 overlay.classList.remove('hidden');
                 setTimeout(() => drawer.classList.add('open'), 10);
             }
@@ -1087,7 +1352,15 @@
             const drawer = document.getElementById('profileDrawer');
             if (drawer) drawer.classList.remove('open');
             if (overlay) {
-                setTimeout(() => overlay.classList.add('hidden'), 250);
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    const anyOpen = Array.from(document.querySelectorAll('.fixed.z-50')).some(el => {
+                        return !el.classList.contains('hidden') && el.id !== 'profileDrawerOverlay' && el.id !== 'profileDrawer';
+                    });
+                    if (!anyOpen) {
+                        document.body.classList.remove('modal-open');
+                    }
+                }, 250);
             }
         }
 
@@ -1104,79 +1377,105 @@
                 document.getElementById('nilai_input').value = (currentNilai !== null && currentNilai !== 'null') ? currentNilai : '';
                 const catEl = document.getElementById('nilai_catatan');
                 if (catEl) catEl.value = (catatanDosen && catatanDosen !== 'undefined') ? catatanDosen : '';
-                document.getElementById('nilaiModal').classList.remove('hidden');
+                openModal('nilaiModal');
             }
         }
 
         function closeNilaiModal() {
-            const modal = document.getElementById('nilaiModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('nilaiModal');
         }
 
         // POPUP CONFIRM DELETE (Poin 3)
         function confirmDelete(actionUrl, targetTitle) {
-            const modal = document.getElementById('deleteConfirmModal');
             const form = document.getElementById('deleteConfirmForm');
             const titleEl = document.getElementById('deleteTargetTitle');
-            if (modal && form) {
+            if (form) {
                 form.action = actionUrl;
                 if (titleEl) titleEl.innerText = `Apakah Anda yakin ingin menghapus ${targetTitle}?`;
-                modal.classList.remove('hidden');
+                openModal('deleteConfirmModal');
             }
         }
 
         function closeDeleteModal() {
-            const modal = document.getElementById('deleteConfirmModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('deleteConfirmModal');
         }
 
         // POPUP CONFIRM LOGOUT (Poin 4)
         function openLogoutModal() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.classList.remove('hidden');
+            openModal('logoutConfirmModal');
         }
 
-        function closeLogoutModal() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function openKumpulModal(idTugas, namaTugas, isKirimUlang = false) {
-            const modal = document.getElementById('kumpulModal');
-            if (modal) {
-                document.getElementById('kumpul_id_tugas').value = idTugas;
-                document.getElementById('kumpul_nama_tugas').value = namaTugas;
-                document.getElementById('kumpul_kirim_ulang').value = isKirimUlang ? '1' : '0';
-                const notice = document.getElementById('kumpul_resubmit_notice');
-                if (notice) notice.classList.toggle('hidden', !isKirimUlang);
-                const btn = document.getElementById('kumpul_submit_btn');
-                if (btn) btn.innerText = isKirimUlang ? 'Ajukan Kirim Ulang' : 'Kumpulkan Tugas';
-                modal.classList.remove('hidden');
+        // Custom Modal Approve/Reject
+        function openApproveModal(actionUrl, namaMhs) {
+            const form = document.getElementById('approveConfirmForm');
+            const title = document.getElementById('approveConfirmTitle');
+            if (form) {
+                form.action = actionUrl;
+                if (title) title.innerHTML = `Setujui pengajuan kirim ulang dari <strong>"${namaMhs}"</strong>? Data lama akan digantikan.`;
+                openModal('approveConfirmModal');
             }
         }
 
+        function closeApproveModal() {
+            closeModal('approveConfirmModal');
+        }
+
+        function openRejectModal(actionUrl, namaMhs) {
+            const form = document.getElementById('rejectConfirmForm');
+            const title = document.getElementById('rejectConfirmTitle');
+            if (form) {
+                form.action = actionUrl;
+                if (title) title.innerHTML = `Tolak pengajuan kirim ulang dari <strong>"${namaMhs}"</strong>? Pengumpulan lama tetap digunakan.`;
+                openModal('rejectConfirmModal');
+            }
+        }
+
+        function closeRejectModal() {
+            closeModal('rejectConfirmModal');
+        }
+
+        function closeLogoutModal() {
+            closeModal('logoutConfirmModal');
+        }
+
+        function openKumpulModal(idTugas, namaTugas, isKirimUlang = false) {
+            document.getElementById('kumpul_id_tugas').value = idTugas;
+            document.getElementById('kumpul_nama_tugas').value = namaTugas;
+            document.getElementById('kumpul_kirim_ulang').value = isKirimUlang ? '1' : '0';
+            const notice = document.getElementById('kumpul_resubmit_notice');
+            if (notice) notice.classList.toggle('hidden', !isKirimUlang);
+            const btn = document.getElementById('kumpul_submit_btn');
+            if (btn) btn.innerText = isKirimUlang ? 'Ajukan Kirim Ulang' : 'Kumpulkan Tugas';
+            openModal('kumpulModal');
+        }
+
         function closeKumpulModal() {
-            const modal = document.getElementById('kumpulModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('kumpulModal');
         }
 
         // ===== MODAL REVIEW / CATATAN DOSEN =====
         function openReviewModal(namaMhs, catatan, waktuNilai) {
-            const modal = document.getElementById('reviewModal');
-            if (modal) {
-                document.getElementById('review_nama').innerText = namaMhs || '-';
-                document.getElementById('review_isi').innerText = catatan || '(Tidak ada catatan)';
-                document.getElementById('review_waktu').innerText = (waktuNilai && waktuNilai !== '-') ? ('Dinilai pada: ' + waktuNilai) : 'Belum ada waktu penilaian';
-                modal.classList.remove('hidden');
-            }
+            document.getElementById('review_nama').innerText = namaMhs || '-';
+            document.getElementById('review_isi').innerText = catatan || '(Tidak ada catatan)';
+            document.getElementById('review_waktu').innerText = (waktuNilai && waktuNilai !== '-') ? ('Dinilai pada: ' + waktuNilai) : 'Belum ada waktu penilaian';
+            openModal('reviewModal');
         }
 
         function closeReviewModal() {
-            const modal = document.getElementById('reviewModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('reviewModal');
         }
 
         // ===== SORTING TUGAS (Deadline / Abjad) =====
+        // Search tugas
+        function filterTugas() {
+            const query = (document.getElementById('searchTugas')?.value || '').toLowerCase();
+            const rows = document.querySelectorAll('#task-list-container .task-row');
+            rows.forEach(row => {
+                const name = (row.dataset.nama || '');
+                row.style.display = name.includes(query) ? '' : 'none';
+            });
+        }
+
         function sortTasks(mode) {
             const container = document.getElementById('task-list-container');
             if (!container) return;
@@ -1334,51 +1633,46 @@
         }
 
         function openAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal) {
-                const el = document.getElementById('add_nama_dosen');
-                if (el && currentSelectedDosen) {
-                    el.value = currentSelectedDosen;
-                }
-                modal.classList.remove('hidden');
+            const el = document.getElementById('add_nama_dosen');
+            if (el && currentSelectedDosen) {
+                el.value = currentSelectedDosen;
             }
+            openModal('addModal');
         }
 
         function closeAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('addModal');
         }
 
         function openEditModal(tugas) {
-            const modal = document.getElementById('editModal');
-            if (modal) {
-                const id = tugas.id_tugas || tugas.id;
-                document.getElementById('editForm').action = `/tugas/${id}`;
-                document.getElementById('edit_nama_tugas').value = tugas.nama_tugas || '';
-                document.getElementById('edit_nama_dosen').value = tugas.nama_dosen || '';
+            const id = tugas.id_tugas || tugas.id;
+            const actionUrl = `/tugas/${id}`;
+            document.getElementById('editForm').action = actionUrl;
+            document.getElementById('edit_action_url').value = actionUrl;
+            document.getElementById('edit_nama_tugas').value = tugas.nama_tugas || '';
+            document.getElementById('edit_deskripsi_tugas').value = tugas.deskripsi_tugas || '';
+            document.getElementById('edit_nama_dosen').value = tugas.nama_dosen || '';
 
-                if (tugas.deadline_tugas) {
-                    const dt = new Date(tugas.deadline_tugas);
-                    const year = dt.getFullYear();
-                    const month = String(dt.getMonth() + 1).padStart(2, '0');
-                    const day = String(dt.getDate()).padStart(2, '0');
-                    const hours = String(dt.getHours()).padStart(2, '0');
-                    const minutes = String(dt.getMinutes()).padStart(2, '0');
-                    document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-                }
-
-                const showNilaiCb = document.getElementById('edit_show_nilai');
-                if (showNilaiCb) {
-                    showNilaiCb.checked = tugas.show_nilai === undefined ? true : !!tugas.show_nilai;
-                }
-
-                modal.classList.remove('hidden');
+            if (tugas.deadline_tugas) {
+                const dt = new Date(tugas.deadline_tugas);
+                const year = dt.getFullYear();
+                const month = String(dt.getMonth() + 1).padStart(2, '0');
+                const day = String(dt.getDate()).padStart(2, '0');
+                const hours = String(dt.getHours()).padStart(2, '0');
+                const minutes = String(dt.getMinutes()).padStart(2, '0');
+                document.getElementById('edit_deadline_tugas').value = `${year}-${month}-${day}T${hours}:${minutes}`;
             }
+
+            const showNilaiCb = document.getElementById('edit_show_nilai');
+            if (showNilaiCb) {
+                showNilaiCb.checked = tugas.show_nilai === undefined ? true : !!tugas.show_nilai;
+            }
+
+            openModal('editModal');
         }
 
         function closeEditModal() {
-            const modal = document.getElementById('editModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('editModal');
         }
 
         document.addEventListener('keydown', (e) => {
@@ -1391,8 +1685,133 @@
                 closeReviewModal();
                 closeDeleteModal();
                 closeLogoutModal();
+                closeAddTugasConfirmModal();
+                closeEditTugasConfirmModal();
+                closeKumpulTugasConfirmModal();
+                closeNilaiTugasConfirmModal();
+                closeApproveModal();
+                closeRejectModal();
             }
         });
+
+        // Auto-dismiss flash notifications after 5 seconds
+        document.querySelectorAll('.flash-msg').forEach(function(el) {
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.4s, transform 0.4s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function() { el.remove(); }, 400);
+            }, 5000);
+        });
+
+        // Intercept Form Submissions for Custom Confirmation Modals
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-reopen modals if validation errors exist
+            @if($errors->any())
+                @if(old('_method') === 'PUT')
+                    const actionUrl = "{{ old('edit_action_url') }}";
+                    if (actionUrl) {
+                        document.getElementById('editForm').action = actionUrl;
+                        openModal('editModal');
+                    }
+                @else
+                    openModal('addModal');
+                @endif
+            @endif
+
+            const forms = [
+                { id: 'tugasStoreForm', confirmId: 'addTugasConfirmModal' },
+                { id: 'editForm', confirmId: 'editTugasConfirmModal' },
+                { id: 'kumpulForm', confirmId: 'kumpulTugasConfirmModal', checkResubmit: true },
+                { id: 'nilaiForm', confirmId: 'nilaiTugasConfirmModal' }
+            ];
+
+            forms.forEach(({ id, confirmId, checkResubmit }) => {
+                const form = document.getElementById(id);
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        if (e.submitter && e.submitter.dataset.confirmed) {
+                            return; // Let it submit if already confirmed
+                        }
+
+                        if (!form.checkValidity()) {
+                            return; // Let browser show validation errors
+                        }
+
+                        e.preventDefault();
+
+                        // If it's kumpulForm, dynamic confirmation title for Kirim Ulang vs Kumpul
+                        if (checkResubmit) {
+                            const isResubmit = document.getElementById('kumpul_kirim_ulang')?.value === '1';
+                            const titleEl = document.getElementById('kumpulTugasConfirmTitle');
+                            const name = document.getElementById('kumpul_nama_tugas')?.value || 'tugas';
+                            if (titleEl) {
+                                titleEl.innerHTML = isResubmit
+                                    ? `Ajukan kirim ulang untuk <strong>"${name}"</strong>?`
+                                    : `Kumpulkan tugas <strong>"${name}"</strong>?`;
+                            }
+                        }
+
+                        // Close the inputs modal first (with animation)
+                        const inputModal = form.closest('.fixed');
+                        if (inputModal) closeModal(inputModal.id);
+
+                        // Show confirm modal
+                        setTimeout(() => {
+                            openModal(confirmId);
+                        }, 210);
+
+                        // Save reference to the input modal so we can reopen it if cancelled
+                        window.pendingInputModal = inputModal;
+                    });
+                }
+            });
+        });
+
+        // Submit actions triggered by click in confirmation modals
+        function submitTugasStoreForm() {
+            document.getElementById('tugasStoreForm').submit();
+        }
+
+        function submitEditForm() {
+            document.getElementById('editForm').submit();
+        }
+
+        function submitKumpulForm() {
+            document.getElementById('kumpulForm').submit();
+        }
+
+        function submitNilaiForm() {
+            document.getElementById('nilaiForm').submit();
+        }
+
+        function closeAddTugasConfirmModal() {
+            closeModal('addTugasConfirmModal');
+            if (window.pendingInputModal) {
+                setTimeout(() => openModal(window.pendingInputModal.id), 210);
+            }
+        }
+
+        function closeEditTugasConfirmModal() {
+            closeModal('editTugasConfirmModal');
+            if (window.pendingInputModal) {
+                setTimeout(() => openModal(window.pendingInputModal.id), 210);
+            }
+        }
+
+        function closeKumpulTugasConfirmModal() {
+            closeModal('kumpulTugasConfirmModal');
+            if (window.pendingInputModal) {
+                setTimeout(() => openModal(window.pendingInputModal.id), 210);
+            }
+        }
+
+        function closeNilaiTugasConfirmModal() {
+            closeModal('nilaiTugasConfirmModal');
+            if (window.pendingInputModal) {
+                setTimeout(() => openModal(window.pendingInputModal.id), 210);
+            }
+        }
 
         // Smooth Page Switch Interceptor
         document.querySelectorAll('.page-switch-link').forEach(link => {

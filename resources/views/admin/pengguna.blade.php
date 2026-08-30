@@ -44,15 +44,33 @@
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        *, *::before, *::after { 
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 6px;
         }
-        *::-webkit-scrollbar { 
-            display: none; 
-            width: 0; 
-            height: 0; 
+        
+        /* Modern Thin Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
         ::selection { background: #FF7A00; color: #fff; }
         :focus-visible { outline: 2px solid #FF7A00; outline-offset: 2px; }
 
@@ -61,13 +79,31 @@
             animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes pageFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .page-exit {
             opacity: 0 !important;
             transform: translateY(-6px) !important;
             transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Modal Animation Transitions */
+        .modal-backdrop {
+            transition: opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+        .modal-content {
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .modal-content.show {
+            transform: scale(1);
+            opacity: 1;
         }
 
         /* Sidebar Drawer Animation */
@@ -81,17 +117,17 @@
         .theme-slider-btn { box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12); }
     </style>
 </head>
-<body class="min-h-screen bg-slate-100 dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
+<body class="min-h-screen bg-[#e5e9f0] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
 
     <!-- Ambient Subtle Background Elements -->
     <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
+        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-400/8 dark:bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
     </div>
 
     <!-- MAIN HEADER BAR -->
-    <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
+    <header class="bg-[#f1f3f8]/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-300/80 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
                 
@@ -106,7 +142,7 @@
                     </a>
 
                     <!-- Page Navigation Switcher Tabs -->
-                    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
+                    <div class="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-300 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
                         <a href="{{ route('tugas.index') }}"
                            class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
                                   {{ request()->routeIs('tugas.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
@@ -168,13 +204,13 @@
         @if(session('success') || session('error'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
             @if(session('success'))
-                <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 shadow-sm">
+                <div class="flash-msg p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 shadow-sm">
                     <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     <span>{{ session('success') }}</span>
                 </div>
             @endif
             @if(session('error'))
-                <div class="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 shadow-sm">
+                <div class="flash-msg p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center gap-2.5 shadow-sm">
                     <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     <span>{{ session('error') }}</span>
                 </div>
@@ -199,7 +235,7 @@
 
             <!-- Statistik Ringkas -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
+                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-md dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Akun</p>
@@ -210,7 +246,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
+                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-md dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mahasiswa</p>
@@ -221,7 +257,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
+                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-md dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dosen</p>
@@ -232,7 +268,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
+                <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-md dark:shadow-xl dark:shadow-black/20 transition-colors duration-300">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Admin</p>
@@ -246,7 +282,7 @@
             </div>
 
             <!-- Daftar Pengguna -->
-            <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
+            <div class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-md dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
                 
                 <!-- Toolbar: Pencarian & Filter Role -->
                 <div class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -449,36 +485,54 @@
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Ahmad Fulan" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Ahmad Fulan" class="w-full bg-slate-50 dark:bg-slate-800 border @error('name') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('name')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Daftarkan Sebagai (Role)</label>
-                    <select name="role" required onchange="updateIndukLabel(this.value, 'add_label_induk', 'add_placeholder_induk')" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <select name="role" value="{{ old('role') }}" required onchange="updateIndukLabel(this.value, 'add_label_induk', 'add_placeholder_induk')" class="w-full bg-slate-50 dark:bg-slate-800 border @error('role') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
                         <option value="mahasiswa" selected>Mahasiswa</option>
                         <option value="dosen">Dosen</option>
                         <option value="admin">Admin</option>
                     </select>
+                    @error('role')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5" id="add_label_induk">Nomor Induk (NIM)</label>
-                    <input type="text" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="Masukkan NIM mahasiswa" id="add_placeholder_induk" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" name="nomer_induk" value="{{ old('nomer_induk') }}" required placeholder="Masukkan NIM mahasiswa" id="add_placeholder_induk" class="w-full bg-slate-50 dark:bg-slate-800 border @error('nomer_induk') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nomer_induk')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email Aktif</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="email@unmul.ac.id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="email@unmul.ac.id" class="w-full bg-slate-50 dark:bg-slate-800 border @error('email') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('email')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
-                        <input type="password" name="password" required minlength="8" placeholder="Min. 8 karakter" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                        <input type="password" name="password" required minlength="8" placeholder="Min. 8 karakter" class="w-full bg-slate-50 dark:bg-slate-800 border @error('password') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                        @error('password')
+                            <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Konfirmasi Password</label>
-                        <input type="password" name="password_confirmation" required minlength="8" placeholder="Ulangi password" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                        <input type="password" name="password_confirmation" required minlength="8" placeholder="Ulangi password" class="w-full bg-slate-50 dark:bg-slate-800 border @error('password_confirmation') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                        @error('password_confirmation')
+                            <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -504,29 +558,42 @@
             <form id="editForm" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="edit_action_url" id="edit_action_url" value="{{ old('edit_action_url') }}">
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
-                    <input type="text" id="edit_name" name="name" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="edit_name" name="name" value="{{ old('name') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('name') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('name')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Role</label>
-                    <select id="edit_role" name="role" required onchange="updateIndukLabel(this.value, 'edit_label_induk', null)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <select id="edit_role" name="role" value="{{ old('role') }}" required onchange="updateIndukLabel(this.value, 'edit_label_induk', null)" class="w-full bg-slate-50 dark:bg-slate-800 border @error('role') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
                         <option value="mahasiswa">Mahasiswa</option>
                         <option value="dosen">Dosen</option>
                         <option value="admin">Admin</option>
                     </select>
+                    @error('role')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5" id="edit_label_induk">Nomor Induk (NIM)</label>
-                    <input type="text" id="edit_nomer_induk" name="nomer_induk" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="edit_nomer_induk" name="nomer_induk" value="{{ old('nomer_induk') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('nomer_induk') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nomer_induk')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email Aktif</label>
-                    <input type="email" id="edit_email" name="email" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="email" id="edit_email" name="email" value="{{ old('email') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('email') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('email')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
@@ -616,13 +683,71 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateThemeStatusText(document.documentElement.classList.contains('dark'));
+
+            // Auto-reopen modals if validation errors exist
+            @if($errors->any())
+                @if(old('_method') === 'PUT')
+                    const actionUrl = "{{ old('edit_action_url') }}";
+                    if (actionUrl) {
+                        document.getElementById('editForm').action = actionUrl;
+                        openModal('editModal');
+                    }
+                @else
+                    openModal('addModal');
+                @endif
+            @endif
         });
 
         // ===== Profile Drawer =====
+        // Modal open/close helpers with transitions & body scroll lock
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            
+            document.body.classList.add('modal-open');
+            modal.classList.add('modal-backdrop');
+            modal.classList.remove('hidden');
+            
+            const content = modal.querySelector('.bg-white, .bg-slate-900');
+            if (content) {
+                content.classList.add('modal-content');
+            }
+            
+            void modal.offsetWidth; // force reflow
+            
+            modal.classList.add('show');
+            if (content) {
+                content.classList.add('show');
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            
+            modal.classList.remove('show');
+            const content = modal.querySelector('.bg-white, .bg-slate-900');
+            if (content) {
+                content.classList.remove('show');
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                
+                const anyOpen = Array.from(document.querySelectorAll('.fixed.z-50')).some(el => {
+                    return !el.classList.contains('hidden') && el.id !== 'profileDrawerOverlay' && el.id !== 'profileDrawer';
+                });
+                if (!anyOpen) {
+                    document.body.classList.remove('modal-open');
+                }
+            }, 200);
+        }
+
         function openProfileDrawer() {
             const overlay = document.getElementById('profileDrawerOverlay');
             const drawer = document.getElementById('profileDrawer');
             if (overlay && drawer) {
+                document.body.classList.add('modal-open');
                 overlay.classList.remove('hidden');
                 setTimeout(() => drawer.classList.add('open'), 10);
             }
@@ -632,7 +757,17 @@
             const overlay = document.getElementById('profileDrawerOverlay');
             const drawer = document.getElementById('profileDrawer');
             if (drawer) drawer.classList.remove('open');
-            if (overlay) setTimeout(() => overlay.classList.add('hidden'), 250);
+            if (overlay) {
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    const anyOpen = Array.from(document.querySelectorAll('.fixed.z-50')).some(el => {
+                        return !el.classList.contains('hidden') && el.id !== 'profileDrawerOverlay' && el.id !== 'profileDrawer';
+                    });
+                    if (!anyOpen) {
+                        document.body.classList.remove('modal-open');
+                    }
+                }, 250);
+            }
         }
 
         // ===== Filter & Search =====
@@ -679,60 +814,53 @@
 
         // ===== Modal Tambah =====
         function openAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal) modal.classList.remove('hidden');
+            openModal('addModal');
         }
-
+ 
         function closeAddModal() {
-            const modal = document.getElementById('addModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('addModal');
         }
-
+ 
         // ===== Modal Edit =====
         function openEditModal(user) {
-            const modal = document.getElementById('editModal');
-            if (!modal) return;
-            document.getElementById('editForm').action = `/admin/pengguna/${user.id}`;
+            const actionUrl = `/admin/pengguna/${user.id}`;
+            document.getElementById('editForm').action = actionUrl;
+            document.getElementById('edit_action_url').value = actionUrl;
             document.getElementById('edit_name').value = user.name || '';
             document.getElementById('edit_email').value = user.email || '';
             document.getElementById('edit_nomer_induk').value = user.nomer_induk || '';
             document.getElementById('edit_role').value = user.role || 'mahasiswa';
             document.getElementById('edit_password').value = '';
             updateIndukLabel(user.role, 'edit_label_induk', null);
-            modal.classList.remove('hidden');
+            openModal('editModal');
         }
-
+ 
         function closeEditModal() {
-            const modal = document.getElementById('editModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('editModal');
         }
-
+ 
         // ===== Modal Hapus =====
         function confirmDelete(actionUrl, targetTitle) {
-            const modal = document.getElementById('deleteConfirmModal');
             const form = document.getElementById('deleteConfirmForm');
             const titleEl = document.getElementById('deleteTargetTitle');
-            if (modal && form) {
+            if (form) {
                 form.action = actionUrl;
                 if (titleEl) titleEl.innerText = `Apakah Anda yakin ingin menghapus ${targetTitle}? Tindakan ini tidak dapat dibatalkan.`;
-                modal.classList.remove('hidden');
+                openModal('deleteConfirmModal');
             }
         }
-
+ 
         function closeDeleteModal() {
-            const modal = document.getElementById('deleteConfirmModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('deleteConfirmModal');
         }
-
+ 
         // ===== Modal Logout =====
         function openLogoutModal() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.classList.remove('hidden');
+            openModal('logoutConfirmModal');
         }
-
+ 
         function closeLogoutModal() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('logoutConfirmModal');
         }
 
         // Escape key closes everything
@@ -744,6 +872,16 @@
                 closeDeleteModal();
                 closeLogoutModal();
             }
+        });
+
+        // Auto-dismiss flash notifications
+        document.querySelectorAll('.flash-msg').forEach(function(el) {
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.4s, transform 0.4s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function() { el.remove(); }, 400);
+            }, 5000);
         });
 
         // Smooth Page Switch Interceptor

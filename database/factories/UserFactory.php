@@ -29,6 +29,8 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'nomer_induk' => (string) fake()->unique()->numberBetween(1000000000, 9999999999),
+            'role' => 'mahasiswa',
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'two_factor_secret' => null,

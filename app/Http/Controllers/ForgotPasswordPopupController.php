@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ForgotPasswordPopupController extends Controller
 {
+    private const MAX_VERIFY_ATTEMPTS = 5;
+
     /**
      * Kirim kode verifikasi reset password ke email setelah validasi Email dan NIM/NIP.
      */
@@ -38,18 +40,11 @@ class ForgotPasswordPopupController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        // Jangan bocorkan apakah email terdaftar: pesan sama utk email tidak ada / NIM tidak cocok.
+        if (!$user || trim($user->nomer_induk) !== trim($request->nomer_induk)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Alamat email tidak terdaftar dalam sistem.',
-            ], 404);
-        }
-
-        // Cek kecocokan nomor induk (NIM / NIP)
-        if (trim($user->nomer_induk) !== trim($request->nomer_induk)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nomor Induk (NIM/NIP) tidak cocok dengan akun email ini.',
+                'message' => 'Data email dan nomor induk tidak cocok dengan akun terdaftar.',
             ], 422);
         }
 
@@ -62,6 +57,7 @@ class ForgotPasswordPopupController extends Controller
             [
                 'token' => Hash::make($code),
                 'created_at' => Carbon::now(),
+                'attempts' => 0,
             ]
         );
 
@@ -133,7 +129,18 @@ class ForgotPasswordPopupController extends Controller
             ], 422);
         }
 
+        $attempts = (int) ($record->attempts ?? 0);
+        if ($attempts >= self::MAX_VERIFY_ATTEMPTS) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terlalu banyak percobaan. Silakan minta kode verifikasi baru.',
+            ], 422);
+        }
+
         if (!Hash::check($request->code, $record->token) && $request->code !== $record->token) {
+            DB::table('password_reset_tokens')->where('email', $request->email)
+                ->increment('attempts');
             return response()->json([
                 'success' => false,
                 'message' => 'Kode verifikasi yang Anda masukkan salah. Periksa kembali email Anda.',
@@ -200,8 +207,19 @@ class ForgotPasswordPopupController extends Controller
             ], 422);
         }
 
+        $attempts = (int) ($record->attempts ?? 0);
+        if ($attempts >= self::MAX_VERIFY_ATTEMPTS) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terlalu banyak percobaan. Silakan minta kode verifikasi baru.',
+            ], 422);
+        }
+
         // Cek kesesuaian kode token
         if (!Hash::check($request->code, $record->token) && $request->code !== $record->token) {
+            DB::table('password_reset_tokens')->where('email', $request->email)
+                ->increment('attempts');
             return response()->json([
                 'success' => false,
                 'message' => 'Kode verifikasi yang Anda masukkan salah. Periksa kembali email Anda.',
