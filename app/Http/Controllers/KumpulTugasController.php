@@ -8,11 +8,14 @@ use Illuminate\Support\Facades\Log;
 
 class KumpulTugasController extends Controller
 {
+    private string $apiBaseUrl = 'http://127.0.0.1:8000';
     private string $api2BaseUrl = 'http://127.0.0.1:8001';
 
-    /**
-     * Mengambil seluruh data pengumpulan dari FastAPI2
-     */
+    private function apiKey(): string
+    {
+        return 'Bearer ' . config('services.api_key', env('API_KEY', 'your-secret-api-key-change-me'));
+    }
+
     private function fetchKumpul(): array
     {
         try {
@@ -24,17 +27,43 @@ class KumpulTugasController extends Controller
     }
 
     /**
-     * Menyimpan data pengumpulan tugas mahasiswa ke FastAPI2.
-     *
-     * CATATAN PERUBAHAN (perbaikan celah):
-     * 1. Cegah pengumpulan ganda (double) -> dicek dulu ke /ambil-kumpul.
-     * 2. Kirim ulang TIDAK langsung menimpa data lama; status diset 'pending'
-     *    dan harus disetujui dosen lewat approve().
-     * 3. ADMIN dikecualikan dari validasi "khusus mahasiswa" -> admin boleh
-     *    mengumpulkan tugas juga, tanpa batasan role tambahan.
+     * Pastikan dosen yang login berhak mengelola pengumpulan untuk tugas ini.
+     * Dosen hanya boleh mengelola pengumpulan tugas miliknya sendiri.
      */
+    private function ensureCanManage(array $kumpul): bool
+    {
+        $user = auth()->user();
+        if ($user && $user->isAdmin()) {
+            return true;
+        }
+        if (!$user || !$user->isDosen()) {
+            return false;
+        }
+
+        $idTugas = (int) ($kumpul['id_tugas'] ?? 0);
+        if ($idTugas <= 0) {
+            return false;
+        }
+
+        try {
+            $check = Http::timeout(3)->get("{$this->apiBaseUrl}/ambil-tugas/{$idTugas}");
+            if ($check->successful()) {
+                $tugasData = $check->json();
+                return strcasecmp($tugasData['nama_dosen'] ?? '', $user->name) === 0;
+            }
+        } catch (\Exception $e) {
+            Log::error("Check tugas ownership error: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
     public function store(Request $request)
     {
+        if (!auth()->user()->isMahasiswa()) {
+            return redirect()->back()->with('error', 'Hanya mahasiswa yang boleh mengumpulkan tugas.');
+        }
+
         $request->validate([
             'id_tugas' => 'required|integer',
             'file_mahasiswa' => 'nullable|string|max:1000',
@@ -42,12 +71,24 @@ class KumpulTugasController extends Controller
             'id_tugas.required' => 'ID tugas tidak valid.',
         ]);
 
-        $namaMahasiswa = $request->nama_mahasiswa ?? auth()->user()->name ?? 'Mahasiswa';
+        try {
+            $tugasResp = Http::timeout(3)->get("{$this->apiBaseUrl}/ambil-tugas/{$request->id_tugas}");
+            if ($tugasResp->successful()) {
+                $tugasData = $tugasResp->json();
+                $deadline = \Carbon\Carbon::parse($tugasData['deadline_tugas'] ?? null);
+                if ($deadline->isPast()) {
+                    return redirect()->back()->with('error', 'Tugas ini sudah melewati tenggat waktu. Anda tidak bisa mengumpulkan tugas lagi.');
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Cek deadline error: " . $e->getMessage());
+        }
+
+        $namaMahasiswa = auth()->user()->name ?? 'Mahasiswa';
         $tanggalKumpul = now()->format('Y-m-d\TH:i:s');
         $fileMahasiswa = $request->file_mahasiswa ?? '';
 
         try {
-            // Cek data yang sudah ada untuk mencegah duplikat
             $existing = collect($this->fetchKumpul())
                 ->where('id_tugas', (int) $request->id_tugas)
                 ->filter(function ($k) use ($namaMahasiswa) {
@@ -87,7 +128,7 @@ class KumpulTugasController extends Controller
                 'id_tugas' => (int) $request->id_tugas,
                 'nama_mahasiswa' => $namaMahasiswa,
                 'file_mahasiswa' => $fileMahasiswa,
-                'nilai_mahasiswa' => 0.0,
+                'nilai' => null,
                 'tanggal_kumpul' => $tanggalKumpul,
                 'resubmit_status' => $status,
             ]);
@@ -103,11 +144,6 @@ class KumpulTugasController extends Controller
         }
     }
 
-    /**
-     * Dosen menyetujui pengajuan kirim ulang:
-     * - Pengumpulan baru menjadi aktif (disetujui).
-     * - Pengumpulan lama dihapus agar tidak dobel.
-     */
     public function approve($id)
     {
         try {
@@ -118,8 +154,13 @@ class KumpulTugasController extends Controller
                 return redirect()->back()->with('error', 'Pengajuan kirim ulang tidak ditemukan atau sudah diproses.');
             }
 
-            // Setujui pengumpulan baru
-            $response = Http::timeout(3)->patch("{$this->api2BaseUrl}/edit-kumpul/{$id}", [
+            if (!$this->ensureCanManage($pending)) {
+                return redirect()->back()->with('error', 'Anda hanya bisa menyetujui pengajuan kirim ulang untuk tugas yang Anda buat sendiri.');
+            }
+
+            $response = Http::timeout(3)->withHeaders([
+                'Authorization' => $this->apiKey(),
+            ])->patch("{$this->api2BaseUrl}/edit-kumpul/{$id}", [
                 'resubmit_status' => 'disetujui',
             ]);
 
@@ -127,7 +168,6 @@ class KumpulTugasController extends Controller
                 return redirect()->back()->with('error', 'Gagal menyetujui kirim ulang: ' . $response->body());
             }
 
-            // Hapus pengumpulan lama (yang aktif sebelumnya) agar tidak dobel
             $lama = $semua->first(function ($k) use ($pending, $id) {
                 return (int)($k['id_kumpul'] ?? 0) !== (int)$id
                     && (int)($k['id_tugas'] ?? 0) === (int)($pending['id_tugas'] ?? -1)
@@ -136,7 +176,9 @@ class KumpulTugasController extends Controller
             });
 
             if ($lama) {
-                Http::timeout(3)->delete("{$this->api2BaseUrl}/hapus-kumpul/{$lama['id_kumpul']}");
+                Http::timeout(3)->withHeaders([
+                    'Authorization' => $this->apiKey(),
+                ])->delete("{$this->api2BaseUrl}/hapus-kumpul/{$lama['id_kumpul']}");
             }
 
             $waktu = now()->translatedFormat('j M Y, H:i');
@@ -147,10 +189,6 @@ class KumpulTugasController extends Controller
         }
     }
 
-    /**
-     * Dosen menolak pengajuan kirim ulang:
-     * - Pengajuan baru dihapus, pengumpulan lama tetap dipakai.
-     */
     public function reject($id)
     {
         try {
@@ -161,7 +199,13 @@ class KumpulTugasController extends Controller
                 return redirect()->back()->with('error', 'Pengajuan kirim ulang tidak ditemukan atau sudah diproses.');
             }
 
-            $response = Http::timeout(3)->delete("{$this->api2BaseUrl}/hapus-kumpul/{$id}");
+            if (!$this->ensureCanManage($pending)) {
+                return redirect()->back()->with('error', 'Anda hanya bisa menolak pengajuan kirim ulang untuk tugas yang Anda buat sendiri.');
+            }
+
+            $response = Http::timeout(3)->withHeaders([
+                'Authorization' => $this->apiKey(),
+            ])->delete("{$this->api2BaseUrl}/hapus-kumpul/{$id}");
 
             if ($response->successful()) {
                 return redirect()->back()->with('success', "Pengajuan kirim ulang dari {$pending['nama_mahasiswa']} ditolak. Pengumpulan sebelumnya tetap digunakan.");
@@ -174,19 +218,10 @@ class KumpulTugasController extends Controller
         }
     }
 
-    /**
-     * Memberikan nilai tugas mahasiswa via FastAPI2.
-     *
-     * CATATAN PERUBAHAN:
-     * - Nilai lama otomatis TERGANTI (overwrite) saat dosen mengedit nilai,
-     *   sehingga tidak ada nilai lama yang tersisa.
-     * - Waktu penilaian (tanggal, jam, menit) dicatat oleh FastAPI 2 di kolom
-     *   'dinilai_at' setiap kali nilai disimpan/diubah.
-     */
     public function updateNilai(Request $request, $id)
     {
         $request->validate([
-            'nilai' => 'required|integer|min:0|max:100',
+            'nilai' => 'required|numeric|min:0|max:100',
             'catatan_dosen' => 'nullable|string|max:1000',
         ], [
             'nilai.required' => 'Nilai wajib diisi.',
@@ -196,8 +231,19 @@ class KumpulTugasController extends Controller
         ]);
 
         try {
-            $response = Http::timeout(3)->patch("{$this->api2BaseUrl}/beri-nilai/{$id}", [
-                'nilai' => (int) $request->nilai,
+            $kumpul = collect($this->fetchKumpul())->firstWhere('id_kumpul', (int) $id);
+            if (!$kumpul) {
+                return redirect()->back()->with('error', 'Data pengumpulan tidak ditemukan.');
+            }
+
+            if (!$this->ensureCanManage($kumpul)) {
+                return redirect()->back()->with('error', 'Anda hanya bisa menilai pengumpulan pada tugas yang Anda buat sendiri.');
+            }
+
+            $response = Http::timeout(3)->withHeaders([
+                'Authorization' => $this->apiKey(),
+            ])->patch("{$this->api2BaseUrl}/beri-nilai/{$id}", [
+                'nilai' => (float) $request->nilai,
                 'catatan_dosen' => $request->filled('catatan_dosen') ? trim($request->catatan_dosen) : '',
             ]);
 
@@ -213,13 +259,21 @@ class KumpulTugasController extends Controller
         }
     }
 
-    /**
-     * Menghapus data pengumpulan tugas via FastAPI2
-     */
     public function destroy($id)
     {
         try {
-            $response = Http::timeout(3)->delete("{$this->api2BaseUrl}/hapus-kumpul/{$id}");
+            $kumpul = collect($this->fetchKumpul())->firstWhere('id_kumpul', (int) $id);
+            if (!$kumpul) {
+                return redirect()->back()->with('error', 'Data pengumpulan tidak ditemukan.');
+            }
+
+            if (!$this->ensureCanManage($kumpul)) {
+                return redirect()->back()->with('error', 'Anda hanya bisa menghapus pengumpulan pada tugas yang Anda buat sendiri.');
+            }
+
+            $response = Http::timeout(3)->withHeaders([
+                'Authorization' => $this->apiKey(),
+            ])->delete("{$this->api2BaseUrl}/hapus-kumpul/{$id}");
 
             if ($response->successful()) {
                 return redirect()->back()->with('success', 'Data pengumpulan tugas berhasil dihapus!');

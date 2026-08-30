@@ -43,22 +43,40 @@
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        *, *::before, *::after { 
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 6px;
         }
-        *::-webkit-scrollbar { 
-            display: none; 
-            width: 0; 
-            height: 0; 
+        
+        /* Modern Thin Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
         ::selection { background: #FF7A00; color: #fff; }
         :focus-visible { outline: 2px solid #FF7A00; outline-offset: 2px; }
         .page-transition-wrapper {
             animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes pageFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .page-exit {
@@ -66,19 +84,56 @@
             transform: translateY(-6px) !important;
             transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
+
+        /* Modal Animation Transitions */
+        .modal-backdrop {
+            transition: opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+        .modal-content {
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .modal-content.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        @keyframes cardSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .task-card {
+            animation: cardSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .task-card:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .task-card:hover { border-color: rgba(255, 122, 0, 0.3); }
+        .dark .task-card:hover { border-color: rgba(255, 122, 0, 0.2); }
+        .light .task-card { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
     </style>
 </head>
-<body class="min-h-screen bg-slate-100 dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
+<body class="min-h-screen bg-[#e5e9f0] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
 
     <!-- Background Ambient -->
     <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute inset-0 opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
+        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-400/8 dark:bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
     </div>
 
     <!-- HEADER -->
-    <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
+    <header class="bg-[#f1f3f8]/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-300/80 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
                 <div class="flex items-center gap-3 sm:gap-6 min-w-0">
@@ -90,7 +145,7 @@
                         </div>
                     </a>
 
-                    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
+                    <div class="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-300 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
                         <a href="{{ route('tugas.index') }}"
                            class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60">
                             <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -123,12 +178,12 @@
 
         @if(session('success'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-            <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold shadow-sm">{{ session('success') }}</div>
+            <div class="flash-msg p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold shadow-sm">{{ session('success') }}</div>
         </div>
         @endif
         @if(session('error') || $errorMessage)
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-            <div class="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold shadow-sm">{{ session('error') ?? $errorMessage }}</div>
+            <div class="flash-msg p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold shadow-sm">{{ session('error') ?? $errorMessage }}</div>
         </div>
         @endif
 
@@ -156,8 +211,8 @@
             </div>
 
             <!-- Daftar Arsip -->
-            <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
-                <div id="arsip-container" class="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <div class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-md dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
+                <div id="arsip-container" class="py-1">
                     @php
                         /*
                          | CATATAN HAK AKSES (ROLE) — HALAMAN ARSIP:
@@ -170,21 +225,25 @@
                         // [PERUBAHAN] Admin juga dapat melihat ringkasan pengumpulan pribadinya (akses penuh seperti mahasiswa)
                         $canSubmit = auth()->user()->isMahasiswa() || auth()->user()->isAdmin();
                     @endphp
-                    @forelse($tugasList as $tugas)
+                    @forelse($tugasList as $index => $tugas)
                         @php
                             $id = $tugas['id_tugas'] ?? $tugas['id'] ?? null;
                             $deadline = isset($tugas['deadline_tugas']) ? \Carbon\Carbon::parse($tugas['deadline_tugas']) : null;
                             $submissions = collect($kumpulList)->where('id_tugas', $id);
-                            $mySubmission = $submissions->firstWhere('nama_mahasiswa', auth()->user()->name);
+                            $mySubmission = $submissions->first(function ($s) {
+                                return strcasecmp($s['nama_mahasiswa'] ?? '', auth()->user()->name) === 0;
+                            });
                             $getNilai = function ($sub) {
                                 if (isset($sub['nilai']) && $sub['nilai'] !== null && $sub['nilai'] !== '') return (int) $sub['nilai'];
                                 if (isset($sub['nilai_mahasiswa']) && $sub['nilai_mahasiswa'] !== null && $sub['nilai_mahasiswa'] !== '' && (float) $sub['nilai_mahasiswa'] > 0) return (int) $sub['nilai_mahasiswa'];
                                 return null;
                             };
                         @endphp
-                        <div class="task-row p-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150"
+                        <div class="task-card task-row m-3 p-5 bg-white dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/40 rounded-xl hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150"
+                             style="animation-delay: {{ $index * 60 }}ms"
                              data-deadline="{{ $deadline ? $deadline->timestamp : 0 }}"
-                             data-nama="{{ mb_strtolower($tugas['nama_tugas'] ?? '') }}">
+                             data-nama="{{ mb_strtolower($tugas['nama_tugas'] ?? '') }}"
+                             data-dosen="{{ mb_strtolower($tugas['nama_dosen'] ?? '') }}">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -201,7 +260,7 @@
                                 <div class="flex flex-col items-start sm:items-end gap-2 shrink-0">
                                     <span class="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-rose-600 dark:text-rose-300 bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20" title="Tenggat Waktu">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        Deadline: {{ $deadline?->translatedFormat('l, j F Y \• H:i') }}
+                                        Deadline: {{ $deadline?->translatedFormat('D, j M Y \j\a\m H:i') }}
                                     </span>
                                 </div>
                             </div>
@@ -217,7 +276,7 @@
                                     </span>
                                 @elseif($mySubmission)
                                     @php
-                                        $tglKumpul = isset($mySubmission['tanggal_kumpul']) ? \Carbon\Carbon::parse($mySubmission['tanggal_kumpul'])->translatedFormat('l, j F Y \jam H:i') : '-';
+                                        $tglKumpul = isset($mySubmission['tanggal_kumpul']) ? \Carbon\Carbon::parse($mySubmission['tanggal_kumpul'])->translatedFormat('D, j M Y \j\a\m H:i') : '-';
                                         $showNilaiArsip = array_key_exists('show_nilai', $tugas) ? (bool) $tugas['show_nilai'] : true;
                                         $nilaiVal = $showNilaiArsip ? $getNilai($mySubmission) : null;
                                         $gradeHuruf = $nilaiVal !== null ? \App\Support\Grade::huruf($nilaiVal) : null;
@@ -298,6 +357,16 @@
             });
             rows.forEach(row => container.appendChild(row));
         }
+
+        // Auto-dismiss flash notifications
+        document.querySelectorAll('.flash-msg').forEach(function(el) {
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.4s, transform 0.4s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function() { el.remove(); }, 400);
+            }, 5000);
+        });
 
         // Smooth Page Switch Interceptor
         document.querySelectorAll('.page-switch-link').forEach(link => {

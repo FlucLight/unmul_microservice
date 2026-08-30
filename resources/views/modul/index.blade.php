@@ -44,15 +44,33 @@
             overflow-x: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        *, *::before, *::after { 
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 6px;
         }
-        *::-webkit-scrollbar { 
-            display: none; 
-            width: 0; 
-            height: 0; 
+        
+        /* Modern Thin Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
         ::selection { background: #FF7A00; color: #fff; }
         :focus-visible { outline: 2px solid #FF7A00; outline-offset: 2px; }
 
@@ -61,20 +79,51 @@
             animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes pageFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .page-exit {
             opacity: 0 !important;
             transform: translateY(-6px) !important;
             transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
+
+        /* Modal Animation Transitions */
+        .modal-backdrop {
+            transition: opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+        .modal-content {
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .modal-content.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        @keyframes cardSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modul-card {
+            animation: cardSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .modul-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: rgba(255, 122, 0, 0.3);
+        }
+        .dark .modul-card:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -5px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 122, 0, 0.2);
+        }
+        .light .modul-card { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
 
         /* Hidebar Drawer Animation */
         .profile-drawer {
@@ -91,17 +140,17 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-slate-100 dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
+<body class="min-h-screen bg-[#e5e9f0] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
 
     <!-- Ambient Subtle Background Elements -->
     <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
+        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-400/8 dark:bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
     </div>
 
     <!-- MAIN HEADER BAR (COMPACT & UNIFIED) -->
-    <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
+    <header class="bg-[#f1f3f8]/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-300/80 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
                 
@@ -116,7 +165,7 @@
                     </a>
 
                     <!-- Page Navigation Switcher Tabs (Consistent Location) -->
-                    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
+                    <div class="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-300 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
                         <a href="{{ route('tugas.index') }}"
                            class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
                                   {{ request()->routeIs('tugas.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
@@ -187,7 +236,7 @@
         @if(session('success') || session('error') || $errorMessage)
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
             @if(session('success'))
-                <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm">
+                <div class="flash-msg p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm">
                     <div class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         <span>{{ session('success') }}</span>
@@ -195,7 +244,7 @@
                 </div>
             @endif
             @if(session('error') || $errorMessage)
-                <div class="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm">
+                <div class="flash-msg p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-sm">
                     <div class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         <span>{{ session('error') ?? $errorMessage }}</span>
@@ -232,24 +281,29 @@
 
                 <!-- LEFT COLUMN: Ledger / Daftar Modul -->
                 <div class="lg:col-span-8 space-y-4">
-                    <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
+                    <div class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-md dark:shadow-xl dark:shadow-black/20 overflow-hidden backdrop-blur-sm transition-colors duration-300">
                         
-                        <div class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between">
+                        <div class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between flex-wrap gap-2">
                             <div id="modul-table-title" class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>Semua Modul Kuliah</span>
                                 <span id="filter-badge" class="hidden bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded text-[10px] font-mono">Filter Aktif</span>
                             </div>
-                            <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tanggal Unggah</span>
+                            <div class="relative">
+                                <svg class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="text" id="searchModul" onkeyup="filterModul()" placeholder="Cari modul..." class="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-orange-500 w-36 sm:w-48 transition">
+                            </div>
                         </div>
 
-                        <div id="modul-list-container" class="divide-y divide-slate-100 dark:divide-slate-800/80">
-                            @forelse($modulList as $modul)
+                        <div id="modul-list-container" class="py-1">
+                            @forelse($modulList as $index => $modul)
                                 @php
                                     $idModul = $modul['id_modul'] ?? $modul['id'] ?? null;
                                     $tglUpload = isset($modul['tanggal_diupload']) ? \Carbon\Carbon::parse($modul['tanggal_diupload'])->translatedFormat('j M Y, H:i') : '-';
                                     $fileUrl = $modul['file_modul'] ?? null;
                                 @endphp
-                                <div class="modul-row p-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150 space-y-3" data-dosen="{{ strtolower($modul['nama_dosen'] ?? '') }}">
+                                <div class="modul-card modul-row m-3 p-5 bg-white dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/40 rounded-xl hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150 space-y-3"
+                                     style="animation-delay: {{ $index * 60 }}ms"
+                                     data-nama="{{ strtolower($modul['nama_modul'] ?? '') }}" data-dosen="{{ strtolower($modul['nama_dosen'] ?? '') }}">
                                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                         <div class="min-w-0 flex-1">
                                             <div class="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -281,7 +335,7 @@
 
                                                 <!-- Edit & Hapus Modul (Dosen & Admin) -->
                                                 @if(auth()->user()->isDosen() || auth()->user()->isAdmin())
-                                                    <button onclick='openEditModulModal({{ json_encode($modul) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Modul">
+                                                    <button onclick='openEditModulModal({{ json_encode($modul, JSON_HEX_APOS) }})' class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-orange-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition" title="Ubah Modul">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
                                                     <button type="button" onclick="confirmDelete('{{ route('modul.destroy', $idModul) }}', 'Modul: {{ addslashes($modul['nama_modul']) }}')" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-lg transition cursor-pointer" title="Hapus Modul">
@@ -310,7 +364,7 @@
 
                 <!-- RIGHT COLUMN: Dosen Pengampu Filter -->
                 <div class="lg:col-span-4 space-y-4">
-                    <div class="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm dark:shadow-xl dark:shadow-black/20 backdrop-blur-sm transition-colors duration-300">
+                    <div class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-md dark:shadow-xl dark:shadow-black/20 backdrop-blur-sm transition-colors duration-300">
                         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
                             <div>
                                 <h3 class="font-bold text-sm text-slate-900 dark:text-white">Dosen Pengampu</h3>
@@ -514,19 +568,25 @@
                 <button onclick="closeAddModulModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl leading-none transition" aria-label="Tutup">&times;</button>
             </div>
 
-            <form action="{{ route('modul.store') }}" method="POST" class="space-y-4">
+            <form id="addModulForm" action="{{ route('modul.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama / Judul Modul</label>
-                    <input type="text" name="nama_modul" required placeholder="Contoh: Modul 1 - Pemrograman Web Laravel" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" name="nama_modul" value="{{ old('nama_modul') }}" required placeholder="Contoh: Modul 1 - Pemrograman Web Laravel" class="w-full bg-slate-50 dark:bg-slate-800 border @error('nama_modul') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nama_modul')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Dosen Pengampu</label>
-                    <input type="text" name="nama_dosen" value="{{ auth()->user()->name }}" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" name="nama_dosen" value="{{ auth()->user()->name }}" readonly class="w-full bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link File / Google Drive Modul <span class="text-rose-500">*</span></label>
-                    <input type="url" name="file_modul" required placeholder="https://drive.google.com/file/d/..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="url" name="file_modul" value="{{ old('file_modul') }}" required placeholder="https://drive.google.com/file/d/..." class="w-full bg-slate-50 dark:bg-slate-800 border @error('file_modul') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('file_modul')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                     <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Pastikan link Google Drive sudah diatur agar dapat diakses oleh mahasiswa.</p>
                 </div>
 
@@ -553,17 +613,27 @@
             <form id="editModulForm" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="edit_action_url" id="edit_action_url" value="{{ old('edit_action_url') }}">
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama / Judul Modul</label>
-                    <input type="text" id="edit_nama_modul" name="nama_modul" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="edit_nama_modul" name="nama_modul" value="{{ old('nama_modul') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('nama_modul') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nama_modul')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Dosen Pengampu</label>
-                    <input type="text" id="edit_nama_dosen" name="nama_dosen" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="text" id="edit_nama_dosen" name="nama_dosen" value="{{ old('nama_dosen') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('nama_dosen') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('nama_dosen')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link File / Google Drive Modul</label>
-                    <input type="url" id="edit_file_modul" name="file_modul" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    <input type="url" id="edit_file_modul" name="file_modul" value="{{ old('file_modul') }}" required class="w-full bg-slate-50 dark:bg-slate-800 border @error('file_modul') border-rose-500 dark:border-rose-500/50 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition">
+                    @error('file_modul')
+                        <p class="text-rose-500 text-[10px] mt-1 font-semibold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="flex justify-end gap-2.5 pt-2">
@@ -655,13 +725,72 @@
         document.addEventListener('DOMContentLoaded', () => {
             const isDark = document.documentElement.classList.contains('dark');
             updateThemeStatusText(isDark);
+
+            // Auto-reopen modals if validation errors exist
+            @if($errors->any())
+                @if(old('_method') === 'PUT')
+                    const actionUrl = "{{ old('edit_action_url') }}";
+                    if (actionUrl) {
+                        document.getElementById('editModulForm').action = actionUrl;
+                        openModal('editModulModal');
+                    }
+                @else
+                    openModal('addModulModal');
+                @endif
+            @endif
         });
+
+        // Profile Drawer Functions
+        // Modal open/close helpers with transitions & body scroll lock
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            
+            document.body.classList.add('modal-open');
+            modal.classList.add('modal-backdrop');
+            modal.classList.remove('hidden');
+            
+            const content = modal.querySelector('.bg-white, .bg-slate-900');
+            if (content) {
+                content.classList.add('modal-content');
+            }
+            
+            void modal.offsetWidth; // force reflow
+            
+            modal.classList.add('show');
+            if (content) {
+                content.classList.add('show');
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            
+            modal.classList.remove('show');
+            const content = modal.querySelector('.bg-white, .bg-slate-900');
+            if (content) {
+                content.classList.remove('show');
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                
+                const anyOpen = Array.from(document.querySelectorAll('.fixed.z-50')).some(el => {
+                    return !el.classList.contains('hidden') && el.id !== 'profileDrawerOverlay' && el.id !== 'profileDrawer';
+                });
+                if (!anyOpen) {
+                    document.body.classList.remove('modal-open');
+                }
+            }, 200);
+        }
 
         // Profile Drawer Functions
         function openProfileDrawer() {
             const overlay = document.getElementById('profileDrawerOverlay');
             const drawer = document.getElementById('profileDrawer');
             if (overlay && drawer) {
+                document.body.classList.add('modal-open');
                 overlay.classList.remove('hidden');
                 setTimeout(() => drawer.classList.add('open'), 10);
             }
@@ -672,7 +801,15 @@
             const drawer = document.getElementById('profileDrawer');
             if (drawer) drawer.classList.remove('open');
             if (overlay) {
-                setTimeout(() => overlay.classList.add('hidden'), 250);
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    const anyOpen = Array.from(document.querySelectorAll('.fixed.z-50')).some(el => {
+                        return !el.classList.contains('hidden') && el.id !== 'profileDrawerOverlay' && el.id !== 'profileDrawer';
+                    });
+                    if (!anyOpen) {
+                        document.body.classList.remove('modal-open');
+                    }
+                }, 250);
             }
         }
 
@@ -736,58 +873,50 @@
         }
 
         function openAddModulModal() {
-            const modal = document.getElementById('addModulModal');
-            if (modal) modal.classList.remove('hidden');
+            openModal('addModulModal');
         }
         
         function closeAddModulModal() {
-            const modal = document.getElementById('addModulModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('addModulModal');
         }
 
         function openEditModulModal(modul) {
-            const modal = document.getElementById('editModulModal');
-            if (modal) {
-                const id = modul.id_modul || modul.id;
-                document.getElementById('editModulForm').action = `/modul/${id}`;
-                document.getElementById('edit_nama_modul').value = modul.nama_modul || '';
-                document.getElementById('edit_nama_dosen').value = modul.nama_dosen || '';
-                document.getElementById('edit_file_modul').value = modul.file_modul || '';
-                modal.classList.remove('hidden');
-            }
+            const id = modul.id_modul || modul.id;
+            const actionUrl = `/modul/${id}`;
+            document.getElementById('editModulForm').action = actionUrl;
+            document.getElementById('edit_action_url').value = actionUrl;
+            document.getElementById('edit_nama_modul').value = modul.nama_modul || '';
+            document.getElementById('edit_nama_dosen').value = modul.nama_dosen || '';
+            document.getElementById('edit_file_modul').value = modul.file_modul || '';
+            openModal('editModulModal');
         }
 
         function closeEditModulModal() {
-            const modal = document.getElementById('editModulModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('editModulModal');
         }
 
         // POPUP CONFIRM DELETE (Poin 3)
         function confirmDelete(actionUrl, targetTitle) {
-            const modal = document.getElementById('deleteConfirmModal');
             const form = document.getElementById('deleteConfirmForm');
             const titleEl = document.getElementById('deleteTargetTitle');
-            if (modal && form) {
+            if (form) {
                 form.action = actionUrl;
                 if (titleEl) titleEl.innerText = `Apakah Anda yakin ingin menghapus ${targetTitle}?`;
-                modal.classList.remove('hidden');
+                openModal('deleteConfirmModal');
             }
         }
 
         function closeDeleteModal() {
-            const modal = document.getElementById('deleteConfirmModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('deleteConfirmModal');
         }
 
         // POPUP CONFIRM LOGOUT (Poin 4)
         function openLogoutModal() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.classList.remove('hidden');
+            openModal('logoutConfirmModal');
         }
 
         function closeLogoutModal() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.classList.add('hidden');
+            closeModal('logoutConfirmModal');
         }
 
         document.addEventListener('keydown', (e) => {
@@ -798,6 +927,26 @@
                 closeDeleteModal();
                 closeLogoutModal();
             }
+        });
+
+        // Search modul
+        function filterModul() {
+            const query = (document.getElementById('searchModul')?.value || '').toLowerCase();
+            const rows = document.querySelectorAll('#modul-list-container .modul-row');
+            rows.forEach(row => {
+                const name = (row.dataset.nama || '').toLowerCase();
+                row.style.display = name.includes(query) ? '' : 'none';
+            });
+        }
+
+        // Auto-dismiss flash notifications
+        document.querySelectorAll('.flash-msg').forEach(function(el) {
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.4s, transform 0.4s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function() { el.remove(); }, 400);
+            }, 5000);
         });
 
         // Smooth Page Switch Interceptor
