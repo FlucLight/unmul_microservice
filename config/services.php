@@ -35,7 +35,25 @@ return [
         ],
     ],
 
-    'api_key' => env('API_KEY'),
+    'api_key' => env('API_KEY', 'your-secret-api-key-change-me'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Microservices FastAPI (untuk Swagger UI admin & integrasi internal)
+    |--------------------------------------------------------------------------
+    */
+
+    'api_tugas' => [
+        'url' => env('API_TUGAS_URL', 'http://127.0.0.1:8000'),
+    ],
+
+    'api_penilaian' => [
+        'url' => env('API_PENILAIAN_URL', 'http://127.0.0.1:8001'),
+    ],
+
+    'api_modul' => [
+        'url' => env('API_MODUL_URL', 'http://127.0.0.1:8002'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

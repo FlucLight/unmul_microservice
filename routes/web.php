@@ -7,6 +7,7 @@ use App\Http\Controllers\ModulController;
 
 use App\Http\Controllers\ForgotPasswordPopupController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\ApiDocsController;
 
 // Halaman Utama - Welcome Page
 Route::get('/', function () {
@@ -57,12 +58,15 @@ Route::middleware([
         Route::post('/kumpul-tugas', [KumpulTugasController::class, 'store'])->name('kumpul.store');
     });
 
-    // Khusus ADMIN: Manajemen Pengguna (Daftarkan Mahasiswa/Dosen via NIM/NIP)
+    // Khusus ADMIN: Manajemen Pengguna & Dokumentasi API (Swagger UI)
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/pengguna', [UserManagementController::class, 'index'])->name('admin.pengguna');
         Route::post('/admin/pengguna', [UserManagementController::class, 'store'])->name('admin.pengguna.store');
         Route::put('/admin/pengguna/{id}', [UserManagementController::class, 'update'])->name('admin.pengguna.update');
         Route::delete('/admin/pengguna/{id}', [UserManagementController::class, 'destroy'])->name('admin.pengguna.destroy');
+
+        Route::get('/admin/api-docs', [ApiDocsController::class, 'index'])->name('admin.api-docs');
+        Route::get('/admin/api-docs/spec/{service}', [ApiDocsController::class, 'spec'])->name('admin.api-docs.spec');
     });
 
 });
