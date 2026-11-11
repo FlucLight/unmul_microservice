@@ -125,77 +125,7 @@
         <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
         <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
     </div>
-
-    <!-- MAIN HEADER BAR -->
-    <header class="bg-[#f1f3f8]/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-300/80 dark:border-slate-800 sticky top-0 z-40 shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16 gap-4">
-                
-                <!-- Left: Logo Kampus & Switcher Tabs -->
-                <div class="flex items-center gap-3 sm:gap-6 min-w-0">
-                    <a href="{{ route('home') }}" class="flex items-center gap-2.5 sm:gap-3 shrink-0 group no-underline text-inherit">
-                        <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL" class="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-md group-hover:scale-105 transition-transform">
-                        <div class="hidden sm:block leading-tight">
-                            <span class="font-extrabold text-sm text-slate-900 dark:text-white block tracking-tight group-hover:text-orange-500 transition-colors">FAKULTAS TEKNIK</span>
-                            <span class="font-semibold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest block">UNIVERSITAS MULAWARMAN</span>
-                        </div>
-                    </a>
-
-                    <!-- Page Navigation Switcher Tabs -->
-                    <div class="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-300 dark:border-slate-700/80 text-xs font-semibold shadow-inner">
-                        <a href="{{ route('tugas.index') }}"
-                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
-                                  {{ request()->routeIs('tugas.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
-                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('tugas.*') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                            <span class="hidden md:inline">Tugas Kuliah</span><span class="md:hidden">Tugas</span>
-                        </a>
-
-                        <a href="{{ route('modul.index') }}"
-                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
-                                  {{ request()->routeIs('modul.*') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
-                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('modul.*') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                            <span class="hidden md:inline">Modul Kuliah</span><span class="md:hidden">Modul</span>
-                        </a>
-
-                        @if(auth()->user()->role === 'admin')
-                        <a href="{{ route('admin.pengguna') }}"
-                           class="page-switch-link px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 no-underline transition-all
-                                  {{ request()->routeIs('admin.pengguna') ? 'bg-gradient-to-r from-[#FF7A00] to-[#FF9225] text-white font-bold shadow-md shadow-orange-500/20 active-tab' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60' }}">
-                            <svg class="w-3.5 h-3.5 {{ request()->routeIs('admin.pengguna') ? 'text-white' : 'text-slate-500 dark:text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                            <span class="hidden md:inline">Manajemen Akun</span><span class="md:hidden">Akun</span>
-                        </a>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Right: Theme Slider & Mini Profile Trigger -->
-                <div class="flex items-center gap-3 shrink-0">
-<button type="button" onclick="toggleTheme()" class="theme-slider-btn relative hidden md:inline-flex items-center w-14 h-7 p-0.5 rounded-full cursor-pointer transition-colors duration-300 bg-slate-200 dark:bg-slate-700/90 border border-slate-300 dark:border-slate-600 focus:outline-none" aria-label="Ganti Mode Tema" title="Ganti Tema (Kiri: Terang, Kanan: Gelap)">                        <span class="absolute left-1.5 flex items-center justify-center pointer-events-none opacity-80 dark:opacity-30 transition-opacity">
-                            <svg class="w-3.5 h-3.5 text-amber-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                        </span>
-                        <span class="absolute right-1.5 flex items-center justify-center pointer-events-none opacity-30 dark:opacity-80 transition-opacity">
-                            <svg class="w-3.5 h-3.5 text-slate-400 dark:text-indigo-300" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </span>
-                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-slate-900 shadow-md transform transition-transform duration-300 translate-x-0 dark:translate-x-7 border border-slate-200 dark:border-slate-700 z-10 pointer-events-none">
-                            <svg class="w-3.5 h-3.5 text-amber-500 inline dark:hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                            <svg class="w-3.5 h-3.5 text-indigo-400 hidden dark:inline" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </span>
-                    </button>
-
-                    <!-- Mini Profile Trigger -->
-                    <button type="button" onclick="openProfileDrawer()" class="flex items-center gap-2 p-1.5 sm:pl-2.5 sm:pr-3 rounded-full bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-sm transition group" title="Buka Profil & Menu">
-                        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-[#FF7A00] to-[#FF9225] text-white font-extrabold text-xs flex items-center justify-center shadow-sm shrink-0">
-                            {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                        </div>
-                        <span class="hidden sm:block text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
-                            {{ auth()->user()->name }}
-                        </span>
-                        <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+    @include('partials.navbar')
 
     <!-- CONTENT WRAPPER -->
     <div id="pageMainContent" class="page-transition-wrapper flex-1 relative z-10">

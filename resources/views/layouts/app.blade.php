@@ -6,7 +6,21 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
-	<link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+        <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+        <script>
+            (function () {
+                try {
+                    var mode = localStorage.getItem('pkl_theme');
+                    if (mode === 'light') {
+                        document.documentElement.classList.remove('dark');
+                        document.documentElement.classList.add('light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        document.documentElement.classList.remove('light');
+                    }
+                } catch (e) {}
+            })();
+        </script>
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
