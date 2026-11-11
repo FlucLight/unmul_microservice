@@ -161,12 +161,6 @@
 </head>
 <body class="min-h-screen bg-[#e5e9f0] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 antialiased flex flex-col">
 
-    <!-- Ambient Subtle Background Elements -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute -top-40 left-1/4 w-96 h-96 bg-orange-400/8 dark:bg-orange-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-400/8 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 24px 24px;"></div>
-    </div>
     @include('partials.navbar')
 
     <!-- CONTENT WRAPPER WITH SMOOTH TRANSITION -->
