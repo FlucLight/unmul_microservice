@@ -37,4 +37,19 @@ return [
 
     'api_key' => env('API_KEY'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Cek NIM (FastAPI Service 4 - Port 8003)
+    |--------------------------------------------------------------------------
+    |
+    | Layanan pemeriksa NIM untuk validasi registrasi mandiri Mahasiswa.
+    | Hanya NIM yang terdaftar pada database mahasiswa yang boleh mendaftar.
+    |
+    */
+
+    'cek_nim' => [
+        'url' => env('API_CEK_NIM_URL', 'http://127.0.0.1:8003'),
+        'key' => env('API_KEY', 'your-secret-api-key-change-me'),
+    ],
+
 ];
