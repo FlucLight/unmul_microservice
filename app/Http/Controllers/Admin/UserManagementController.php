@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\NimMahasiswaTerdaftar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -25,10 +26,17 @@ class UserManagementController extends Controller
      */
     public function store(Request $request)
     {
+        $nomerIndukRules = ['required', 'string', 'max:50', 'unique:users'];
+
+        // Hanya akun Mahasiswa yang NIM-nya diverifikasi ke database mahasiswa (API Cek NIM).
+        if ($request->role === 'mahasiswa') {
+            $nomerIndukRules[] = new NimMahasiswaTerdaftar;
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'nomer_induk' => ['required', 'string', 'max:50', 'unique:users'],
+            'nomer_induk' => $nomerIndukRules,
             'role' => ['required', 'string', 'in:admin,dosen,mahasiswa'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
@@ -61,10 +69,21 @@ class UserManagementController extends Controller
     {
         $user = User::findOrFail($id);
 
+        $nomerIndukRules = ['required', 'string', 'max:50', 'unique:users,nomer_induk,' . $user->id];
+
+        // Verifikasi NIM hanya saat identitas mahasiswa berubah:
+        // NIM diganti, atau role dialihkan menjadi Mahasiswa.
+        // Akun lama yang hanya mengubah nama/email tidak perlu diverifikasi ulang.
+        $nimBerubah = $request->nomer_induk !== $user->nomer_induk;
+        $roleBerubahKeMahasiswa = $request->role === 'mahasiswa' && $user->role !== 'mahasiswa';
+        if ($request->role === 'mahasiswa' && ($nimBerubah || $roleBerubahKeMahasiswa)) {
+            $nomerIndukRules[] = new NimMahasiswaTerdaftar;
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'nomer_induk' => ['required', 'string', 'max:50', 'unique:users,nomer_induk,' . $user->id],
+            'nomer_induk' => $nomerIndukRules,
             'role' => ['required', 'string', 'in:admin,dosen,mahasiswa'],
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',

@@ -1,43 +1,7 @@
 /**
  * Script Interaktif Template Website HTML5
  * Mengatur Hidebar Drawer, Login Popup Modal, Swapping Register View, Scroll-Triggered Footer
- * + Google Identity Services (GIS) Login Asli
  */
-
-// ============================================================
-// KONFIGURASI GOOGLE - GANTI DENGAN CLIENT ID KAMU
-// ============================================================
-// Cara mendapatkan CLIENT_ID:
-// 1. Buka https://console.cloud.google.com/
-// 2. Buat project baru atau pilih yang sudah ada
-// 3. Pergi ke API & Services > Credentials
-// 4. Klik "Create Credentials" > "OAuth 2.0 Client IDs"
-// 5. Application type: "Web application"
-// 6. Tambahkan Authorized JavaScript origins:
-//    - http://localhost (untuk Live Server)
-//    - http://127.0.0.1:5500 (default VS Code Live Server)
-// 7. Salin Client ID dan paste di bawah:
-const GOOGLE_CLIENT_ID = '1072078119249-8ufnsubqhmssdtv90vq488s7i51p1s2r.apps.googleusercontent.com';
-
-// ============================================================
-// DECODE JWT TOKEN GOOGLE (Tanpa library eksternal)
-// ============================================================
-function decodeJWT(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error('Gagal decode JWT:', e);
-    return null;
-  }
-}
 
 function setupApp() {
   // DOM Elements
@@ -82,7 +46,7 @@ function setupApp() {
   const loginForm = document.getElementById('loginForm');
   const loginAlertBox = document.getElementById('loginAlertBox');
   const btnLoginSubmit = document.getElementById('btnLoginSubmit');
-  const inputEmailLogin = document.getElementById('inputEmailLogin');
+  const inputNomerIndukLogin = document.getElementById('inputNomerIndukLogin');
   const inputPasswordLogin = document.getElementById('inputPasswordLogin');
 
   function getCsrfToken() {
@@ -481,8 +445,8 @@ function setupApp() {
             forgotResetForm.reset();
             forgotPasswordForm.reset();
             showLoginView();
-            if (inputEmailLogin) {
-              inputEmailLogin.value = email;
+            if (inputNomerIndukLogin) {
+              inputNomerIndukLogin.value = nomerInduk;
             }
             showToast('Silakan masuk dengan password baru Anda.', '');
           }, 1500);
@@ -529,15 +493,15 @@ function setupApp() {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const email = inputEmailLogin ? inputEmailLogin.value.trim() : '';
+      const nomerInduk = inputNomerIndukLogin ? inputNomerIndukLogin.value.trim() : '';
       const password = inputPasswordLogin ? inputPasswordLogin.value : '';
 
       hideLoginAlert();
 
       // Validasi panjang password minimal 8 karakter sebelum kirim (Poin 10)
-      if (!email) {
-        showLoginAlert('Silakan masukkan email akun Anda terlebih dahulu.');
-        if (inputEmailLogin) inputEmailLogin.focus();
+      if (!nomerInduk) {
+        showLoginAlert('Silakan masukkan Nomor Induk (NIM/NIP) Anda terlebih dahulu.');
+        if (inputNomerIndukLogin) inputNomerIndukLogin.focus();
         return;
       }
 
@@ -569,7 +533,7 @@ function setupApp() {
           },
           credentials: 'same-origin',
           body: JSON.stringify({
-            email: email,
+            nomer_induk: nomerInduk,
             password: password,
             remember: loginForm.querySelector('input[name="remember"]')?.checked || false,
           }),
@@ -613,9 +577,9 @@ function setupApp() {
           let message = data.message || 'Terjadi kesalahan validasi.';
 
           // Terjemahkan pesan kredensial salah agar mudah dipahami
-          const emailErrors = errors.email || [];
-          if (emailErrors.some(err => err.toLowerCase().includes('credential'))) {
-            message = 'Email atau password yang Anda masukkan salah. Silakan periksa kembali.';
+          const indukErrors = errors.nomer_induk || errors.email || [];
+          if (indukErrors.some(err => err.toLowerCase().includes('credential'))) {
+            message = 'Nomor Induk (NIM/NIP) atau password yang Anda masukkan salah. Silakan periksa kembali.';
           }
 
           showLoginAlert(message);
@@ -649,11 +613,8 @@ function setupApp() {
       userLoggedBadge.style.display = 'flex';
       if (userNameDisplay) userNameDisplay.innerText = username;
 
-      // Ganti foto profil dengan foto Google asli jika ada
-      if (userAvatarImg && pictureUrl) {
-        userAvatarImg.src = pictureUrl;
-        userAvatarImg.alt = username;
-      } else if (userAvatarImg) {
+      // Avatar inisial pengguna (tanpa foto Google)
+      if (userAvatarImg) {
         userAvatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=FF7A00&color=fff&bold=true&size=100`;
         userAvatarImg.alt = username;
       }
@@ -673,11 +634,6 @@ function setupApp() {
   if (userLoggedBadge) {
     userLoggedBadge.addEventListener('click', () => {
       if (confirm('Logout dari akun?')) {
-        // Sign out dari Google juga
-        if (typeof google !== 'undefined' && google.accounts) {
-          google.accounts.id.disableAutoSelect();
-        }
-
         sessionStorage.removeItem('loggedInUser');
 
         if (btnLoginHeader) btnLoginHeader.style.display = 'flex';

@@ -3,23 +3,59 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
-class DatabaseSeeder extends Seeder
+class SiswaSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
-     * Seed the application's database.
+     * Run the database seeds.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Tampung data siswa di sini (bisa hasil dari Excel/CSV)
+        $dataSiswa = [
+            [
+                'name'        => 'Ahmad Rizky',
+                'email'       => '0012345678@siswa.sekolah.sch.id',
+                'nomer_induk' => '0012345678', // NISN / NIM
+            ],
+            [
+                'name'        => 'Siti Aminah',
+                'email'       => '0012345679@siswa.sekolah.sch.id',
+                'nomer_induk' => '0012345679',
+            ],
+            // ... Masukkan data siswa lainnya di sini ...
+        ];
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // 2. Pecah data per 200 baris (mencegah server overload/timeout)
+        $chunks = array_chunk($dataSiswa, 200);
+
+        foreach ($chunks as $chunk) {
+            DB::transaction(function () use ($chunk) {
+                foreach ($chunk as $siswa) {
+                    User::create([
+                        // Data Utama & Autentikasi
+                        'name'                      => $siswa['name'],
+                        'email'                     => $siswa['email'],
+                        'email_verified_at'        => now(), // Otomatis terverifikasi saat di-seed
+                        'password'                  => Hash::make($siswa['nomer_induk']), // Password = NISN/NIM
+                        'nomer_induk'               => $siswa['nomer_induk'],
+                        'role'                      => 'siswa',
+
+                        // Kolom Fitur Bawaan Jetstream / Fortify (di-null kan)
+                        'two_factor_secret'         => null,
+                        'two_factor_recovery_codes' => null,
+                        'two_factor_confirmed_at'   => null,
+                        'remember_token'            => null,
+                        'current_team_id'           => null,
+                        'profile_photo_path'        => null,
+
+                        // Timestamp dikelola otomatis oleh Eloquent
+                    ]);
+                }
+            });
+        }
     }
 }

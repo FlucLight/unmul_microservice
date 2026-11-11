@@ -1,8 +1,5 @@
 import os
-from dotenv import load_dotenv
 from sqlmodel import SQLModel, create_engine
-
-load_dotenv()
 
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASS = os.getenv("DB_PASS", "")

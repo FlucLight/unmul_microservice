@@ -7,8 +7,6 @@
   <title>Dashboard — Fakultas Teknik UNMUL</title>
   <meta name="description" content="Dashboard pengguna Fakultas Teknik Universitas Mulawarman">
   <link rel="stylesheet" href="{{ asset('css/loginpage.css') }}">
-  <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     *, *::before, *::after {
       scrollbar-width: none;
@@ -374,9 +372,6 @@
     // Logout
     document.getElementById('btnLogout').addEventListener('click', () => {
       if (confirm('Logout dari akun?')) {
-        if (typeof google !== 'undefined' && google.accounts) {
-          google.accounts.id.disableAutoSelect();
-        }
         sessionStorage.removeItem('loggedInUser');
         showToast('Berhasil logout', '');
         setTimeout(() => window.location.href = 'index.html', 1000);
