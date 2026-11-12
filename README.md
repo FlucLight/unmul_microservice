@@ -34,7 +34,7 @@ Tujuan utama dari pemisahan ini adalah agar setiap layanan dapat dikembangkan, d
 
 ## Arsitektur Sistem (Microservices)
 
-Sistem terdiri dari empat komponen utama yang saling terhubung menggunakan protokol HTTP melalui REST API Client.
+Sistem terdiri dari lima komponen utama yang saling terhubung menggunakan protokol HTTP melalui REST API Client.
 
 ```mermaid
 graph TD
@@ -42,7 +42,7 @@ graph TD
     Laravel <-->|HTTP REST Client| API1[FastAPI Service 1 / Port 8000<br/>Master Tugas Dosen]
     Laravel <-->|HTTP REST Client| API2[FastAPI Service 2 / Port 8001<br/>Pengumpulan & Penilaian Tugas]
     Laravel <-->|HTTP REST Client| API3[FastAPI Service 3 / Port 8002<br/>Modul Kuliah]
-    Laravel <-->|Validasi NIM saat pendaftaran| API4[FastAPI Service 4 / Port 8003<br/>Cek NIM Mahasiswa]
+    Laravel <-->|Validasi NIM, sinkronisasi, & Kelola Massal NIM (proxy server-side)| API4[FastAPI Service 4 / Port 8003<br/>Cek NIM Mahasiswa]
     Laravel <--> DBLaravel[(MySQL: unmul_microservice)]
     API1 <--> DB1[(MySQL: db_crudt)]
     API2 <--> DB2[(MySQL: db_tugas)]
@@ -54,7 +54,7 @@ graph TD
 
 1. **Laravel Web Frontend (Port 8080)**
 
-   Aplikasi web utama berbasis Laravel 11 + Jetstream (Blade) + Tailwind CSS. Bertugas menyajikan antarmuka interaktif, autentikasi pengguna, otorisasi berbasis peran (RBAC), serta memanggil REST API ke seluruh microservices backend.
+   Aplikasi web utama berbasis Laravel 11 + Jetstream (Blade) + Tailwind CSS. Bertugas menyajikan antarmuka interaktif, autentikasi pengguna, otorisasi berbasis peran (RBAC), profil pengguna, manajemen akun admin, serta memanggil REST API ke microservices backend (termasuk proxy server-side ke layanan Cek NIM).
 
    - Database: `unmul_microservice`
 
@@ -78,9 +78,9 @@ graph TD
 
 5. **FastAPI Service 4 - Cek NIM (Port 8003)**
 
-   Microservice Python (`API_cek-nim`) berbasis FastAPI dan SQLModel untuk memverifikasi bahwa NIM benar-benar terdaftar pada database mahasiswa. Dipakai oleh Laravel saat Admin mendaftarkan akun Mahasiswa, sehingga hanya mahasiswa asli yang memiliki akun dan dapat login.
+   Microservice Python (`API_cek-nim`) berbasis FastAPI dan SQLModel untuk memverifikasi dan mengelola data NIM mahasiswa (NIM + password) pada database mahasiswa. Dipakai oleh Laravel untuk validasi/sinkronisasi NIM saat pendaftaran & pengelolaan akun Mahasiswa, serta sebagai sumber data untuk halaman **Kelola Massal NIM** (proxy server-side, admin-only).
 
-   - Database: `db_cek`
+   - Database: `db_cek` (tabel `modul`)
 
 ---
 
@@ -90,19 +90,17 @@ Sistem menerapkan middleware `CheckRole` pada Laravel untuk mengatur hak akses b
 
 - **Admin**
 
-  Memiliki akses penuh ke seluruh fitur sistem, meliputi manajemen tugas, pengumpulan tugas, penilaian, dan modul kuliah. Admin juga bertanggung jawab atas **Manajemen Akun**, yaitu mendaftarkan, mengubah, dan menghapus akun Mahasiswa, Dosen, atau Admin lain berdasarkan Nomor Induk (NIM/NIP).
+  Memiliki akses penuh ke seluruh fitur sistem, meliputi manajemen tugas, pengumpulan tugas, penilaian, modul kuliah, arsip tugas, profil, serta manajemen pengguna: **Manajemen Akun** (`/admin/pengguna`) dan **Kelola Massal NIM** (`/admin/pengguna/massal`).
 
 - **Dosen**
 
-  Dapat membuat, memperbarui, dan menghapus tugas kuliah. Dosen juga dapat memberikan nilai beserta catatan penilaian pada tugas mahasiswa, serta mengunggah, mengedit, dan menghapus modul kuliah. Dosen hanya dapat mengelola tugas dan modul yang dibuat oleh dirinya sendiri.
+  Dapat membuat, memperbarui, dan menghapus tugas kuliah, memberikan nilai beserta catatan penilaian, mengunggah/mengedit/menghapus modul kuliah, mengakses arsip tugas, serta mengelola profil. Dosen hanya dapat mengelola tugas dan modul yang dibuat oleh dirinya sendiri (sesuai logika aplikasi).
 
 - **Mahasiswa**
 
-  Dapat melihat daftar tugas kuliah dan modul kuliah, serta mengumpulkan tugas melalui tautan Google Drive atau file.
+  Dapat melihat daftar tugas dan modul, mengumpulkan tugas (tautan/file), serta mengelola profilnya sendiri.
 
-> **Catatan penting:** Registrasi mandiri (publik) dinonaktifkan. Akun hanya dapat dibuat oleh Admin atau Operator Fakultas melalui halaman **Manajemen Akun** (`/admin/pengguna`). Pengguna yang terdaftar sebelum fitur ini diaktifkan secara otomatis berperan sebagai Mahasiswa.
->
-> Selain itu, NIM pada akun Mahasiswa **diverifikasi otomatis** terhadap database mahasiswa melalui FastAPI Service 4 (Port 8003). NIM yang tidak terdaftar akan ditolak, sehingga hanya mahasiswa asli yang dapat dibuatkan akun dan login.
+> **Catatan penting:** Registrasi mandiri (publik) dinonaktifkan. Akun dibuat oleh Admin melalui halaman **Manajemen Akun**. Login menggunakan **Nomor Induk (NIM/NIP)** beserta kredensial yang ditetapkan. NIM pada akun Mahasiswa diverifikasi terhadap database mahasiswa melalui FastAPI Service 4 (Port 8003) saat pendaftaran/perubahan relevan — hanya NIM terdaftar yang dapat digunakan untuk akun Mahasiswa.
 
 ---
 
@@ -110,31 +108,49 @@ Sistem menerapkan middleware `CheckRole` pada Laravel untuk mengatur hak akses b
 
 - **UI Modern dan Responsif**
 
-  Berbasis Tailwind CSS dengan dukungan mode gelap dan terang (tersimpan di `localStorage`), serta antarmuka yang adaptif untuk perangkat desktop dan mobile.
+  Berbasis Tailwind CSS dengan gaya konsisten (kartu rounded, aksen oranye) dan dukungan tema **Terang / Gelap / Sistem** (tersimpan di `localStorage`, mengikuti preferensi sistem bila dipilih), adaptif untuk desktop dan mobile.
 
-- **Manajemen Akun oleh Admin**
+- **Autentikasi & Keamanan**
 
-  Admin dapat mendaftarkan akun baru lengkap dengan Nomor Induk (NIM/NIP), email, dan role (Mahasiswa/Dosen/Admin). Dilengkapi dengan pencarian real-time, filter per role, kartu statistik pengguna, edit data, reset password, dan hapus akun. Untuk role Mahasiswa, NIM diverifikasi otomatis ke database mahasiswa (API Cek NIM, Port 8003) sebelum akun dibuat — hanya mahasiswa asli yang bisa mendaftar dan login.
+  Login via Nomor Induk (NIM/NIP) dengan Laravel Jetstream/Sanctum/Fortify, RBAC middleware (`CheckRole`), serta API key untuk komunikasi ke layanan Cek NIM (dikelola server-side pada fitur kelola massal).
+
+- **Profil Pengguna (`/user/profile`)**
+
+  Halaman profil bergaya 2 kolom (konsisten dengan halaman Tugas/Modul): ubah **username** (3–30 karakter, huruf kecil/angka/`_`/`.`, unik), bio (opsional, maks. 160), dan informasi profil yang diizinkan; unggah/pratinjau/hapus foto profil (jpg/png/webp, ≤2MB, disimpan di `storage/app/public/avatars`) dengan fallback inisial; pengaturan tema (Terang/Gelap/Sistem) tersinkron dengan toggle navbar. **Nama asli bersifat read-only** bagi pengguna ("Nama asli dikelola oleh admin") dan setiap input `name` ditolak/di-strip di sisi server.
+
+- **Manajemen Akun oleh Admin (`/admin/pengguna`)**
+
+  Admin dapat mendaftarkan, mengubah, dan menghapus akun Mahasiswa/Dosen/Admin (NIM/NIP, email, role). Dilengkapi pencarian/filter, kartu statistik, edit data, reset password, dan proteksi (tidak dapat menghapus akun sendiri). Untuk role Mahasiswa, NIM diverifikasi ke database mahasiswa (API Cek NIM, Port 8003) saat pembuatan/perubahan NIM atau pengalihan role ke Mahasiswa.
+
+- **Kelola Massal NIM (`/admin/pengguna/massal`, Admin)**
+
+  Pengelolaan data **NIM + password** mahasiswa secara massal, diproksikan server-side ke **API Cek NIM** (`db_cek.modul`) sehingga API key tidak terekspos ke browser. Fitur:
+  - Daftar & pencarian NIM, status koneksi layanan, checkbox pemilihan.
+  - Tambah satu NIM (password kosong → default `mhs123`).
+  - Import massal via teks (daftar NIM dipisah baris/koma/spasi + password default).
+  - Import via file **.json / .csv / .xlsx** (maks. 5MB) berformat sederhana: hanya kolom/field `nim` dan opsional `password` (password per-baris didahulukan, lalu password default form, lalu `mhs123`); NIM duplikat di file di-dedupe, NIM yang sudah terdaftar dilewati.
+  - Edit/hapus satuan, serta aksi massal: ubah password terpilih dan hapus terpilih.
+  - Akses khusus admin (middleware RBAC).
 
 - **Lupa Password 2 Langkah**
 
-  Pengguna memasukkan email dan NIM/NIP, kemudian sistem mengirim **kode verifikasi 6 digit** yang berlaku selama 60 menit. Setelah kode terverifikasi, pengguna dapat membuat password baru. Terdapat batasan maksimal 5 kali percobaan kode untuk mencegah percobaan paksa (brute-force).
+  Pengguna memasukkan email dan NIM/NIP, sistem mengirim kode verifikasi 6 digit (berlaku 60 menit). Setelah terverifikasi, pengguna dapat membuat password baru. Batas maksimal 5 kali percobaan kode untuk mencegah brute-force.
 
 - **Manajemen Tugas Kuliah**
 
-  Fitur Tambah, Edit, Hapus, dan Lihat Tugas Kuliah yang terintegrasi dengan FastAPI Service 1 (Port 8000), termasuk filter tugas berdasarkan dosen pengampu.
+  Tambah, edit, hapus, dan lihat tugas kuliah terintegrasi dengan FastAPI Service 1 (Port 8000). Tersedia halaman **Arsip Tugas** (`/tugas/arsip`) untuk Dosen/Admin.
 
-- **Sistem Pengumpulan dan Penilaian dengan Catatan Dosen**
+- **Sistem Pengumpulan dan Penilaian**
 
-  Mahasiswa dapat mengumpulkan tugas (tautan file), sedangkan Dosen dan Admin dapat memberikan nilai (0-100) beserta catatan atau umpan balik penilaian. Terintegrasi dengan FastAPI Service 2 (Port 8001).
+  Mahasiswa mengumpulkan tugas, Dosen/Admin memberi nilai (0–100) beserta catatan/umpan balik, menyetujui/menolak, atau menghapus pengumpulan sesuai hak akses. Terintegrasi dengan FastAPI Service 2 (Port 8001).
 
 - **Manajemen Modul Kuliah**
 
-  Dosen dapat mengunggah modul materi kuliah, dan mahasiswa dapat mengunduh atau mengaksesnya. Terintegrasi dengan FastAPI Service 3 (Port 8002).
+  Dosen mengunggah/mengedit/menghapus modul materi; mahasiswa dapat mengaksesnya. Terintegrasi dengan FastAPI Service 3 (Port 8002).
 
-- **Quad API Connection Status Checker**
+- **Pemeriksaan Koneksi Layanan**
 
-  Indikator status koneksi real-time untuk memeriksa ketersediaan FastAPI Service 1, Service 2, Service 3, dan Service 4.
+  Indikator/status ketersediaan koneksi ke microservices FastAPI pada antarmuka aplikasi.
 
 ---
 
@@ -145,17 +161,38 @@ Sistem menerapkan middleware `CheckRole` pada Laravel untuk mengatur hak akses b
 | Method | Endpoint | Deskripsi | Akses |
 | ------ | -------- | --------- | ----- |
 | GET | `/` | Halaman utama (welcome) | Publik |
+| GET | `/dashboard` | Redirect ke daftar tugas | Login |
 | GET | `/tugas` | Halaman daftar tugas kuliah | Login |
+| GET | `/tugas/arsip` | Arsip tugas kuliah | Dosen, Admin |
 | GET | `/modul` | Halaman daftar modul kuliah | Login |
 | POST | `/tugas` | Menambahkan tugas kuliah | Dosen, Admin |
 | PUT | `/tugas/{id}` | Mengubah data tugas kuliah | Dosen, Admin |
 | DELETE | `/tugas/{id}` | Menghapus tugas kuliah | Dosen, Admin |
 | POST | `/kumpul-tugas` | Mengumpulkan tugas mahasiswa | Mahasiswa, Admin |
 | PATCH | `/kumpul-tugas/{id}/nilai` | Memberi nilai dan catatan dosen | Dosen, Admin |
+| PATCH | `/kumpul-tugas/{id}/setujui` | Menyetujui pengumpulan tugas | Dosen, Admin |
+| PATCH | `/kumpul-tugas/{id}/tolak` | Menolak pengumpulan tugas | Dosen, Admin |
+| DELETE | `/kumpul-tugas/{id}` | Menghapus pengumpulan tugas | Dosen, Admin |
+| POST | `/modul` | Menambahkan modul kuliah | Dosen, Admin |
+| PUT | `/modul/{id}` | Mengubah modul kuliah | Dosen, Admin |
+| DELETE | `/modul/{id}` | Menghapus modul kuliah | Dosen, Admin |
 | GET | `/admin/pengguna` | Halaman manajemen akun pengguna | Admin |
 | POST | `/admin/pengguna` | Mendaftarkan akun baru | Admin |
 | PUT | `/admin/pengguna/{id}` | Mengubah data akun / reset password | Admin |
 | DELETE | `/admin/pengguna/{id}` | Menghapus akun (tidak dapat menghapus akun sendiri) | Admin |
+| GET | `/admin/pengguna/massal` | Kelola Massal NIM (proxy ke API Cek NIM) | Admin |
+| POST | `/admin/pengguna/massal` | Tambah satu NIM | Admin |
+| POST | `/admin/pengguna/massal/import` | Import massal NIM dari teks | Admin |
+| POST | `/admin/pengguna/massal/import-file` | Import massal NIM dari file JSON/CSV/XLSX (nim+password) | Admin |
+| PUT | `/admin/pengguna/massal/{nim}` | Ubah data NIM/password | Admin |
+| DELETE | `/admin/pengguna/massal/{nim}` | Hapus satu NIM | Admin |
+| POST | `/admin/pengguna/massal/bulk-update` | Ubah password massal (NIM terpilih) | Admin |
+| POST | `/admin/pengguna/massal/bulk-delete` | Hapus massal (NIM terpilih) | Admin |
+| GET | `/user/profile` | Halaman profil pengguna | Login |
+| PUT | `/user/profile` | Memperbarui profil (username/bio/dll; nama dikelola admin) | Login |
+| POST | `/user/profile/avatar` | Unggah/perbarui foto profil | Login |
+| DELETE | `/user/profile/avatar` | Hapus foto profil | Login |
+| PUT | `/user/profile/password` | Ubah password | Login |
 
 ### Lupa Password (AJAX, tanpa login)
 
@@ -183,7 +220,7 @@ Sistem menerapkan middleware `CheckRole` pada Laravel untuk mengatur hak akses b
 | GET | `/ambil-kumpul` | Mengambil data seluruh pengumpulan tugas mahasiswa |
 | POST | `/kumpul-tugas` | Mengumpulkan tugas baru (`id_tugas`, `nama_mahasiswa`, `file_mahasiswa`, `tanggal_kumpul`) |
 | PATCH | `/edit-kumpul/{kumpul_id}` | Mengubah data pengumpulan tugas |
-| PATCH | `/beri-nilai/{kumpul_id}` | Memberikan nilai (`nilai`: 0-100, `catatan_dosen`: opsional) |
+| PATCH | `/beri-nilai/{kumpul_id}` | Memberikan nilai (`nilai`: 0–100, `catatan_dosen`: opsional) |
 | DELETE | `/hapus-kumpul/{kumpul_id}` | Menghapus data pengumpulan tugas |
 
 ### FastAPI Service 3 - Modul Kuliah (Port 8002)
@@ -199,14 +236,23 @@ Sistem menerapkan middleware `CheckRole` pada Laravel untuk mengatur hak akses b
 
 ### FastAPI Service 4 - Cek NIM (Port 8003)
 
+Service ini dilindungi API key (`Authorization: Bearer <API_KEY>`) untuk endpoint data/manajemen.
+
 | Method | Endpoint | Deskripsi |
 | ------ | -------- | --------- |
 | GET | `/` | Cek status server |
-| GET | `/cek-nim/{nim}` | Memeriksa apakah NIM terdaftar pada database mahasiswa (dilindungi API key, dipakai Laravel saat pendaftaran akun Mahasiswa) |
-| GET | `/ambil-nim` | Mengambil daftar seluruh NIM yang terdaftar (dilindungi API key) |
+| GET | `/cek-nim/{nim}` | Memeriksa apakah NIM terdaftar pada database mahasiswa |
+| GET | `/ambil-nim` | Mengambil daftar seluruh NIM yang terdaftar |
 | POST | `/tambah-nim` | Menambahkan **satu** NIM baru (body: `{"nim": 2109106001, "password": "mhs123"}`) |
-| POST | `/import-nim` | **Bulk import** banyak NIM sekaligus (body: `{"nims": [2109106001, 2109106002], "password": "mhs123"}`). NIM yang sudah ada dilewati (tidak error). |
+| POST | `/import-nim` | **Bulk import** banyak NIM sekaligus (body: `{"nims": [2109106001, 2109106002], "password": "mhs123"}`). NIM yang sudah ada dilewati. |
+| PATCH | `/edit-nim/{nim}` | Mengubah NIM dan/atau password |
+| PATCH | `/edit-nim-massal` | Ubah password/data NIM secara massal |
 | DELETE | `/hapus-nim/{nim}` | Menghapus NIM dari database mahasiswa |
+| POST | `/hapus-nim-massal` | Menghapus banyak NIM sekaligus |
+| GET | `/kelola` | Halaman UI bawaan service untuk kelola data NIM (opsional, membutuhkan input API key di browser) |
+| GET | `/docs` | Dokumentasi API (Scalar/Swagger sesuai konfigurasi service) |
+
+> **Integrasi Laravel:** Halaman **Kelola Massal NIM** (`/admin/pengguna/massal`) di Laravel mem-proxy operasi ke endpoint di atas dari sisi server (admin-only) menggunakan `API_CEK_NIM_URL` dan `API_KEY`.
 
 ---
 
@@ -218,12 +264,11 @@ Sistem menerapkan middleware `CheckRole` pada Laravel untuk mengatur hak akses b
 | Backend Services | Python 3.10+, FastAPI, SQLModel, PyMySQL, Uvicorn |
 | Database | MySQL Server (Laragon / XAMPP) |
 | Autentikasi & Keamanan | Laravel Jetstream, Sanctum, Fortify, Custom RBAC Middleware (`CheckRole`) |
+| Utilitas | Guzzle HTTP Client (proxy ke API), maatwebsite/excel (baca/impor file CSV/XLSX NIM) |
 
 ---
 
 ## Petunjuk Menjalankan Proyek
-
-Bagian ini menjelaskan langkah-langkah untuk menjalankan seluruh sistem dari awal, mulai dari persiapan database hingga mengakses aplikasi.
 
 ### 1. Persiapan Database (MySQL)
 
@@ -247,7 +292,7 @@ CREATE DATABASE IF NOT EXISTS db_modul;
 CREATE DATABASE IF NOT EXISTS db_cek;
 ```
 
-### Data Awal (Seed) untuk `db_cek` (Service 4 - Cek NIM)
+#### Data Awal (Seed) untuk `db_cek` (Service 4 - Cek NIM)
 
 Agar fitur validasi NIM bisa diuji, isi tabel `modul` di database `db_cek` dengan beberapa NIM mahasiswa contoh. Tabel akan dibuat otomatis oleh FastAPI saat service dijalankan (lifespan `create_db`).
 
@@ -260,63 +305,16 @@ INSERT INTO modul (nim, password) VALUES
     (2109106003, 'mhs123');
 ```
 
-> **Catatan:** Hanya NIM yang ada di tabel `modul` yang akan dianggap valid oleh API Cek NIM. Saat Admin mendaftarkan akun Mahasiswa dengan NIM di luar daftar ini, sistem akan menolak dengan pesan *"NIM tidak terdaftar pada database mahasiswa"*.
+> **Catatan:** Hanya NIM yang ada di tabel `modul` (`db_cek`) yang dianggap valid oleh API Cek NIM.
 
-### Konfigurasi API Key (opsional)
+#### Konfigurasi API Key & URL Layanan Cek NIM
 
-Secara default, semua service memakai API key `your-secret-api-key-change-me`. Agar lebih aman (opsional), atur variabel `API_KEY` yang **sama** di:
+Secara default API key adalah `your-secret-api-key-change-me`. Untuk integrasi Laravel ↔ API Cek NIM, atur nilai yang **sama**:
 
-- `.env` Laravel → `API_KEY=rahasia-anda`
-- environment shell Python (untuk keempat service) → `set API_KEY=rahasia-anda` (Windows) / `export API_KEY=rahasia-anda` (Linux/Mac)
+- `.env` Laravel → `API_KEY=rahasia-anda` dan (opsional) `API_CEK_NIM_URL=http://127.0.0.1:8003`
+- Environment/service Python (khususnya `API_cek-nim`) → `API_KEY=rahasia-anda` (harus sama)
 
-Jika tidak diatur, default di atas tetap dipakai dan sistem tetap berjalan.
-
-### Cara Bulk Import NIM (pilih salah satu)
-
-**Cara A — Swagger UI (paling mudah, tanpa SQL):**
-1. Buka `http://127.0.0.1:8003/docs`
-2. Klik endpoint `POST /import-nim` → **Try it out**
-3. Masukkan body JSON, contoh:
-   ```json
-   {
-     "nims": [2109106001, 2109106002, 2109106003],
-     "password": "mhs123"
-   }
-   ```
-4. Klik **Authorize** (ikon gembok) di kanan atas, masukkan `Bearer your-secret-api-key-change-me` (atau API key Anda), lalu **Execute**.
-5. Respons akan menampilkan `ditambah`, `dilewati`, dan `total_input`.
-
-**Cara B — File SQL (bulk insert langsung ke MySQL):**
-```bash
-mysql -u root db_cek < API_cek-nim/seed_nim.sql
-```
-Atau buka file `API_cek-nim/seed_nim.sql` di phpMyAdmin/HeidiSQL/DBeaver dan jalankan.
-
-**Cara C — cURL:**
-```bash
-curl -X POST http://127.0.0.1:8003/import-nim \
-  -H "Authorization: Bearer your-secret-api-key-change-me" \
-  -H "Content-Type: application/json" \
-  -d @API_cek-nim/sample_import.json
-```
-
-**Cara D — Python script (untuk ribuan NIM dari file CSV/TXT):**
-```python
-import requests, csv
-
-API_KEY = "your-secret-api-key-change-me"
-with open("nim_list.csv") as f:
-    nims = [int(row[0]) for row in csv.reader(f)]
-
-resp = requests.post(
-    "http://127.0.0.1:8003/import-nim",
-    headers={"Authorization": f"Bearer {API_KEY}"},
-    json={"nims": nims, "password": "mhs123"},
-)
-print(resp.json())
-```
-
-> **Tips:** Endpoint `/import-nim` aman dipanggil berulang kali — NIM yang sudah ada otomatis dilewati (`dilewati`), tidak error. Jadi Anda bisa menambah NIM baru tanpa takut duplikat.
+Jika tidak diubah, default tetap dapat digunakan untuk pengembangan lokal.
 
 ### 2. Instalasi Dependency dan Konfigurasi Laravel
 
@@ -334,24 +332,27 @@ print(resp.json())
    npm run build
    ```
 
-3. Generate key dan jalankan migrasi database Laravel:
+3. Generate key, jalankan migrasi, dan tautan storage (untuk foto profil/avatar):
 
    ```bash
    php artisan key:generate
    php artisan migrate
+   php artisan storage:link
    ```
 
 ### 3. Instalasi Dependency Python (Microservices)
 
-Pastikan Python 3.10+ sudah terinstal, kemudian jalankan perintah berikut untuk menginstal dependensi yang dibutuhkan oleh keempat microservice:
+Pastikan Python 3.10+ sudah terinstal. Instal dependensi yang dibutuhkan oleh microservice (contoh umum):
 
 ```bash
 pip install fastapi uvicorn sqlmodel pymysql pydantic
 ```
 
+> Beberapa service (mis. `API_cek-nim`) memiliki `requirements.txt` dan/atau virtual environment (`.venv`) sendiri — gunakan dependensi sesuai folder service masing-masing bila tersedia.
+
 ### 4. Menjalankan Seluruh Service
 
-Buka 5 terminal terpisah dan jalankan masing-masing service:
+Buka terminal terpisah dan jalankan masing-masing service:
 
 **Terminal 1 - FastAPI Service 1 (Master Tugas / Port 8000):**
 
@@ -379,6 +380,7 @@ python -m uvicorn main:app --reload --port 8002
 ```bash
 cd API_cek-nim
 python -m uvicorn main:app --reload --port 8003
+# atau (jika memakai venv service): .\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8003
 ```
 
 **Terminal 5 - Laravel Web Server (Port 8080):**
@@ -389,7 +391,7 @@ php artisan serve --port 8080
 
 ### 5. Membuat Akun Admin Pertama
 
-Karena registrasi publik dinonaktifkan, akun admin pertama harus dibuat secara manual melalui Artisan Tinker:
+Karena registrasi publik dinonaktifkan, akun admin pertama dapat dibuat melalui Artisan Tinker:
 
 ```bash
 php artisan tinker
@@ -405,38 +407,25 @@ App\Models\User::create([
 ]);
 ```
 
-Setelah login sebagai Admin, akun Mahasiswa dan Dosen lainnya dapat didaftarkan melalui menu **Manajemen Akun** (`/admin/pengguna`).
-
-### 5b. Skenario Pengujian Fitur Validasi NIM (Mahasiswa)
-
-Setelah login sebagai Admin, buka **Manajemen Akun** (`/admin/pengguna`) dan coba skenario berikut untuk memastikan validasi NIM berjalan:
-
-| No | Skenario | Input | Hasil yang Diharapkan |
-| -- | -------- | ----- | --------------------- |
-| 1 | NIM **terdaftar** di `db_cek` | Role: Mahasiswa, NIM: `2109106001` | Akun berhasil dibuat ✅ |
-| 2 | NIM **tidak terdaftar** di `db_cek` | Role: Mahasiswa, NIM: `9999999999` | Ditolak, pesan *"NIM tidak terdaftar pada database mahasiswa"* ❌ |
-| 3 | NIM **bukan angka** | Role: Mahasiswa, NIM: `ABC-123` | Ditolak, pesan *"NIM tidak terdaftar pada database mahasiswa"* ❌ |
-| 4 | Role **Dosen** (NIP) | Role: Dosen, NIM/NIP: `198501012010` | Akun berhasil dibuat tanpa verifikasi NIM ✅ |
-| 5 | Role **Admin** | Role: Admin, NIM/NIP: `NIP-OPERATOR-002` | Akun berhasil dibuat tanpa verifikasi NIM ✅ |
-| 6 | Service 4 **mati** | Matikan Terminal 4, lalu coba buat akun Mahasiswa dengan NIM terdaftar | Ditolak, pesan *"Sistem tidak dapat memverifikasi NIM Anda saat ini..."* ❌ |
-
-Setelah akun Mahasiswa valid dibuat, uji **login** dengan email & password akun tersebut — harus berhasil masuk dan hanya bisa mengakses fitur Mahasiswa.
+Setelah login sebagai Admin, akun Mahasiswa dan Dosen dapat didaftarkan melalui **Manajemen Akun** (`/admin/pengguna`) dan data NIM dapat dikelola melalui **Kelola Massal NIM** (`/admin/pengguna/massal`).
 
 ### 6. Akses Aplikasi dan Dokumentasi API
-
-Buka browser dan akses alamat berikut:
 
 | Akses | URL |
 | ----- | --- |
 | Halaman Utama (Welcome) | `http://127.0.0.1:8080/` |
 | Halaman Login | `http://127.0.0.1:8080/login` |
 | Halaman Tugas Kuliah | `http://127.0.0.1:8080/tugas` |
+| Arsip Tugas (Dosen/Admin) | `http://127.0.0.1:8080/tugas/arsip` |
 | Halaman Modul Kuliah | `http://127.0.0.1:8080/modul` |
+| Profil Pengguna | `http://127.0.0.1:8080/user/profile` |
 | Manajemen Akun (Admin) | `http://127.0.0.1:8080/admin/pengguna` |
-| Swagger API 1 (Master Tugas) | `http://127.0.0.1:8000/docs` |
-| Swagger API 2 (Pengumpulan Tugas) | `http://127.0.0.1:8001/docs` |
-| Swagger API 3 (Modul Kuliah) | `http://127.0.0.1:8002/docs` |
-| Swagger API 4 (Cek NIM) | `http://127.0.0.1:8003/docs` |
+| Kelola Massal NIM (Admin) | `http://127.0.0.1:8080/admin/pengguna/massal` |
+| Swagger/Docs API 1 (Master Tugas) | `http://127.0.0.1:8000/docs` |
+| Swagger/Docs API 2 (Pengumpulan Tugas) | `http://127.0.0.1:8001/docs` |
+| Swagger/Docs API 3 (Modul Kuliah) | `http://127.0.0.1:8002/docs` |
+| Swagger/Docs API 4 (Cek NIM) | `http://127.0.0.1:8003/docs` |
+| UI Kelola NIM (bawaan Service 4) | `http://127.0.0.1:8003/kelola` |
 
 ---
 
