@@ -1,301 +1,196 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — Fakultas Teknik UNMUL</title>
-  <meta name="description" content="Halaman login Fakultas Teknik Universitas Mulawarman">
+  <title>Masuk LMS — Fakultas Teknik UNMUL</title>
+  <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+  <meta name="description" content="Halaman masuk Learning Management System Fakultas Teknik Universitas Mulawarman">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem('pkl_theme') || 'light';
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
+        if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] } } } }
+  </script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .page-bg {
+      background-color: #F8FAFC;
+      background-image:
+        linear-gradient(to right, rgba(20,83,45,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(20,83,45,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
-    *::-webkit-scrollbar {
-      display: none;
-      width: 0;
-      height: 0;
+    .dark .page-bg {
+      background-color: #0B0F19;
+      background-image:
+        linear-gradient(to right, rgba(148,163,184,0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148,163,184,0.07) 1px, transparent 1px);
     }
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: #0f172a;
-      padding: 24px 16px;
-      position: relative;
-      overflow-x: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .video-bg-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-    .bg-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .video-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 1;
-      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.93) 100%);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-    .auth-wrapper {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 440px;
-      margin: auto;
-    }
-    .auth-card {
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 36px 32px 32px;
-      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2);
-    }
-    .auth-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-    .auth-logo img { height: 42px; width: auto; object-fit: contain; }
-    .auth-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
-    .auth-logo-text .l1 { font-size: 0.82rem; font-weight: 800; color: #0f172a; letter-spacing: 0.03em; text-transform: uppercase; }
-    .auth-logo-text .l2 { font-size: 0.72rem; font-weight: 800; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; }
-    .auth-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-    .auth-subtitle { font-size: 0.85rem; color: #64748b; margin-bottom: 22px; }
-    .auth-footer-text { text-align: center; margin-top: 22px; font-size: 0.85rem; color: #64748b; }
-    .auth-footer-text a { color: #d97706; font-weight: 700; text-decoration: none; }
-    .auth-footer-text a:hover { text-decoration: underline; }
   </style>
 </head>
-
-<body>
-  <!-- Fixed Video Background -->
-  <div class="video-bg-container">
-    <video class="bg-video" autoplay loop muted playsinline
-      poster="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80">
-      <source src="{{ asset('fakultas-teknik-universitas-mulawarmanmp4_Al7wZnbtmn.mp4') }}" type="video/mp4">
-    </video>
-    <div class="video-overlay"></div>
-  </div>
-
-  <div class="auth-wrapper">
-    <div class="mb-3">
-      <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-xs font-bold text-white/90 hover:text-white bg-slate-900/60 hover:bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/15 transition shadow-sm">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span>Kembali ke Beranda</span>
-      </a>
-    </div>    <!-- LOGIN CARD -->
-    <div class="auth-card" id="loginCard">
-      <div class="auth-logo">
-        <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
-        <div class="auth-logo-text">
-          <span class="l1">FAKULTAS TEKNIK</span>
-          <span class="l2">UNIVERSITAS MULAWARMAN</span>
-        </div>
-      </div>
-      <h1 class="auth-title">Log In LMS</h1>
-      <p class="auth-subtitle">Masukkan Nomor Induk (NIM/NIP) dan password akun Anda</p>
-
-      @if (session('status'))
-        <div class="mb-4 text-xs font-semibold text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 flex items-center gap-2">
-            <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            <span>{{ session('status') }}</span>
-        </div>
-      @endif
-
-      @if ($errors->any())
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
-            <ul class="space-y-1">
-                @foreach ($errors->all() as $error)
-                    <li class="flex items-center gap-1.5">
-                      <span class="text-red-500 font-bold">•</span>
-                      <span>{{ $error }}</span>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-      @endif
-
-      <form method="POST" action="{{ route('login') }}" class="space-y-4">
-        @csrf
-
-        <div>
-          <label for="nomer_induk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Nomor Induk (NIM / NIP)</label>
-          <input type="text" id="nomer_induk" name="nomer_induk" value="{{ old('nomer_induk') }}" required autofocus autocomplete="username" placeholder="Masukkan NIM / NIP Anda" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-        </div>
-
-        <div>
-          <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Password</label>
-          <div class="relative">
-            <input type="password" id="password" name="password" required minlength="8" autocomplete="current-password" placeholder="Masukkan password (min. 8 karakter)" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-            <button type="button" id="togglePassword" onclick="togglePasswordVisibility('password', this)" class="absolute right-0 top-0 h-full px-3.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
+<body class="min-h-screen page-bg text-slate-800 dark:text-slate-100 antialiased">
+  <div class="min-h-screen flex flex-col">
+    <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/70 backdrop-blur">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <a href="{{ route('home') }}" class="flex items-center gap-3">
+          <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL" class="w-10 h-10 object-contain">
+          <div class="leading-tight">
+            <div class="text-[11px] font-extrabold tracking-wide uppercase text-slate-900 dark:text-white">Fakultas Teknik</div>
+            <div class="text-[10px] font-semibold tracking-wide uppercase text-slate-600 dark:text-slate-400">Universitas Mulawarman</div>
           </div>
-        </div>
-
-        <div class="flex items-center justify-between text-xs pt-1">
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <input type="checkbox" name="remember" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
-            <span class="text-slate-600 font-medium">Ingat Saya</span>
-          </label>
-          <button type="button" id="btnSwitchToForgot" class="text-amber-700 font-semibold hover:underline bg-transparent border-0 cursor-pointer p-0 text-xs">Lupa password?</button>
-        </div>
-
-        <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-sm transition transform active:scale-[0.99] mt-2 cursor-pointer">
-          Log In Sekarang
-        </button>
-      </form>
-
-      <p class="auth-footer-text">Akun LMS hanya dapat dibuat oleh <strong>Operator Fakultas</strong>.<br>
-        <a href="https://wa.me/6287721685155?text=Halo%20Admin%2FOperator%2C%20saya%20ingin%20mengajukan%20pembuatan%20akun%20LMS.%20Berikut%20data%20diri%20saya%3A%0A%0ANama%20Lengkap%3A%20%0ARole%20(Mahasiswa%2FDosen)%3A%20%0ANomor%20Induk%20(NIM%2FNIP)%3A%20%0AEmail%20Aktif%3A%20%0APassword%20yang%20diinginkan%3A%20%0A%0AMohon%20bantuannya%20untuk%20dibuatkan%20akun.%20Terima%20kasih"
-          target="_blank" rel="noopener noreferrer"
-          class="inline-flex items-center justify-center gap-2 mt-2 px-4 py-2 rounded-full bg-[#25D366]/10 border border-[#25D366]/40 text-[#128C7E] hover:bg-[#25D366] hover:border-[#25D366] hover:text-white transition font-bold text-xs">
-          <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-          Hubungi Admin via WhatsApp
         </a>
-      </p>
-    </div>
-
-    <!-- FORGOT PASSWORD CARD (IN-PLACE POPUP/VIEW) -->
-    <div class="auth-card hidden" id="forgotCard">
-      <div class="auth-logo">
-        <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL">
-        <div class="auth-logo-text">
-          <span class="l1">FAKULTAS TEKNIK</span>
-          <span class="l2">UNIVERSITAS MULAWARMAN</span>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 mb-1">
-        <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-          </svg>
-        </div>
-        <h2 class="auth-title mb-0 text-xl font-extrabold">Lupa Password?</h2>
-      </div>
-      <p class="auth-subtitle mb-3 text-xs text-slate-500">Verifikasi akun dengan NIM/NIP & email untuk mereset kata sandi.</p>
-
-      <div id="loginForgotAlert" class="hidden mb-3 p-3 rounded-xl text-xs font-semibold"></div>
-
-      <form id="loginForgotForm" class="space-y-3">
-        @csrf
-
-        <!-- Nomor Induk -->
-        <div>
-          <label for="fgNomerInduk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nomor Induk (NIM / NIP)</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-              </svg>
-            </div>
-            <input type="text" id="fgNomerInduk" name="nomer_induk" placeholder="Contoh: 2109106001 / 19850101..." class="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-          </div>
-        </div>
-
-        <!-- Email + Kirim Verifikasi -->
-        <div>
-          <label for="fgEmail" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Terdaftar</label>
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
-                </svg>
-              </div>
-              <input type="email" id="fgEmail" name="email" placeholder="nama@unmul.ac.id" class="w-full pl-9 pr-2 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-            </div>
-            <button type="button" id="btnFgSendCode" class="shrink-0 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-md shadow-amber-500/20 text-xs whitespace-nowrap transition transform active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              <span id="btnFgSendCodeText">Kirim Verifikasi</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Kode Verifikasi (6 Digit) -->
-        <div>
-          <label for="fgCode" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Kode Verifikasi (6 Digit)</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <input type="text" id="fgCode" name="code" maxlength="6" placeholder="Masukkan 6 digit kode dari email" class="w-full pl-9 pr-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm tracking-widest font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-          </div>
-          <span class="text-[10px] text-slate-400 mt-0.5 block">Klik "Kirim Verifikasi" di atas untuk mendapatkan kode</span>
-        </div>
-
-        <!-- Password Baru Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <label for="fgPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Password Baru</label>
-            <div class="relative">
-              <input type="password" id="fgPassword" name="password" minlength="8" placeholder="Min. 8 karakter" class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-              <button type="button" onclick="togglePasswordVisibility('fgPassword', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label for="fgPasswordConfirm" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Konfirmasi Password</label>
-            <div class="relative">
-              <input type="password" id="fgPasswordConfirm" name="password_confirmation" minlength="8" placeholder="Ulangi password" class="w-full pl-3 pr-9 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition">
-              <button type="button" onclick="togglePasswordVisibility('fgPasswordConfirm', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-amber-600 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" id="btnFgSubmit" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 text-xs sm:text-sm transition transform active:scale-[0.99] mt-1 cursor-pointer">
-          Simpan Password Baru
+        <button type="button" onclick="(function(){try{var k='pkl_theme';var next=(document.documentElement.classList.contains('dark')?'light':'dark');localStorage.setItem(k,next);if(next==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){}})()" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Ganti tema" title="Ganti tema">
+          <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="w-4 h-4 hidden dark:block" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-      </form>
+      </div>
+    </header>
 
-      <p class="auth-footer-text mt-3">Sudah ingat password? <button type="button" id="btnSwitchToLogin" class="text-amber-700 font-semibold hover:underline bg-transparent border-0 cursor-pointer p-0 text-xs">Masuk di sini</button></p>
-    </div>
+    <main class="flex-1 flex items-center justify-center px-4 py-10">
+      <div class="w-full max-w-md">
+        <div class="mb-4">
+          <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-forest-900 dark:hover:text-emerald-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Kembali ke Beranda
+          </a>
+        </div>
+
+        <!-- LOGIN CARD -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 sm:p-7" id="loginCard">
+          <div class="flex items-center gap-3 mb-5">
+            <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL" class="w-11 h-11 object-contain">
+            <div class="leading-tight">
+              <div class="text-xs font-extrabold tracking-wide text-slate-900 dark:text-white uppercase">Fakultas Teknik</div>
+              <div class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase">Universitas Mulawarman</div>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-[#14532D] dark:bg-emerald-500/15 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 mb-3">Portal Akademik Terpadu</span>
+          <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white">Masuk LMS</h1>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 mb-5">Masukkan Nomor Induk (NIM/NIP) dan kata sandi akun Anda.</p>
+
+          @if (session('status'))
+            <div class="mb-4 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+              <span>{{ session('status') }}</span>
+            </div>
+          @endif
+
+          @if ($errors->any())
+            <div class="mb-4 p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs rounded-xl">
+              <ul class="space-y-1">
+                @foreach ($errors->all() as $error)
+                  <li class="flex items-center gap-1.5"><span class="text-rose-500 font-bold">•</span><span>{{ $error }}</span></li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
+
+          <form method="POST" action="{{ route('login') }}" class="space-y-4">
+            @csrf
+            <div>
+              <label for="nomer_induk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Nomor Induk (NIM / NIP)</label>
+              <input type="text" id="nomer_induk" name="nomer_induk" value="{{ old('nomer_induk') }}" required autofocus autocomplete="username" placeholder="Masukkan NIM / NIP Anda" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+            </div>
+            <div>
+              <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Kata Sandi</label>
+              <div class="relative">
+                <input type="password" id="password" name="password" required minlength="8" autocomplete="current-password" placeholder="Masukkan kata sandi (min. 8 karakter)" class="w-full pl-3.5 pr-11 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+                <button type="button" id="togglePassword" onclick="togglePasswordVisibility('password', this)" class="absolute right-0 top-0 h-full px-3.5 flex items-center text-slate-400 hover:text-[#14532D] dark:hover:text-emerald-400 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" name="remember" class="rounded border-slate-300 text-[#14532D] focus:ring-[#14532D]">
+                <span class="text-slate-600 dark:text-slate-300 font-medium">Ingat Saya</span>
+              </label>
+              <button type="button" id="btnSwitchToForgot" class="text-amber-700 dark:text-amber-400 font-semibold hover:underline bg-transparent border-0 cursor-pointer p-0 text-xs">Lupa kata sandi?</button>
+            </div>
+            <button type="submit" class="w-full py-3 bg-[#14532D] hover:bg-[#166534] text-white font-bold rounded-xl shadow-sm text-sm transition mt-2 cursor-pointer">Masuk ke LMS</button>
+          </form>
+
+          <p class="text-center mt-5 text-xs text-slate-600 dark:text-slate-400">Akun LMS dibuat oleh <strong>Operator Fakultas</strong>.<br>
+            <a href="https://wa.me/6287721685155?text=Halo%20Admin%2FOperator%2C%20saya%20ingin%20mengajukan%20pembuatan%20akun%20LMS.%20Berikut%20data%20diri%20saya%3A%0A%0ANama%20Lengkap%3A%20%0ARole%20(Mahasiswa%2FDosen)%3A%20%0ANomor%20Induk%20(NIM%2FNIP)%3A%20%0AEmail%20Aktif%3A%20%0APassword%20yang%20diinginkan%3A%20%0A%0AMohon%20bantuannya%20untuk%20dibuatkan%20akun.%20Terima%20kasih" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 mt-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition font-bold">
+              Hubungi Operator Fakultas via WhatsApp
+            </a>
+          </p>
+        </div>
+
+        <!-- FORGOT PASSWORD CARD (IN-PLACE, IDs & script preserved) -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 sm:p-7 hidden" id="forgotCard">
+          <div class="flex items-center gap-3 mb-5">
+            <img src="{{ asset('logo.png') }}" alt="Logo FT UNMUL" class="w-11 h-11 object-contain">
+            <div class="leading-tight">
+              <div class="text-xs font-extrabold tracking-wide text-slate-900 dark:text-white uppercase">Fakultas Teknik</div>
+              <div class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase">Universitas Mulawarman</div>
+            </div>
+          </div>
+
+          <h2 class="text-xl font-extrabold text-slate-900 dark:text-white mb-1">Lupa Kata Sandi?</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">Verifikasi akun dengan NIM/NIP & email untuk mereset kata sandi.</p>
+
+          <div id="loginForgotAlert" class="hidden mb-3 p-3 rounded-xl text-xs font-semibold"></div>
+
+          <form id="loginForgotForm" class="space-y-3">
+            @csrf
+            <div>
+              <label for="fgNomerInduk" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Nomor Induk (NIM / NIP)</label>
+              <input type="text" id="fgNomerInduk" name="nomer_induk" placeholder="Contoh: 2109106001 / 19850101..." class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+            </div>
+            <div>
+              <label for="fgEmail" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Email Terdaftar</label>
+              <div class="flex gap-2">
+                <input type="email" id="fgEmail" name="email" placeholder="nama@unmul.ac.id" class="flex-1 px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+                <button type="button" id="btnFgSendCode" class="shrink-0 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5 cursor-pointer">
+                  <span id="btnFgSendCodeText">Kirim Verifikasi</span>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label for="fgCode" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Kode Verifikasi (6 Digit)</label>
+              <input type="text" id="fgCode" name="code" maxlength="6" placeholder="Masukkan 6 digit kode dari email" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm tracking-widest font-mono font-bold bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+              <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">Klik "Kirim Verifikasi" untuk mendapatkan kode.</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label for="fgPassword" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Kata Sandi Baru</label>
+                <div class="relative">
+                  <input type="password" id="fgPassword" name="password" minlength="8" placeholder="Min. 8 karakter" class="w-full pl-3 pr-9 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+                  <button type="button" onclick="togglePasswordVisibility('fgPassword', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-[#14532D] dark:hover:text-emerald-400 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label for="fgPasswordConfirm" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Konfirmasi Kata Sandi</label>
+                <div class="relative">
+                  <input type="password" id="fgPasswordConfirm" name="password_confirmation" minlength="8" placeholder="Ulangi kata sandi" class="w-full pl-3 pr-9 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14532D]/20 dark:focus:ring-emerald-500/30 focus:border-[#14532D] dark:focus:border-emerald-500 transition">
+                  <button type="button" onclick="togglePasswordVisibility('fgPasswordConfirm', this)" class="absolute right-0 top-0 h-full px-2.5 flex items-center text-slate-400 hover:text-[#14532D] dark:hover:text-emerald-400 transition focus:outline-none" title="Tampilkan Password" aria-label="Tampilkan Password">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button type="submit" id="btnFgSubmit" class="w-full py-2.5 bg-[#14532D] hover:bg-[#166534] text-white font-bold rounded-xl text-sm transition mt-1 cursor-pointer">Simpan Kata Sandi Baru</button>
+          </form>
+
+          <p class="text-center mt-4 text-xs text-slate-600 dark:text-slate-400">Sudah ingat kata sandi? <button type="button" id="btnSwitchToLogin" class="text-amber-700 dark:text-amber-400 font-semibold hover:underline bg-transparent border-0 cursor-pointer p-0 text-xs">Masuk di sini</button></p>
+        </div>
+
+        <p class="mt-6 text-center text-[11px] text-slate-500 dark:text-slate-400">&copy; {{ date('Y') }} Fakultas Teknik Universitas Mulawarman · Dikembangkan oleh Tim PKL SMK Negeri 1 Tenggarong</p>
+      </div>
+    </main>
   </div>
 
   <script>
@@ -307,8 +202,8 @@
       btn.setAttribute('title', isPassword ? 'Sembunyikan Password' : 'Tampilkan Password');
       btn.setAttribute('aria-label', isPassword ? 'Sembunyikan Password' : 'Tampilkan Password');
       btn.innerHTML = isPassword ? `
-        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+        <svg class="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
         </svg>
       ` : `
         <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,11 +222,11 @@
 
     function showLoginAlert(type, msg) {
       if (!loginForgotAlert) return;
-      loginForgotAlert.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border', 'border-red-200', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+      loginForgotAlert.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border', 'border-red-200', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'dark:bg-emerald-500/10', 'dark:text-emerald-300', 'dark:border-emerald-500/30', 'dark:bg-rose-500/10', 'dark:text-rose-300', 'dark:border-rose-500/30');
       if (type === 'error') {
-        loginForgotAlert.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+        loginForgotAlert.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200', 'dark:bg-rose-500/10', 'dark:text-rose-300', 'dark:border-rose-500/30');
       } else {
-        loginForgotAlert.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200');
+        loginForgotAlert.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200', 'dark:bg-emerald-500/10', 'dark:text-emerald-300', 'dark:border-emerald-500/30');
       }
       loginForgotAlert.innerHTML = `<span>${msg}</span>`;
     }
@@ -458,7 +353,7 @@
           showLoginAlert('error', 'Terjadi kesalahan sistem.');
         } finally {
           btnFgSubmit.disabled = false;
-          btnFgSubmit.innerText = 'Simpan Password Baru';
+          btnFgSubmit.innerText = 'Simpan Kata Sandi Baru';
         }
       });
     }

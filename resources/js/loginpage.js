@@ -89,10 +89,11 @@ function setupApp() {
   const scrollIndicator = document.getElementById('scrollIndicator');
 
   // ==========================================
-  // SCROLL TRIGGER: SEMBUNYIKAN FOOTER SEBELUM DI-SCROLL
+  // SCROLL TRIGGER: FOOTER (legacy) - keep compatible
   // ==========================================
   function handleScrollFooter() {
     if (!footer) return;
+    if (!footer.classList.contains('footer-standard')) return; // redesigned footer is always visible
     const scrollPos = window.scrollY || window.pageYOffset;
 
     if (scrollPos > 20) {
@@ -111,44 +112,71 @@ function setupApp() {
   // HIDEBAR DRAWER LOGIC (JURUSAN)
   // ==========================================
   function openHidebar() {
-    if (hidebarOverlay) hidebarOverlay.classList.add('active');
-    if (hidebarPanel) hidebarPanel.classList.add('active');
+    if (hidebarOverlay) {
+      hidebarOverlay.classList.add('active');
+      hidebarOverlay.classList.remove('opacity-0', 'pointer-events-none', 'hidden');
+      hidebarOverlay.style.opacity = '1';
+      hidebarOverlay.style.pointerEvents = 'auto';
+    }
+    if (hidebarPanel) {
+      hidebarPanel.classList.add('active');
+      // support redesigned Tailwind drawer (translate-x-full) and legacy CSS drawer
+      hidebarPanel.classList.remove('translate-x-full');
+      hidebarPanel.style.transform = 'translateX(0)';
+    }
     document.body.style.overflow = 'hidden';
   }
 
   function closeHidebar() {
-    if (hidebarOverlay) hidebarOverlay.classList.remove('active');
-    if (hidebarPanel) hidebarPanel.classList.remove('active');
+    if (hidebarOverlay) {
+      hidebarOverlay.classList.remove('active');
+      hidebarOverlay.classList.add('opacity-0', 'pointer-events-none');
+      hidebarOverlay.style.opacity = '';
+      hidebarOverlay.style.pointerEvents = '';
+    }
+    if (hidebarPanel) {
+      hidebarPanel.classList.remove('active');
+      hidebarPanel.classList.add('translate-x-full');
+      hidebarPanel.style.transform = '';
+    }
     document.body.style.overflow = '';
   }
 
   // Semua tombol pembuka drawer (nav desktop, hamburger mobile, hero)
-  document.querySelectorAll('.js-open-hidebar').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      openHidebar();
+  // Skip if page already has inline drawer handler (welcome redesign) to avoid double-toggle.
+  if (!window.__hidebarInlineInit) {
+    document.querySelectorAll('.js-open-hidebar').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openHidebar();
+      });
     });
-  });
-  if (btnCloseHidebar) {
-    btnCloseHidebar.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeHidebar();
-    });
-  }
-  if (hidebarOverlay) {
-    hidebarOverlay.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeHidebar();
-    });
+    if (btnCloseHidebar) {
+      btnCloseHidebar.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeHidebar();
+      });
+    }
+    if (hidebarOverlay) {
+      hidebarOverlay.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeHidebar();
+      });
+    }
   }
 
   if (hidebarLinks && hidebarLinks.length > 0) {
     hidebarLinks.forEach(link => {
       link.addEventListener('click', (e) => {
-        const url = link.getAttribute('href');
-        if (url === '#') {
+        const url = link.getAttribute('href') || '';
+        // anchor in-page links: just close drawer smoothly
+        if (url.startsWith('#')) {
+          closeHidebar();
+          return;
+        }
+        if (url === '') {
           e.preventDefault();
-          const menuText = link.querySelector('.hidebar-link-text')?.innerText || 'Jurusan';
+          const menuText = link.querySelector('.hidebar-link-text')?.innerText || 'Menu';
           showToast(`Membuka: ${menuText}`, '');
           closeHidebar();
           return;
@@ -180,12 +208,19 @@ function setupApp() {
     } else {
       showLoginView();
     }
-    if (loginModalOverlay) loginModalOverlay.classList.add('active');
+    if (loginModalOverlay) {
+      loginModalOverlay.classList.add('active');
+      // support redesigned Tailwind modal (display toggled via .active) and legacy
+      loginModalOverlay.style.display = 'flex';
+    }
     document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
-    if (loginModalOverlay) loginModalOverlay.classList.remove('active');
+    if (loginModalOverlay) {
+      loginModalOverlay.classList.remove('active');
+      loginModalOverlay.style.display = '';
+    }
     document.body.style.overflow = '';
   }
 
