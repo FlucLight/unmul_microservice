@@ -173,11 +173,19 @@
 
 <script>
 (function () {
-    // Theme: support both pkl_theme (standalone pages) and generic 'theme'
+    // Theme: support pkl_theme with light/dark/system
     var storageKey = 'pkl_theme';
-    function applyTheme(mode) {
+    function systemPrefersDark() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function resolveTheme(mode) {
+        if (mode === 'system') return systemPrefersDark() ? 'dark' : 'light';
+        return mode === 'light' ? 'light' : 'dark';
+    }
+    function applyThemeMode(mode) {
+        var effective = resolveTheme(mode);
         var root = document.documentElement;
-        if (mode === 'dark') {
+        if (effective === 'dark') {
             root.classList.add('dark');
             root.classList.remove('light');
         } else {
@@ -185,14 +193,26 @@
             root.classList.add('light');
         }
     }
+    function getMode() {
+        var m = 'dark';
+        try { m = localStorage.getItem(storageKey) || 'dark'; } catch (e) {}
+        return (m === 'light' || m === 'dark' || m === 'system') ? m : 'dark';
+    }
+    function setMode(mode) {
+        try { localStorage.setItem(storageKey, mode); } catch (e) {}
+        applyThemeMode(mode);
+    }
+    // ensure applied (pages may set early, but system can change)
+    applyThemeMode(getMode());
+    if (window.matchMedia) {
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        var onChange = function () { if (getMode() === 'system') applyThemeMode('system'); };
+        if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+    }
     window.__toggleTheme = function () {
         var isDark = document.documentElement.classList.contains('dark');
         var next = isDark ? 'light' : 'dark';
-        try { localStorage.setItem(storageKey, next); } catch (e) {}
-        applyTheme(next);
-        if (typeof window.toggleTheme === 'function' && window.toggleTheme !== window.__toggleTheme) {
-            // keep legacy hooks in sync
-        }
+        setMode(next);
     };
     // Expose as toggleTheme for existing inline handlers compatibility
     if (typeof window.toggleTheme !== 'function') {

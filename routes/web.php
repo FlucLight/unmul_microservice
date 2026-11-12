@@ -7,6 +7,7 @@ use App\Http\Controllers\ModulController;
 
 use App\Http\Controllers\ForgotPasswordPopupController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\ProfileController;
 
 // Halaman Utama - Welcome Page
 Route::get('/', function () {
@@ -64,5 +65,12 @@ Route::middleware([
         Route::put('/admin/pengguna/{id}', [UserManagementController::class, 'update'])->name('admin.pengguna.update');
         Route::delete('/admin/pengguna/{id}', [UserManagementController::class, 'destroy'])->name('admin.pengguna.destroy');
     });
+
+    // Profil (custom)
+    Route::get('/user/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/user/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/user/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/user/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+    Route::put('/user/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
 });
