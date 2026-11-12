@@ -1,53 +1,31 @@
-<x-action-section>
-    <x-slot name="title">
-        {{ __('Delete Account') }}
-    </x-slot>
+<div class="bg-slate-900 border border-rose-900/40 rounded-2xl p-6 shadow-sm">
+    <div class="mb-5">
+        <h3 class="text-lg font-semibold text-slate-100">Hapus Akun</h3>
+        <p class="text-slate-400 text-sm mt-1">Hapus akun Anda secara permanen.</p>
+    </div>
 
-    <x-slot name="description">
-        {{ __('Permanently delete your account.') }}
-    </x-slot>
+    <div class="space-y-4">
+        <p class="text-sm text-slate-400 max-w-2xl">Setelah akun dihapus, seluruh data dan sumber daya terkait akan dihapus secara permanen. Pastikan Anda telah menyimpan data penting sebelum melanjutkan.</p>
 
-    <x-slot name="content">
-        <div class="max-w-xl text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+        <div>
+            <button type="button" wire:click="confirmUserDeletion" wire:loading.attr="disabled" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium transition shadow-sm">
+                Hapus Akun
+            </button>
         </div>
 
-        <div class="mt-5">
-            <x-danger-button wire:click="confirmUserDeletion" wire:loading.attr="disabled">
-                {{ __('Delete Account') }}
-            </x-danger-button>
-        </div>
-
-        <!-- Delete User Confirmation Modal -->
         <x-dialog-modal wire:model.live="confirmingUserDeletion">
-            <x-slot name="title">
-                {{ __('Delete Account') }}
-            </x-slot>
-
+            <x-slot name="title">Hapus Akun</x-slot>
             <x-slot name="content">
-                {{ __('Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
-
+                <span class="text-slate-300">Apakah Anda yakin ingin menghapus akun ini? Tindakan ini tidak dapat dibatalkan. Masukkan kata sandi untuk konfirmasi.</span>
                 <div class="mt-4" x-data="{}" x-on:confirming-delete-user.window="setTimeout(() => $refs.password.focus(), 250)">
-                    <x-input type="password" class="mt-1 block w-3/4"
-                                autocomplete="current-password"
-                                placeholder="{{ __('Password') }}"
-                                x-ref="password"
-                                wire:model="password"
-                                wire:keydown.enter="deleteUser" />
-
-                    <x-input-error for="password" class="mt-2" />
+                    <input type="password" class="mt-1 block w-full sm:w-3/4 bg-slate-950 border border-slate-700/70 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-2.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition" autocomplete="current-password" placeholder="Kata sandi" x-ref="password" wire:model="password" wire:keydown.enter="deleteUser" />
+                    <x-input-error for="password" class="mt-2 text-rose-400 text-sm" />
                 </div>
             </x-slot>
-
             <x-slot name="footer">
-                <x-secondary-button wire:click="$toggle('confirmingUserDeletion')" wire:loading.attr="disabled">
-                    {{ __('Cancel') }}
-                </x-secondary-button>
-
-                <x-danger-button class="ms-3" wire:click="deleteUser" wire:loading.attr="disabled">
-                    {{ __('Delete Account') }}
-                </x-danger-button>
+                <button type="button" wire:click="$toggle('confirmingUserDeletion')" wire:loading.attr="disabled" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-700 bg-slate-800/70 text-slate-200 hover:bg-slate-800 font-medium transition">Batal</button>
+                <button type="button" class="ms-3 inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium transition shadow-sm" wire:click="deleteUser" wire:loading.attr="disabled">Hapus Akun</button>
             </x-slot>
         </x-dialog-modal>
-    </x-slot>
-</x-action-section>
+    </div>
+</div>

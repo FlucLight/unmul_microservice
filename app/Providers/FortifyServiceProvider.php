@@ -6,8 +6,11 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -34,6 +37,56 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
+
+        // Login: utamakan kredensial di tabel users; jika tidak cocok, coba verifikasi
+        // ke database cek_nim (db_cek.modul) dan sinkronkan/provision akun users.
+        Fortify::authenticateUsing(function (Request $request) {
+            $usernameField = Fortify::username(); // nomer_induk
+            $nomerInduk = trim((string) $request->input($usernameField));
+            $password = (string) $request->input('password');
+
+            if ($nomerInduk === '' || $password === '') {
+                return null;
+            }
+
+            // 1) Coba autentikasi ke tabel users (admin/dosen/akun yang sudah ada)
+            $user = User::where($usernameField, $nomerInduk)->first();
+            if ($user && Hash::check($password, $user->password)) {
+                return $user;
+            }
+
+            // 2) Coba autentikasi ke database cek_nim (mahasiswa)
+            try {
+                $nim = is_numeric($nomerInduk) ? (int) $nomerInduk : $nomerInduk;
+                $cek = DB::connection('cek_nim')
+                    ->table('modul')
+                    ->where('nim', $nim)
+                    ->first();
+
+                $cekPassword = $cek && isset($cek->password) ? trim((string) $cek->password) : null;
+                if ($cekPassword !== null && hash_equals($cekPassword, $password)) {
+                    $user = User::where('nomer_induk', (string) $nomerInduk)->first();
+                    if (!$user) {
+                        $user = User::create([
+                            'name' => 'Mahasiswa ' . $nomerInduk,
+                            'email' => null,
+                            'phone' => null,
+                            'nomer_induk' => (string) $nomerInduk,
+                            'role' => 'mahasiswa',
+                            'password' => Hash::make($password),
+                        ]);
+                    } else {
+                        // Sinkronkan password agar konsisten
+                        $user->forceFill(['password' => Hash::make($password)])->save();
+                    }
+                    return $user;
+                }
+            } catch (\Throwable $e) {
+                // Jika koneksi cek_nim gagal, lanjut ke gagal login normal
+            }
+
+            return null;
+        });
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
