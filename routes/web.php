@@ -7,6 +7,7 @@ use App\Http\Controllers\ModulController;
 
 use App\Http\Controllers\ForgotPasswordPopupController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\ProfileController;
 
 // Halaman Utama - Welcome Page
 Route::get('/', function () {
@@ -63,6 +64,23 @@ Route::middleware([
         Route::post('/admin/pengguna', [UserManagementController::class, 'store'])->name('admin.pengguna.store');
         Route::put('/admin/pengguna/{id}', [UserManagementController::class, 'update'])->name('admin.pengguna.update');
         Route::delete('/admin/pengguna/{id}', [UserManagementController::class, 'destroy'])->name('admin.pengguna.destroy');
+
+        // Kelola Massal (NIM + password, proxy ke API Cek NIM)
+        Route::get('/admin/pengguna/massal', [\App\Http\Controllers\Admin\BulkUserController::class, 'index'])->name('admin.pengguna.massal');
+        Route::post('/admin/pengguna/massal', [\App\Http\Controllers\Admin\BulkUserController::class, 'store'])->name('admin.pengguna.massal.store');
+        Route::post('/admin/pengguna/massal/import', [\App\Http\Controllers\Admin\BulkUserController::class, 'import'])->name('admin.pengguna.massal.import');
+        Route::post('/admin/pengguna/massal/import-file', [\App\Http\Controllers\Admin\BulkUserController::class, 'importFile'])->name('admin.pengguna.massal.import-file');
+        Route::put('/admin/pengguna/massal/{nim}', [\App\Http\Controllers\Admin\BulkUserController::class, 'update'])->name('admin.pengguna.massal.update');
+        Route::delete('/admin/pengguna/massal/{nim}', [\App\Http\Controllers\Admin\BulkUserController::class, 'destroy'])->name('admin.pengguna.massal.destroy');
+        Route::post('/admin/pengguna/massal/bulk-update', [\App\Http\Controllers\Admin\BulkUserController::class, 'bulkUpdate'])->name('admin.pengguna.massal.bulk-update');
+        Route::post('/admin/pengguna/massal/bulk-delete', [\App\Http\Controllers\Admin\BulkUserController::class, 'bulkDelete'])->name('admin.pengguna.massal.bulk-delete');
     });
+
+    // Profil (custom)
+    Route::get('/user/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/user/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/user/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/user/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+    Route::put('/user/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
 });

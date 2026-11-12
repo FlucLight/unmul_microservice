@@ -29,9 +29,16 @@
         [
             'label' => 'Manajemen Akun',
             'route' => 'admin.pengguna',
-            'active' => request()->routeIs('admin.pengguna*'),
+            'active' => request()->routeIs('admin.pengguna'),
             'show' => $isAdmin,
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>',
+        ],
+        [
+            'label' => 'Kelola Massal',
+            'route' => 'admin.pengguna.massal',
+            'active' => request()->routeIs('admin.pengguna.massal*'),
+            'show' => $isAdmin,
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>',
         ],
     ];
 @endphp
@@ -173,11 +180,19 @@
 
 <script>
 (function () {
-    // Theme: support both pkl_theme (standalone pages) and generic 'theme'
+    // Theme: support pkl_theme with light/dark/system
     var storageKey = 'pkl_theme';
-    function applyTheme(mode) {
+    function systemPrefersDark() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function resolveTheme(mode) {
+        if (mode === 'system') return systemPrefersDark() ? 'dark' : 'light';
+        return mode === 'light' ? 'light' : 'dark';
+    }
+    function applyThemeMode(mode) {
+        var effective = resolveTheme(mode);
         var root = document.documentElement;
-        if (mode === 'dark') {
+        if (effective === 'dark') {
             root.classList.add('dark');
             root.classList.remove('light');
         } else {
@@ -185,14 +200,26 @@
             root.classList.add('light');
         }
     }
+    function getMode() {
+        var m = 'dark';
+        try { m = localStorage.getItem(storageKey) || 'dark'; } catch (e) {}
+        return (m === 'light' || m === 'dark' || m === 'system') ? m : 'dark';
+    }
+    function setMode(mode) {
+        try { localStorage.setItem(storageKey, mode); } catch (e) {}
+        applyThemeMode(mode);
+    }
+    // ensure applied (pages may set early, but system can change)
+    applyThemeMode(getMode());
+    if (window.matchMedia) {
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        var onChange = function () { if (getMode() === 'system') applyThemeMode('system'); };
+        if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+    }
     window.__toggleTheme = function () {
         var isDark = document.documentElement.classList.contains('dark');
         var next = isDark ? 'light' : 'dark';
-        try { localStorage.setItem(storageKey, next); } catch (e) {}
-        applyTheme(next);
-        if (typeof window.toggleTheme === 'function' && window.toggleTheme !== window.__toggleTheme) {
-            // keep legacy hooks in sync
-        }
+        setMode(next);
     };
     // Expose as toggleTheme for existing inline handlers compatibility
     if (typeof window.toggleTheme !== 'function') {

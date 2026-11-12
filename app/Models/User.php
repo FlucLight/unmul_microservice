@@ -29,8 +29,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'phone',
+        'bio',
+        'avatar',
         'password',
         'nomer_induk',
         'role',
@@ -79,7 +82,49 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'avatar_url',
     ];
+
+    /**
+     * URL avatar kustom (disimpan di storage/app/public/avatars).
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!empty($this->avatar)) {
+            return asset('storage/' . ltrim($this->avatar, '/'));
+        }
+
+        // fallback: foto profil Jetstream lama jika ada
+        if (!empty($this->profile_photo_path)) {
+            return asset('storage/' . ltrim($this->profile_photo_path, '/'));
+        }
+
+        return null;
+    }
+
+    /**
+     * Override Jetstream profile photo URL agar navbar & tampilan lain memakai avatar kustom.
+     */
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        if (!empty($this->avatar)) {
+            return asset('storage/' . ltrim($this->avatar, '/'));
+        }
+
+        // jika ada foto Jetstream lama, pakai itu
+        if (!empty($this->profile_photo_path)) {
+            return $this->getPhotoUrl();
+        }
+
+        // fallback: inisial via ui-avatars
+        $name = trim(collect(explode(' ', $this->name ?? 'U'))->map(fn ($s) => mb_substr($s, 0, 1))->take(2)->implode(''));
+        return 'https://ui-avatars.com/api/?name=' . urlencode($name ?: 'U') . '&color=FFFFFF&background=F97316&bold=true';
+    }
+
+    protected function getPhotoUrl(): string
+    {
+        return asset('storage/' . ltrim($this->profile_photo_path, '/'));
+    }
 
     /**
      * Get the attributes that should be cast.

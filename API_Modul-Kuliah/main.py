@@ -1,12 +1,36 @@
 import os
 import logging
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from config.db import engine, create_db
 from models.modul import Modul, Modul_update
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, Any
+
+def _to_datetime(v: Any):
+    if v is None or isinstance(v, datetime):
+        if isinstance(v, datetime) and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        return v
+    if isinstance(v, str):
+        s = v.replace('Z', '+00:00')
+        try:
+            dt = datetime.fromisoformat(s)
+        except ValueError:
+            for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+                try:
+                    dt = datetime.strptime(v[:19], fmt)
+                    break
+                except ValueError:
+                    continue
+            else:
+                raise ValueError(f'Format tanggal tidak valid: {v}')
+        if dt.tzinfo is not None:
+            dt = dt.replace(tzinfo=None)
+        return dt
+    return v
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("api-modul")
@@ -46,6 +70,7 @@ def home():
 @app.post("/Tambah-modul")
 def tambah_modul(data_modul: Modul, _: str = Depends(verify_api_key)):
     try:
+        data_modul.tanggal_diupload = _to_datetime(data_modul.tanggal_diupload)
         with Session(engine) as session:
             session.add(data_modul)
             session.commit()
@@ -92,6 +117,8 @@ async def editmodul(modul_id: int, modul_data: Modul_update, _: str = Depends(ve
             if not db_modul:
                 raise HTTPException(status_code=404, detail="Modul tidak ditemukan")
             modul_edit = modul_data.model_dump(exclude_unset=True)
+            if 'tanggal_diupload' in modul_edit:
+                modul_edit['tanggal_diupload'] = _to_datetime(modul_edit['tanggal_diupload'])
             db_modul.sqlmodel_update(modul_edit)
             session.add(db_modul)
             session.commit()
