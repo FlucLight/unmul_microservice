@@ -8,7 +8,30 @@ from sqlmodel import Session, select
 from config.db import engine, create_db
 from models.kumpul import kumpul, kumpul_update, beri_nilai
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, Any
+
+def _to_datetime(v: Any):
+    if v is None or isinstance(v, datetime):
+        if isinstance(v, datetime) and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        return v
+    if isinstance(v, str):
+        s = v.replace('Z', '+00:00')
+        try:
+            dt = datetime.fromisoformat(s)
+        except ValueError:
+            for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+                try:
+                    dt = datetime.strptime(v[:19], fmt)
+                    break
+                except ValueError:
+                    continue
+            else:
+                raise ValueError(f'Format tanggal tidak valid: {v}')
+        if dt.tzinfo is not None:
+            dt = dt.replace(tzinfo=None)
+        return dt
+    return v
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("api-penilaian")
@@ -69,6 +92,8 @@ def home():
 @app.post("/kumpul-tugas")
 def kumpul_tugas(data_kumpul: kumpul):
     try:
+        data_kumpul.tanggal_kumpul = _to_datetime(data_kumpul.tanggal_kumpul)
+        data_kumpul.dinilai_at = _to_datetime(getattr(data_kumpul, 'dinilai_at', None))
         with Session(engine) as session:
             statement = select(kumpul).where(
                 kumpul.id_tugas == data_kumpul.id_tugas,
@@ -126,6 +151,10 @@ async def editdata(kumpul_id: int, kumpul_data: kumpul_update, _: str = Depends(
             if not db_tugas:
                 raise HTTPException(status_code=404, detail="Data pengumpulan tidak ditemukan")
             kumpul_edit = kumpul_data.model_dump(exclude_unset=True)
+            if 'tanggal_kumpul' in kumpul_edit:
+                kumpul_edit['tanggal_kumpul'] = _to_datetime(kumpul_edit['tanggal_kumpul'])
+            if 'dinilai_at' in kumpul_edit:
+                kumpul_edit['dinilai_at'] = _to_datetime(kumpul_edit['dinilai_at'])
             db_tugas.sqlmodel_update(kumpul_edit)
             session.add(db_tugas)
             session.commit()

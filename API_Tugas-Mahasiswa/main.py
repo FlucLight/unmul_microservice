@@ -8,7 +8,30 @@ from sqlmodel import Session, select
 from config.database import engine, create_db_all
 from models.tugas import tugas, tugas_update
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, Any
+
+def _to_datetime(v: Any):
+    if v is None or isinstance(v, datetime):
+        if isinstance(v, datetime) and v.tzinfo is not None:
+            return v.replace(tzinfo=None)
+        return v
+    if isinstance(v, str):
+        s = v.replace('Z', '+00:00')
+        try:
+            dt = datetime.fromisoformat(s)
+        except ValueError:
+            for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+                try:
+                    dt = datetime.strptime(v[:19], fmt)
+                    break
+                except ValueError:
+                    continue
+            else:
+                raise ValueError(f'Format tanggal tidak valid: {v}')
+        if dt.tzinfo is not None:
+            dt = dt.replace(tzinfo=None)
+        return dt
+    return v
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("api-tugas")
@@ -61,6 +84,7 @@ def home():
 @app.post("/tambah")
 def tambah_tugas(data_tugas: tugas, _: str = Depends(verify_api_key)):
     try:
+        data_tugas.deadline_tugas = _to_datetime(data_tugas.deadline_tugas)
         with Session(engine) as session:
             session.add(data_tugas)
             session.commit()
@@ -107,6 +131,8 @@ async def editdata(tugas_id: int, tugas_data: tugas_update, _: str = Depends(ver
             if not db_crudt:
                 raise HTTPException(status_code=404, detail="Tugas tidak ditemukan")
             tugas_edit = tugas_data.model_dump(exclude_unset=True)
+            if 'deadline_tugas' in tugas_edit:
+                tugas_edit['deadline_tugas'] = _to_datetime(tugas_edit['deadline_tugas'])
             db_crudt.sqlmodel_update(tugas_edit)
             session.add(db_crudt)
             session.commit()
