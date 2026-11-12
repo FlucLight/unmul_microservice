@@ -65,12 +65,14 @@ Route::middleware([
         Route::put('/admin/pengguna/{id}', [UserManagementController::class, 'update'])->name('admin.pengguna.update');
         Route::delete('/admin/pengguna/{id}', [UserManagementController::class, 'destroy'])->name('admin.pengguna.destroy');
 
-        // Kelola Massal (bulk student/NIM management)
+        // Kelola Massal (NIM + password, proxy ke API Cek NIM)
         Route::get('/admin/pengguna/massal', [\App\Http\Controllers\Admin\BulkUserController::class, 'index'])->name('admin.pengguna.massal');
-        Route::post('/admin/pengguna/massal/preview', [\App\Http\Controllers\Admin\BulkUserController::class, 'preview'])->name('admin.pengguna.massal.preview');
+        Route::post('/admin/pengguna/massal', [\App\Http\Controllers\Admin\BulkUserController::class, 'store'])->name('admin.pengguna.massal.store');
         Route::post('/admin/pengguna/massal/import', [\App\Http\Controllers\Admin\BulkUserController::class, 'import'])->name('admin.pengguna.massal.import');
+        Route::put('/admin/pengguna/massal/{nim}', [\App\Http\Controllers\Admin\BulkUserController::class, 'update'])->name('admin.pengguna.massal.update');
+        Route::delete('/admin/pengguna/massal/{nim}', [\App\Http\Controllers\Admin\BulkUserController::class, 'destroy'])->name('admin.pengguna.massal.destroy');
+        Route::post('/admin/pengguna/massal/bulk-update', [\App\Http\Controllers\Admin\BulkUserController::class, 'bulkUpdate'])->name('admin.pengguna.massal.bulk-update');
         Route::post('/admin/pengguna/massal/bulk-delete', [\App\Http\Controllers\Admin\BulkUserController::class, 'bulkDelete'])->name('admin.pengguna.massal.bulk-delete');
-        Route::get('/admin/pengguna/massal/template/{format}', [\App\Http\Controllers\Admin\BulkUserController::class, 'template'])->name('admin.pengguna.massal.template');
     });
 
     // Profil (custom)

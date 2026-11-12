@@ -3,365 +3,273 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Rules\NimMahasiswaTerdaftar;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Http;
 
 class BulkUserController extends Controller
 {
+    private function baseUrl(): string
+    {
+        return rtrim((string) config('services.cek_nim.url', 'http://127.0.0.1:8003'), '/');
+    }
+
+    private function apiKey(): string
+    {
+        return (string) config('services.cek_nim.key', env('API_KEY', 'your-secret-api-key-change-me'));
+    }
+
+    private function client()
+    {
+        return Http::timeout(10)->withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey(),
+            'Accept' => 'application/json',
+        ]);
+    }
+
     public function index(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
-        $role = $request->get('role');
-
-        $usersQuery = User::query();
-        if ($q !== '') {
-            $usersQuery->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('nomer_induk', 'like', "%{$q}%")
-                  ->orWhere('email', 'like', "%{$q}%")
-                  ->orWhere('username', 'like', "%{$q}%");
-            });
-        }
-        if (in_array($role, ['admin','dosen','mahasiswa'], true)) {
-            $usersQuery->where('role', $role);
-        }
-
-        $users = $usersQuery->orderByDesc('created_at')->paginate(15)->withQueryString();
-
-        $stats = [
-            'total' => User::count(),
-            'mahasiswa' => User::where('role','mahasiswa')->count(),
-            'dosen' => User::where('role','dosen')->count(),
-            'admin' => User::where('role','admin')->count(),
-        ];
-
-        $preview = session('massal_preview');
-        $previewToken = session('massal_preview_token');
-
-        return view('admin.pengguna_massal', compact('users','q','role','stats','preview','previewToken'));
-    }
-
-    public function preview(Request $request)
-    {
-        $request->validate([
-            'file' => ['required','file','mimes:json,csv,txt,xlsx,xls','max:5120'],
-        ], [
-            'file.required' => 'Pilih file untuk diimpor.',
-            'file.mimes' => 'Format file harus .json, .csv, atau .xlsx.',
-            'file.max' => 'Ukuran file maksimal 5MB.',
-        ]);
-
-        $file = $request->file('file');
-        $ext = strtolower($file->getClientOriginalExtension() ?: '');
+        $rows = [];
+        $status = 'unknown';
+        $error = null;
 
         try {
-            $rows = $this->parseRows($file->getRealPath(), $ext);
+            $res = $this->client()->get($this->baseUrl() . '/ambil-nim');
+            if ($res->successful()) {
+                $data = $res->json();
+                $rows = is_array($data) ? $data : [];
+                $status = 'online';
+            } else {
+                $status = 'error';
+                $error = $this->extractError($res->json(), $res->status());
+            }
         } catch (\Throwable $e) {
-            return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
+            $status = 'offline';
+            $error = 'Tidak dapat terhubung ke layanan Cek NIM (' . $this->baseUrl() . '): ' . $e->getMessage();
         }
 
-        if (count($rows) === 0) {
-            return back()->with('error', 'File tidak berisi data yang dapat diproses.');
-        }
-        if (count($rows) > 500) {
-            $rows = array_slice($rows, 0, 500);
-        }
-
-        $preview = [];
-        $seenNomor = [];
-        $seenEmail = [];
-        $seenUsername = [];
-        foreach ($rows as $i => $row) {
-            $normalized = $this->normalizeRow($row);
-            $errors = $this->validateRow($normalized, $seenNomor, $seenEmail, $seenUsername);
-            $preview[] = [
-                'row' => $i + 2, // asumsi baris 1 header
-                'data' => $normalized,
-                'valid' => count($errors) === 0,
-                'errors' => $errors,
-                'action' => $this->detectAction($normalized),
-            ];
-            // track for in-file duplicates only when value present
-            if (!empty($normalized['nomer_induk'])) $seenNomor[strtolower($normalized['nomer_induk'])] = true;
-            if (!empty($normalized['email'])) $seenEmail[strtolower($normalized['email'])] = true;
-            if (!empty($normalized['username'])) $seenUsername[strtolower($normalized['username'])] = true;
+        if ($q !== '') {
+            $rows = array_values(array_filter($rows, function ($r) use ($q) {
+                $nim = isset($r['nim']) ? (string) $r['nim'] : '';
+                return str_contains($nim, $q);
+            }));
         }
 
-        $token = bin2hex(random_bytes(16));
-        session([
-            'massal_preview' => $preview,
-            'massal_preview_token' => $token,
+        // urutkan terbaru (id_mahasiswa desc) jika ada
+        usort($rows, function ($a, $b) {
+            return (int)($b['id_mahasiswa'] ?? 0) <=> (int)($a['id_mahasiswa'] ?? 0);
+        });
+
+        return view('admin.pengguna_massal', [
+            'rows' => $rows,
+            'q' => $q,
+            'status' => $status,
+            'apiError' => $error,
+            'total' => count($rows),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nim' => ['required'],
+            'password' => ['nullable', 'string'],
+        ], [
+            'nim.required' => 'NIM wajib diisi.',
         ]);
 
-        return redirect()->route('admin.pengguna.massal')->with('success', 'Pratinjau siap. Periksa data lalu klik Konfirmasi Impor untuk menyimpan baris valid.');
+        $nim = $this->parseSingleNim($data['nim']);
+        if ($nim === null) {
+            return back()->with('error', 'NIM tidak valid.');
+        }
+        $password = trim((string)($data['password'] ?? '')) !== '' ? (string)$data['password'] : 'mhs123';
+
+        try {
+            $res = $this->client()->post($this->baseUrl() . '/tambah-nim', [
+                'nim' => $nim,
+                'password' => $password,
+            ]);
+            if ($res->successful()) {
+                return back()->with('success', "NIM {$nim} berhasil ditambahkan.");
+            }
+            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal menambahkan NIM.'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
+        }
     }
 
     public function import(Request $request)
     {
-        $request->validate([
-            'preview_token' => ['required','string'],
+        $data = $request->validate([
+            'nims' => ['required', 'string'],
+            'password' => ['nullable', 'string'],
+        ], [
+            'nims.required' => 'Masukkan minimal satu NIM.',
         ]);
 
-        $preview = session('massal_preview');
-        $token = session('massal_preview_token');
-        if (!$preview || !$token || !hash_equals($token, (string)$request->input('preview_token'))) {
-            return back()->with('error', 'Sesi pratinjau tidak valid atau kedaluwarsa. Silakan unggah file kembali.');
+        $nims = $this->parseNimList($data['nims']);
+        if (empty($nims)) {
+            return back()->with('error', 'Tidak ada NIM valid yang ditemukan. Pisahkan NIM dengan baris baru, koma, atau spasi.');
         }
+        $password = trim((string)($data['password'] ?? '')) !== '' ? (string)$data['password'] : 'mhs123';
 
-        $created = 0; $updated = 0; $failed = 0; $errors = [];
-        foreach ($preview as $item) {
-            if (empty($item['valid'])) { $failed++; continue; }
-            $d = $item['data'];
-            try {
-                $user = User::where('nomer_induk', $d['nomer_induk'])->first();
-                $payload = [
-                    'name' => $d['name'],
-                    'email' => $d['email'],
-                    'nomer_induk' => $d['nomer_induk'],
-                    'role' => $d['role'],
-                ];
-                if (!empty($d['username'])) $payload['username'] = $d['username'];
-
-                if ($user) {
-                    // update (jangan ubah password kecuali diberikan)
-                    if (!empty($d['password'])) $payload['password'] = Hash::make($d['password']);
-                    // validasi unik ulang terhadap user lain
-                    $v = Validator::make($payload, [
-                        'email' => ['required','email', Rule::unique('users','email')->ignore($user->id)],
-                        'username' => ['nullable','string','min:3','max:30','regex:/^[a-z0-9_.]+$/', Rule::unique('users','username')->ignore($user->id)],
-                    ]);
-                    if ($v->fails()) { $failed++; $errors[] = 'Baris '.$item['row'].': '.$v->errors()->first(); continue; }
-                    $user->update($payload);
-                    $updated++;
-                } else {
-                    $password = $d['password'] ?? $d['nomer_induk'] ?? 'password123';
-                    $payload['password'] = Hash::make($password);
-                    $v = Validator::make($payload, [
-                        'email' => ['required','email', Rule::unique('users','email')],
-                        'username' => ['nullable','string','min:3','max:30','regex:/^[a-z0-9_.]+$/', Rule::unique('users','username')],
-                    ]);
-                    if ($v->fails()) { $failed++; $errors[] = 'Baris '.$item['row'].': '.$v->errors()->first(); continue; }
-                    User::create($payload);
-                    $created++;
-                }
-            } catch (\Throwable $e) {
-                $failed++;
-                $errors[] = 'Baris '.$item['row'].': '.$e->getMessage();
+        try {
+            $res = $this->client()->post($this->baseUrl() . '/import-nim', [
+                'nims' => $nims,
+                'password' => $password,
+            ]);
+            if ($res->successful()) {
+                $j = $res->json() ?: [];
+                $added = $j['ditambah'] ?? 0;
+                $skipped = $j['dilewati'] ?? 0;
+                return back()->with('success', "Import selesai: {$added} ditambahkan, {$skipped} dilewati (sudah terdaftar). Total input: " . count($nims) . ".");
             }
+            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal import NIM.'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
+        }
+    }
+
+    public function update(Request $request, string $nim)
+    {
+        $oldNim = $this->parseSingleNim($nim);
+        if ($oldNim === null) {
+            return back()->with('error', 'NIM tidak valid.');
+        }
+        $data = $request->validate([
+            'nim' => ['nullable'],
+            'password' => ['nullable', 'string'],
+        ]);
+
+        $newNim = isset($data['nim']) && trim((string)$data['nim']) !== '' ? $this->parseSingleNim($data['nim']) : $oldNim;
+        if ($newNim === null) {
+            return back()->with('error', 'NIM baru tidak valid.');
+        }
+        $password = array_key_exists('password', $data) ? trim((string)$data['password']) : null;
+        $payload = ['nim' => $newNim];
+        $payload['password'] = ($password === null || $password === '') ? null : $password;
+
+        try {
+            $res = $this->client()->patch($this->baseUrl() . '/edit-nim/' . $oldNim, $payload);
+            if ($res->successful()) {
+                return back()->with('success', "Data NIM {$oldNim} berhasil diperbarui.");
+            }
+            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal memperbarui NIM.'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy(string $nim)
+    {
+        $n = $this->parseSingleNim($nim);
+        if ($n === null) {
+            return back()->with('error', 'NIM tidak valid.');
+        }
+        try {
+            $res = $this->client()->delete($this->baseUrl() . '/hapus-nim/' . $n);
+            if ($res->successful()) {
+                return back()->with('success', "NIM {$n} berhasil dihapus.");
+            }
+            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal menghapus NIM.'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'nims' => ['required', 'array', 'min:1'],
+            'nims.*' => ['required'],
+            'password' => ['required', 'string'],
+        ], [
+            'nims.required' => 'Pilih minimal satu NIM.',
+            'password.required' => 'Isi password baru untuk edit massal.',
+        ]);
+
+        $items = [];
+        foreach ($data['nims'] as $nim) {
+            $n = $this->parseSingleNim($nim);
+            if ($n !== null) $items[] = ['nim' => $n, 'password' => $data['password']];
+        }
+        if (empty($items)) {
+            return back()->with('error', 'Tidak ada NIM valid yang dipilih.');
         }
 
-        session()->forget(['massal_preview','massal_preview_token']);
-
-        $msg = "Impor selesai: {$created} dibuat, {$updated} diperbarui, {$failed} gagal/dilewati.";
-        if (count($errors)) $msg .= ' ' . implode(' | ', array_slice($errors, 0, 3));
-
-        return redirect()->route('admin.pengguna.massal')->with('success', $msg);
+        try {
+            $res = $this->client()->patch($this->baseUrl() . '/edit-nim-massal', ['items' => $items]);
+            if ($res->successful()) {
+                $j = $res->json() ?: [];
+                $updated = $j['diupdate'] ?? 0;
+                $nf = count($j['tidak_ditemukan'] ?? []);
+                $conf = count($j['konflik'] ?? []);
+                return back()->with('success', "Edit massal selesai: {$updated} diperbarui, {$nf} tidak ditemukan, {$conf} konflik.");
+            }
+            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal edit massal NIM.'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
+        }
     }
 
     public function bulkDelete(Request $request)
     {
-        $ids = $request->input('ids', []);
-        if (!is_array($ids) || empty($ids)) {
-            return back()->with('error', 'Pilih minimal satu akun untuk dihapus.');
+        $data = $request->validate([
+            'nims' => ['required', 'array', 'min:1'],
+            'nims.*' => ['required'],
+        ], [
+            'nims.required' => 'Pilih minimal satu NIM.',
+        ]);
+
+        $nims = [];
+        foreach ($data['nims'] as $nim) {
+            $n = $this->parseSingleNim($nim);
+            if ($n !== null) $nims[] = $n;
         }
-        $ids = array_values(array_unique(array_map('intval', $ids)));
-        $ids = array_filter($ids, fn($id) => $id !== (int) auth()->id());
-        $deleted = 0;
-        if (!empty($ids)) {
-            $deleted = User::whereIn('id', $ids)->delete();
+        $nims = array_values(array_unique($nims));
+        if (empty($nims)) {
+            return back()->with('error', 'Tidak ada NIM valid yang dipilih.');
         }
-        return back()->with('success', "{$deleted} akun berhasil dihapus.");
+
+        try {
+            $res = $this->client()->post($this->baseUrl() . '/hapus-nim-massal', ['nims' => $nims]);
+            if ($res->successful()) {
+                $j = $res->json() ?: [];
+                $deleted = $j['dihapus'] ?? 0;
+                $nf = count($j['tidak_ditemukan'] ?? []);
+                return back()->with('success', "Hapus massal selesai: {$deleted} dihapus, {$nf} tidak ditemukan.");
+            }
+            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal hapus massal NIM.'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
+        }
     }
 
-    public function template(string $format)
+    private function parseSingleNim($value): ?int
     {
-        $format = strtolower($format);
-        $headers = ['name','username','nomer_induk','email','role','password'];
-        $samples = [
-            ['Budi Santoso','budi.s','210101001','budi@unmul.ac.id','mahasiswa','210101001'],
-            ['Siti Aminah','siti.a','1987654321','siti@unmul.ac.id','dosen','1987654321'],
-        ];
-
-        if ($format === 'json') {
-            $data = array_map(fn($r) => array_combine($headers, $r), $samples);
-            return response()->json($data, 200, [
-                'Content-Disposition' => 'attachment; filename="template_kelola_massal.json"',
-            ], JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
-        }
-
-        if ($format === 'csv') {
-            $filename = 'template_kelola_massal.csv';
-            return new StreamedResponse(function () use ($headers, $samples) {
-                $out = fopen('php://output', 'w');
-                fputcsv($out, $headers);
-                foreach ($samples as $r) fputcsv($out, $r);
-                fclose($out);
-            }, 200, [
-                'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-            ]);
-        }
-
-        if ($format === 'xlsx') {
-            $filename = 'template_kelola_massal.xlsx';
-            $export = new class($headers, $samples) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
-                public function __construct(private array $h, private array $s) {}
-                public function headings(): array { return $this->h; }
-                public function array(): array { return $this->s; }
-            };
-            return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::XLSX);
-        }
-
-        abort(404);
+        if (is_int($value)) return $value;
+        $s = trim((string)$value);
+        if ($s === '' || !preg_match('/^\d+$/', $s)) return null;
+        return (int) $s;
     }
 
-    private function parseRows(string $path, string $ext): array
+    private function parseNimList(string $text): array
     {
-        if ($ext === 'json') {
-            $content = file_get_contents($path);
-            $data = json_decode($content, true);
-            if (!is_array($data)) throw new \RuntimeException('Format JSON tidak valid.');
-            // support list of objects or {data:[...]}
-            if (isset($data['data']) && is_array($data['data'])) $data = $data['data'];
-            // if associative single object, wrap
-            $isAssoc = array_keys($data) !== range(0, count($data) - 1);
-            if ($isAssoc) $data = [$data];
-            return $data;
+        $parts = preg_split('/[\s,;]+/', $text) ?: [];
+        $nims = [];
+        foreach ($parts as $p) {
+            $p = trim((string)$p);
+            if ($p !== '' && preg_match('/^\d+$/', $p)) $nims[] = (int)$p;
         }
-
-        if (in_array($ext, ['csv','txt'])) {
-            $rows = [];
-            if (($h = fopen($path, 'r')) !== false) {
-                $header = null;
-                while (($data = fgetcsv($h, 0, ',')) !== false) {
-                    if ($header === null) { $header = array_map(fn($v)=>trim((string)$v), $data); continue; }
-                    if (count(array_filter($data, fn($v)=>trim((string)$v) !== '')) === 0) continue;
-                    $row = [];
-                    foreach ($header as $i => $key) { $row[$key] = $data[$i] ?? null; }
-                    $rows[] = $row;
-                }
-                fclose($h);
-            }
-            return $rows;
-        }
-
-        if (in_array($ext, ['xlsx','xls'])) {
-            $import = new class implements \Maatwebsite\Excel\Concerns\ToArray {
-                public function array(array $array) { return $array; }
-            };
-            $sheets = Excel::toArray($import, $path);
-            $sheet = $sheets[0] ?? [];
-            if (empty($sheet)) return [];
-            $header = array_map(fn($v)=>trim((string)$v), array_shift($sheet));
-            $rows = [];
-            foreach ($sheet as $data) {
-                if (!is_array($data)) continue;
-                if (count(array_filter($data, fn($v)=>trim((string)($v ?? '')) !== '')) === 0) continue;
-                $row = [];
-                foreach ($header as $i => $key) { $row[$key] = $data[$i] ?? null; }
-                $rows[] = $row;
-            }
-            return $rows;
-        }
-
-        throw new \RuntimeException('Format tidak didukung.');
+        return array_values(array_unique($nims));
     }
 
-    private function normalizeRow(array $row): array
+    private function extractError($json, int $status, string $fallback = 'Terjadi kesalahan.'): string
     {
-        $get = function ($keys) use ($row) {
-            foreach ($keys as $k) {
-                foreach ($row as $rk => $rv) {
-                    if (strtolower(trim((string)$rk)) === strtolower($k)) return is_string($rv) ? trim($rv) : $rv;
-                }
-            }
-            return null;
-        };
-        $role = strtolower((string)($get(['role']) ?? 'mahasiswa'));
-        if (!in_array($role, ['admin','dosen','mahasiswa'], true)) $role = (string)($get(['role']) ?? 'mahasiswa');
-        $username = $get(['username']);
-        if (is_string($username)) $username = strtolower(trim($username));
-        return [
-            'name' => (string)($get(['name','nama','nama_lengkap']) ?? ''),
-            'username' => ($username === '' ? null : $username),
-            'nomer_induk' => (string)($get(['nomer_induk','nim','nip','nomor_induk']) ?? ''),
-            'email' => (string)($get(['email']) ?? ''),
-            'role' => $role,
-            'password' => (string)($get(['password']) ?? ''),
-        ];
-    }
-
-    private function validateRow(array $d, array $seenNomor, array $seenEmail, array $seenUsername): array
-    {
-        $errs = [];
-        if ($d['name'] === '') $errs[] = 'Nama wajib diisi.';
-        if ($d['nomer_induk'] === '') $errs[] = 'NIM/NIP (nomer_induk) wajib diisi.';
-        if ($d['email'] === '') $errs[] = 'Email wajib diisi.';
-        elseif (!filter_var($d['email'], FILTER_VALIDATE_EMAIL)) $errs[] = 'Format email tidak valid.';
-        if (!in_array($d['role'], ['admin','dosen','mahasiswa'], true)) $errs[] = 'Role harus admin/dosen/mahasiswa.';
-
-        $nomorKey = strtolower($d['nomer_induk']);
-        $emailKey = strtolower($d['email']);
-        if ($d['nomer_induk'] !== '' && isset($seenNomor[$nomorKey])) $errs[] = 'NIM/NIP duplikat di file.';
-        if ($d['email'] !== '' && isset($seenEmail[$emailKey])) $errs[] = 'Email duplikat di file.';
-        if (!empty($d['username'])) {
-            if (!preg_match('/^[a-z0-9_.]{3,30}$/', $d['username'])) $errs[] = 'Username tidak valid (3-30, huruf kecil/angka/_/.).';
-            $uKey = strtolower($d['username']);
-            if (isset($seenUsername[$uKey])) $errs[] = 'Username duplikat di file.';
+        if (is_array($json)) {
+            $detail = $json['detail'] ?? $json['message'] ?? null;
+            if (is_string($detail) && $detail !== '') return $detail;
         }
-
-        // cek unik DB (untuk create; jika update by nomer_induk, izinkan milik sendiri)
-        if ($d['nomer_induk'] !== '') {
-            $existing = User::where('nomer_induk', $d['nomer_induk'])->first();
-            if ($d['email'] !== '') {
-                $emailOwner = User::where('email', $d['email'])->first();
-                if ($emailOwner && (!$existing || $emailOwner->id !== $existing->id)) $errs[] = 'Email sudah terdaftar.';
-            }
-            if (!empty($d['username'])) {
-                $uOwner = User::where('username', $d['username'])->first();
-                if ($uOwner && (!$existing || $uOwner->id !== $existing->id)) $errs[] = 'Username sudah terdaftar.';
-            }
-            // NIM mahasiswa harus valid (sesuai logika existing) untuk data baru / perubahan ke mahasiswa
-            if ($d['role'] === 'mahasiswa' && !$existing) {
-                try {
-                    $rule = new NimMahasiswaTerdaftar();
-                    $fail = null;
-                    $rule->validate('nomer_induk', $d['nomer_induk'], function($msg) use (&$fail){ $fail = $msg; });
-                    if ($fail) $errs[] = $fail;
-                } catch (\Throwable $e) {
-                    $errs[] = 'Gagal memverifikasi NIM: ' . $e->getMessage();
-                }
-            }
-            if ($d['role'] === 'mahasiswa' && $existing && $existing->role !== 'mahasiswa') {
-                try {
-                    $rule = new NimMahasiswaTerdaftar();
-                    $fail = null;
-                    $rule->validate('nomer_induk', $d['nomer_induk'], function($msg) use (&$fail){ $fail = $msg; });
-                    if ($fail) $errs[] = $fail;
-                } catch (\Throwable $e) {
-                    $errs[] = 'Gagal memverifikasi NIM: ' . $e->getMessage();
-                }
-            }
-        } else {
-            if ($d['email'] !== '' && User::where('email', $d['email'])->exists()) $errs[] = 'Email sudah terdaftar.';
-            if (!empty($d['username']) && User::where('username', $d['username'])->exists()) $errs[] = 'Username sudah terdaftar.';
-        }
-
-        if ($d['password'] !== '' && strlen($d['password']) < 8) $errs[] = 'Password minimal 8 karakter (atau kosongkan).';
-
-        return $errs;
-    }
-
-    private function detectAction(array $d): string
-    {
-        if (empty($d['nomer_induk'])) return 'invalid';
-        return User::where('nomer_induk', $d['nomer_induk'])->exists() ? 'update' : 'create';
+        return $fallback . " (HTTP {$status})";
     }
 }
