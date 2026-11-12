@@ -23,7 +23,10 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $user->fill($request->validated());
+        $data = $request->validated();
+        unset($data['name']); // nama asli dikelola admin
+
+        $user->fill($data);
 
         // if email changed and verification is relevant, keep simple (project behavior)
         if ($user->isDirty('email')) {
@@ -32,7 +35,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return back()->with('status', 'profile-updated')->with('success', 'Profil berhasil diperbarui.');
+        return back()->with('active_tab', 'profile')->with('status', 'profile-updated')->with('success', 'Profil berhasil diperbarui.');
     }
 
     public function updateAvatar(UpdateAvatarRequest $request): RedirectResponse
