@@ -117,23 +117,50 @@
                 <section class="bg-[#f8f9fc] dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-md dark:shadow-xl dark:shadow-black/20 overflow-hidden">
                     <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
                         <h2 class="text-base font-bold text-slate-900 dark:text-white">Import Massal</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tempel banyak NIM sekaligus, 1 per baris / koma / spasi.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tempel daftar NIM, atau unggah file (hanya kolom NIM & password).</p>
                     </div>
-                    <form action="{{ route('admin.pengguna.massal.import') }}" method="POST" class="p-5 space-y-3">
-                        @csrf
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Daftar NIM <span class="text-rose-500">*</span></label>
-                            <textarea name="nims" rows="5" required placeholder="Contoh:&#10;2109106051&#10;2109106052&#10;2109106053" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition">{{ old('nims') }}</textarea>
+                    <div class="p-5 space-y-5">
+                        <form action="{{ route('admin.pengguna.massal.import') }}" method="POST" class="space-y-3">
+                            @csrf
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Daftar NIM (teks) <span class="text-rose-500">*</span></label>
+                                <textarea name="nims" rows="4" required placeholder="Contoh:&#10;2109106051&#10;2109106052, 2109106053" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition">{{ old('nims') }}</textarea>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Pisahkan dengan baris baru, koma, atau spasi.</p>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Password untuk semua</label>
+                                <input type="text" name="password" value="{{ old('password') }}" placeholder="Kosongkan = mhs123" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition">
+                            </div>
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                Import dari Teks
+                            </button>
+                        </form>
+
+                        <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+                            <form action="{{ route('admin.pengguna.massal.import-file') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                @csrf
+                                <div class="flex items-center justify-between gap-2">
+                                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Upload File (NIM & Password)</label>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">.json</span>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">.csv</span>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">.xlsx</span>
+                                    </div>
+                                </div>
+                                <input type="file" name="file" accept=".json,.csv,.txt,.xlsx,.xls" required class="w-full text-sm text-slate-700 dark:text-slate-200 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-700 dark:file:bg-amber-500/15 dark:file:text-amber-300 hover:file:bg-amber-200 dark:hover:file:bg-amber-500/25 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-1.5">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Password default (jika kosong di file)</label>
+                                    <input type="text" name="password" placeholder="Kosongkan = mhs123" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition">
+                                </div>
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-slate-900 dark:bg-white hover:opacity-90 text-white dark:text-slate-900 text-sm font-bold rounded-xl shadow-sm transition gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                    Upload & Import File
+                                </button>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Format sederhana: hanya kolom/field <span class="font-mono font-semibold">nim</span> dan opsional <span class="font-mono font-semibold">password</span> (maks. 5MB).</p>
+                            </form>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Password untuk semua</label>
-                            <input type="text" name="password" value="{{ old('password') }}" placeholder="Kosongkan = mhs123" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition">
-                        </div>
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                            Import Massal
-                        </button>
-                    </form>
+                    </div>
                 </section>
 
                 <!-- Aksi Massal Terpilih -->

@@ -69,6 +69,7 @@ Route::middleware([
         Route::get('/admin/pengguna/massal', [\App\Http\Controllers\Admin\BulkUserController::class, 'index'])->name('admin.pengguna.massal');
         Route::post('/admin/pengguna/massal', [\App\Http\Controllers\Admin\BulkUserController::class, 'store'])->name('admin.pengguna.massal.store');
         Route::post('/admin/pengguna/massal/import', [\App\Http\Controllers\Admin\BulkUserController::class, 'import'])->name('admin.pengguna.massal.import');
+        Route::post('/admin/pengguna/massal/import-file', [\App\Http\Controllers\Admin\BulkUserController::class, 'importFile'])->name('admin.pengguna.massal.import-file');
         Route::put('/admin/pengguna/massal/{nim}', [\App\Http\Controllers\Admin\BulkUserController::class, 'update'])->name('admin.pengguna.massal.update');
         Route::delete('/admin/pengguna/massal/{nim}', [\App\Http\Controllers\Admin\BulkUserController::class, 'destroy'])->name('admin.pengguna.massal.destroy');
         Route::post('/admin/pengguna/massal/bulk-update', [\App\Http\Controllers\Admin\BulkUserController::class, 'bulkUpdate'])->name('admin.pengguna.massal.bulk-update');
