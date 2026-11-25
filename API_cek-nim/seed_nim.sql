@@ -7,11 +7,14 @@ USE db_cek;
 -- Pastikan tabel sudah ada (dibuat otomatis oleh FastAPI, tapi aman jika dibuat manual)
 CREATE TABLE IF NOT EXISTS modul (
     id_mahasiswa INT AUTO_INCREMENT PRIMARY KEY,
-    nim INT NOT NULL,
+    nim BIGINT NOT NULL,
     password VARCHAR(255) NOT NULL,
     INDEX ix_modul_nim (nim),
     INDEX ix_modul_password (password)
 );
+
+-- Jika tabel sudah ada dengan kolom nim INT, jalankan migrasi ini:
+-- ALTER TABLE modul MODIFY COLUMN nim BIGINT NOT NULL;
 
 -- Hapus data lama (opsional, hapus baris ini jika ingin menambah tanpa menghapus)
 -- TRUNCATE TABLE modul;

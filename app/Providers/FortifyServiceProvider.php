@@ -57,7 +57,7 @@ class FortifyServiceProvider extends ServiceProvider
 
             // 2) Coba autentikasi ke database cek_nim (mahasiswa)
             try {
-                $nim = is_numeric($nomerInduk) ? (int) $nomerInduk : $nomerInduk;
+                $nim = ctype_digit($nomerInduk) ? $nomerInduk : $nomerInduk;
                 $cek = DB::connection('cek_nim')
                     ->table('modul')
                     ->where('nim', $nim)

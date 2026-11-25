@@ -27,6 +27,15 @@ class BulkUserController extends Controller
         ]);
     }
 
+    private function decodeResponse($response): mixed
+    {
+        $decoded = json_decode($response->body(), true, 512, JSON_BIGINT_AS_STRING);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
+        }
+        return $response->json();
+    }
+
     public function index(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
@@ -37,12 +46,12 @@ class BulkUserController extends Controller
         try {
             $res = $this->client()->get($this->baseUrl() . '/ambil-nim');
             if ($res->successful()) {
-                $data = $res->json();
+                $data = $this->decodeResponse($res);
                 $rows = is_array($data) ? $data : [];
                 $status = 'online';
             } else {
                 $status = 'error';
-                $error = $this->extractError($res->json(), $res->status());
+                $error = $this->extractError($this->decodeResponse($res), $res->status());
             }
         } catch (\Throwable $e) {
             $status = 'offline';
@@ -93,7 +102,7 @@ class BulkUserController extends Controller
             if ($res->successful()) {
                 return back()->with('success', "NIM {$nim} berhasil ditambahkan.");
             }
-            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal menambahkan NIM.'));
+            return back()->with('error', $this->extractError($this->decodeResponse($res), $res->status(), 'Gagal menambahkan NIM.'));
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
         }
@@ -120,12 +129,12 @@ class BulkUserController extends Controller
                 'password' => $password,
             ]);
             if ($res->successful()) {
-                $j = $res->json() ?: [];
+                $j = $this->decodeResponse($res) ?: [];
                 $added = $j['ditambah'] ?? 0;
                 $skipped = $j['dilewati'] ?? 0;
                 return back()->with('success', "Import selesai: {$added} ditambahkan, {$skipped} dilewati (sudah terdaftar). Total input: " . count($nims) . ".");
             }
-            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal import NIM.'));
+            return back()->with('error', $this->extractError($this->decodeResponse($res), $res->status(), 'Gagal import NIM.'));
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
         }
@@ -203,7 +212,7 @@ class BulkUserController extends Controller
             if ($res->successful()) {
                 return back()->with('success', "Data NIM {$oldNim} berhasil diperbarui.");
             }
-            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal memperbarui NIM.'));
+            return back()->with('error', $this->extractError($this->decodeResponse($res), $res->status(), 'Gagal memperbarui NIM.'));
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
         }
@@ -220,7 +229,7 @@ class BulkUserController extends Controller
             if ($res->successful()) {
                 return back()->with('success', "NIM {$n} berhasil dihapus.");
             }
-            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal menghapus NIM.'));
+            return back()->with('error', $this->extractError($this->decodeResponse($res), $res->status(), 'Gagal menghapus NIM.'));
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
         }
@@ -249,13 +258,13 @@ class BulkUserController extends Controller
         try {
             $res = $this->client()->patch($this->baseUrl() . '/edit-nim-massal', ['items' => $items]);
             if ($res->successful()) {
-                $j = $res->json() ?: [];
+                $j = $this->decodeResponse($res) ?: [];
                 $updated = $j['diupdate'] ?? 0;
                 $nf = count($j['tidak_ditemukan'] ?? []);
                 $conf = count($j['konflik'] ?? []);
                 return back()->with('success', "Edit massal selesai: {$updated} diperbarui, {$nf} tidak ditemukan, {$conf} konflik.");
             }
-            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal edit massal NIM.'));
+            return back()->with('error', $this->extractError($this->decodeResponse($res), $res->status(), 'Gagal edit massal NIM.'));
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
         }
@@ -283,23 +292,23 @@ class BulkUserController extends Controller
         try {
             $res = $this->client()->post($this->baseUrl() . '/hapus-nim-massal', ['nims' => $nims]);
             if ($res->successful()) {
-                $j = $res->json() ?: [];
+                $j = $this->decodeResponse($res) ?: [];
                 $deleted = $j['dihapus'] ?? 0;
                 $nf = count($j['tidak_ditemukan'] ?? []);
                 return back()->with('success', "Hapus massal selesai: {$deleted} dihapus, {$nf} tidak ditemukan.");
             }
-            return back()->with('error', $this->extractError($res->json(), $res->status(), 'Gagal hapus massal NIM.'));
+            return back()->with('error', $this->extractError($this->decodeResponse($res), $res->status(), 'Gagal hapus massal NIM.'));
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menghubungi layanan Cek NIM: ' . $e->getMessage());
         }
     }
 
-    private function parseSingleNim($value): ?int
+    private function parseSingleNim($value): ?string
     {
-        if (is_int($value)) return $value;
-        $s = trim((string)$value);
+        if (is_int($value)) return (string) $value;
+        $s = trim((string) $value);
         if ($s === '' || !preg_match('/^\d+$/', $s)) return null;
-        return (int) $s;
+        return $s;
     }
 
     private function parseNimList(string $text): array
@@ -307,8 +316,8 @@ class BulkUserController extends Controller
         $parts = preg_split('/[\s,;]+/', $text) ?: [];
         $nims = [];
         foreach ($parts as $p) {
-            $p = trim((string)$p);
-            if ($p !== '' && preg_match('/^\d+$/', $p)) $nims[] = (int)$p;
+            $p = trim((string) $p);
+            if ($p !== '' && preg_match('/^\d+$/', $p)) $nims[] = $p;
         }
         return array_values(array_unique($nims));
     }

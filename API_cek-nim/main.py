@@ -133,7 +133,7 @@ def kelola_nim():
       <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
         <h2 class="font-semibold mb-3">Tambah Satu NIM</h2>
         <div class="space-y-2">
-          <input id="addNim" type="number" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="NIM" />
+          <input id="addNim" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="NIM" />
           <input id="addPass" type="text" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="Password (default: mhs123)" />
           <button onclick="addSingle()" class="w-full px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">Tambah</button>
         </div>
@@ -199,7 +199,7 @@ def kelola_nim():
       <div class="space-y-2">
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">NIM (baru/lama)</label>
-          <input id="editNim" type="number" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          <input id="editNim" type="text" inputmode="numeric" pattern="[0-9]*" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Password</label>
@@ -228,6 +228,12 @@ function showAlert(msg, type='ok') {
   clearTimeout(window._at); window._at = setTimeout(()=>el.classList.add('hidden'), 4000);
 }
 
+function parseJsonSafe(text) {
+  // Preserve large integers (NIM) as strings to avoid JS number precision loss.
+  const safe = text.replace(/("(?:nim|nim_baru|id_mahasiswa)"\\s*:\\s*)(-?\\d+)/g, '$1"$2"');
+  return JSON.parse(safe);
+}
+
 async function api(path, opts={}) {
   const key = getKey();
   if (!key) throw new Error('API key belum diisi.');
@@ -236,7 +242,7 @@ async function api(path, opts={}) {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key, ...(opts.headers||{}) }
   });
   const text = await res.text();
-  let data; try { data = text ? JSON.parse(text) : {}; } catch(e){ data = {raw:text}; }
+  let data; try { data = text ? parseJsonSafe(text) : {}; } catch(e){ data = {raw:text}; }
   if (!res.ok) throw new Error((data && (data.detail || data.message)) || ('HTTP '+res.status));
   return data;
 }
@@ -275,7 +281,7 @@ function render() {
       <td class="p-3">
         <div class="flex gap-2">
           <button onclick='openEdit(${JSON.stringify(r)})' class="px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold">Edit</button>
-          <button onclick="deleteOne(${r.nim})" class="px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold">Hapus</button>
+          <button onclick="deleteOne('')" class="px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold">Hapus</button>
         </div>
       </td>
     </tr>`).join('');
@@ -283,12 +289,12 @@ function render() {
 }
 
 function toggleAll(el) { document.querySelectorAll('.rowcb').forEach(cb => cb.checked = el.checked); }
-function selectedNims() { return Array.from(document.querySelectorAll('.rowcb:checked')).map(cb => Number(cb.dataset.nim)); }
+function selectedNims() { return Array.from(document.querySelectorAll('.rowcb:checked')).map(cb => cb.dataset.nim); }
 
 async function addSingle() {
-  const nim = Number($('addNim').value);
+  const nim = $('addNim').value.trim();
   const password = $('addPass').value.trim() || 'mhs123';
-  if (!nim) return showAlert('NIM wajib diisi.', 'err');
+  if (!/^\\d+$/.test(nim)) return showAlert('NIM wajib diisi dengan angka yang valid.', 'err');
   try {
     await api('/tambah-nim', {method:'POST', body: JSON.stringify({nim, password})});
     $('addNim').value=''; $('addPass').value='';
@@ -324,6 +330,7 @@ async function saveEdit() {
 }
 
 async function deleteOne(nim) {
+  nim = String(nim);
   if(!confirm('Hapus NIM '+nim+'?')) return;
   try { await api('/hapus-nim/'+nim, {method:'DELETE'}); showAlert('NIM dihapus.','ok'); loadData(); }
   catch(e){ showAlert(e.message,'err'); }
