@@ -42,7 +42,7 @@ graph TD
     Laravel <-->|HTTP REST Client| API1[FastAPI Service 1 / Port 8000<br/>Master Tugas Dosen]
     Laravel <-->|HTTP REST Client| API2[FastAPI Service 2 / Port 8001<br/>Pengumpulan & Penilaian Tugas]
     Laravel <-->|HTTP REST Client| API3[FastAPI Service 3 / Port 8002<br/>Modul Kuliah]
-    Laravel <-->|Validasi NIM, sinkronisasi, & Kelola Massal NIM (proxy server-side)| API4[FastAPI Service 4 / Port 8003<br/>Cek NIM Mahasiswa]
+    Laravel <-->|Validasi NIM, sinkronisasi, dan Kelola Massal NIM proxy server-side| API4[FastAPI Service 4 / Port 8003<br/>Cek NIM Mahasiswa]
     Laravel <--> DBLaravel[(MySQL: unmul_microservice)]
     API1 <--> DB1[(MySQL: db_crudt)]
     API2 <--> DB2[(MySQL: db_tugas)]
